@@ -21,9 +21,9 @@ Python **3.12, 3.13 or 3.14**, Git for cloning, and pip. The CI matrix runs the 
 suite on Ubuntu for these Python versions and Windows with Python 3.13.
 SQLite is included with standard Python installations.
 
-The intended GitHub repository is private. The professor must be granted access
-before cloning. A local delivery folder can also be used directly; a repository URL
-in these instructions does not assert that publication has already succeeded.
+The [GitHub repository](https://github.com/SebastianoDruda/apartment-booking-cli)
+is private. The professor must be granted access before cloning. A local delivery
+folder can also be used directly.
 
 ```bash
 git clone https://github.com/SebastianoDruda/apartment-booking-cli.git

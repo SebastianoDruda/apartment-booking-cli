@@ -20,8 +20,7 @@ flowchart LR
 
     Booker -->|creates, changes, or cancels| Booking
     Manager -->|manages| Apartment
-    Booking -->|is for exactly one| Apartment
-    Apartment -->|can have multiple bookings over time| Booking
+    Booking -->|is for one; an apartment can have multiple bookings over time| Apartment
     Booking -->|records| BookerName
     Booking -->|covers| StayPeriod
     Booking -->|records| GuestCount

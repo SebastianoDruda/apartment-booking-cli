@@ -263,14 +263,18 @@ class TestApartmentBookingCLI(unittest.TestCase):
                 # Start as system manager
                 "system manager",
                 "help",
-                # Add two apartments
+                # Add two apartments (Country, City, Street and house number)
                 "apartment add",
                 "Sunny Flat",
+                "Germany",
+                "Munich",
                 "Main St 1",
                 "4",
                 "100",
                 "apartment add",
                 "Cozy Studio",
+                "Austria",
+                "Vienna",
                 "Side St 2",
                 "2",
                 "65",
@@ -335,7 +339,7 @@ class TestApartmentBookingCLI(unittest.TestCase):
 
         text = output.getvalue()
         self.assertIn("AVAILABLE COMMANDS", text)
-        self.assertIn("Apartment 'Sunny Flat' at 'Main St 1' added", text)
+        self.assertIn("Apartment 'Sunny Flat' at 'Germany, Munich, Main St 1' added", text)
         self.assertIn("Updated price for apartment 'Sunny Flat' from 100.00 EUR to 120.00 EUR", text)
         self.assertIn("September 2026 only has 30 days (day 31 is not possible)", text)
         self.assertIn("Apartment 'Sunny Flat' is booked for Alice", text)
@@ -343,6 +347,75 @@ class TestApartmentBookingCLI(unittest.TestCase):
         self.assertIn("Apartment 'Cozy Studio' is booked for Bob", text)
         self.assertIn("Booking for apartment 'Sunny Flat' from 2026-11-02 to 2026-11-06 (Booker: Alice) has been cancelled", text)
         self.assertIn("Apartment 'Cozy Studio' has been removed", text)
+        db.close()
+
+    def test_role_specific_help_and_dynamic_table_alignment(self) -> None:
+        db = BookingDatabase(":memory:")
+        db.add_apartment(
+            "Sebastianos main base",
+            "Italia, Bolzano, Via Sebastiano 15",
+            10,
+            400.0,
+        )
+        db.add_apartment(
+            "Toms Residence",
+            "Italia, Bolzano, Via Druso 304",
+            2,
+            50.0,
+        )
+        db.create_booking(
+            "Sebastianos main base",
+            "2026-10-19",
+            "2026-11-20",
+            "Sebastiano Druda",
+            5,
+        )
+        db.create_booking(
+            "Toms Residence",
+            "2026-10-19",
+            "2026-10-31",
+            "Tom Springer",
+            1,
+        )
+
+        # Check System Manager help only shows manager commands
+        mgr_out = io.StringIO()
+        cli_mgr = ApartmentBookingCLI(db=db, output_stream=mgr_out)
+        cli_mgr.role = "system manager"
+        cli_mgr.cmd_help()
+        mgr_help = mgr_out.getvalue()
+        self.assertIn("System Manager Commands:", mgr_help)
+        self.assertIn("apartment add", mgr_help)
+        self.assertNotIn("Apartment Booker Commands:", mgr_help)
+        self.assertNotIn("booking create", mgr_help)
+
+        # Check Apartment Booker help only shows booker commands
+        booker_out = io.StringIO()
+        cli_booker = ApartmentBookingCLI(db=db, output_stream=booker_out)
+        cli_booker.role = "apartment booker"
+        cli_booker.cmd_help()
+        booker_help = booker_out.getvalue()
+        self.assertIn("Apartment Booker Commands:", booker_help)
+        self.assertIn("booking create", booker_help)
+        self.assertNotIn("System Manager Commands:", booker_help)
+        self.assertNotIn("apartment add", booker_help)
+
+        # Check dynamic table alignment for booking view
+        table_out = io.StringIO()
+        cli_table = ApartmentBookingCLI(db=db, output_stream=table_out)
+        cli_table.cmd_booking_view()
+        table_lines = [
+            line
+            for line in table_out.getvalue().splitlines()
+            if "|" in line
+        ]
+        self.assertEqual(len(table_lines), 3)  # header + 2 rows
+        pipe_positions = [
+            [idx for idx, ch in enumerate(line) if ch == "|"]
+            for line in table_lines
+        ]
+        self.assertEqual(pipe_positions[0], pipe_positions[1])
+        self.assertEqual(pipe_positions[1], pipe_positions[2])
         db.close()
 
 

@@ -74,6 +74,22 @@ def validate_date_range(start_str: str, end_str: str) -> tuple[str, str, int]:
     return start_iso, end_iso, nights
 
 
+def format_address(country: str, city: str, street_and_number: str) -> str:
+    """Validate and format a standardized apartment address as 'Country, City, Street and house number'."""
+    clean_country = country.strip()
+    clean_city = city.strip()
+    clean_street = street_and_number.strip()
+
+    if not clean_country:
+        raise ValueError("Country cannot be empty.")
+    if not clean_city:
+        raise ValueError("City cannot be empty.")
+    if not clean_street:
+        raise ValueError("Street and house number cannot be empty.")
+
+    return f"{clean_country}, {clean_city}, {clean_street}"
+
+
 class BookingDatabase:
     """SQLite persistence and validation for apartments and bookings."""
 

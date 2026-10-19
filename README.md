@@ -49,7 +49,7 @@ At the command prompt, type any of the following commands (or use `Tab` to autoc
 
 | Command | Alias(es) | Description |
 | :--- | :--- | :--- |
-| `apartment add` | — | Add a new apartment by entering its **name**, **address**, **maximum number of people**, and **price per night (EUR)**. |
+| `apartment add` | — | Add a new apartment by entering its **name**, standardized address (**country**, **city**, **street and house number**), **maximum number of people**, and **price per night (EUR)**. |
 | `apartment update` | — | Update the **price per night (EUR)** of an existing apartment by entering the apartment's name (`Tab` autocomplete supported) and new price. |
 | `apartment remove` | `apartment delete` | Remove an apartment from the system by entering the **apartment name** (`Tab` autocomplete supported). |
 | `apartment view` | `apartment list`, `apartments` | View all apartments (without bookings), showing name, address, maximum capacity, and price per night in EUR. |
@@ -96,32 +96,34 @@ The system validates:
        WELCOME TO THE APARTMENT BOOKING SYSTEM
 ============================================================
 
-Please select your role:
+Please select your role (Tip: press Tab to autocomplete):
   [1] apartment booker
   [2] system manager
 Are you an apartment booker or a system manager? system manager
 
 Logged in as: System Manager.
-Type 'help' to see all available commands.
+Type 'help' to see all available commands (press Tab to autocomplete commands and apartment names).
 
 [Manager] > apartment add
 
 --- Add New Apartment ---
 Apartment name: Alpine View
-Address of the apartment: Bergstrasse 12, Munich
+Country: Germany
+City: Munich
+Street and house number: Bergstrasse 12
 Maximum number of people: 4
 Price per night (euros): 120
-[Success] Apartment 'Alpine View' at 'Bergstrasse 12, Munich' added (Max people: 4, Price/night: 120.00 EUR).
+[Success] Apartment 'Alpine View' at 'Germany, Munich, Bergstrasse 12' added (Max people: 4, Price/night: 120.00 EUR).
 
 [Manager] > role
 
-Please select your role:
+Please select your role (Tip: press Tab to autocomplete):
   [1] apartment booker
   [2] system manager
 Are you an apartment booker or a system manager? apartment booker
 
 Logged in as: Apartment Booker.
-Type 'help' to see all available commands.
+Type 'help' to see all available commands (press Tab to autocomplete commands and apartment names).
 
 [Booker] > apartment search
 
@@ -131,11 +133,11 @@ To date (YYYY-MM-DD): 2026-08-15
 Number of people staying: 3
 
 Available apartments from 2026-08-10 to 2026-08-15 for 3 people:
-------------------------------------------------------------------------------------------------
-Apartment Name         | Address                    | Max People | Price/Night  | Total Price 
-------------------------------------------------------------------------------------------------
-Alpine View            | Bergstrasse 12, Munich     | 4          |   120.00 EUR |   600.00 EUR (5n)
-------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------
+Apartment Name         | Address (Country, City, Street)    | Max People | Price/Night  | Total Price 
+--------------------------------------------------------------------------------------------------------
+Alpine View            | Germany, Munich, Bergstrasse 12    | 4          |   120.00 EUR |   600.00 EUR (5n)
+--------------------------------------------------------------------------------------------------------
 
 Enter the name of the apartment you want to book (or press Enter to skip): Alpine View
 Enter your name to complete the booking: Max Mustermann

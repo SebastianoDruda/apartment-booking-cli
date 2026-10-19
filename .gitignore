@@ -9,8 +9,6 @@ dist/
 .coverage*
 htmlcov/
 coverage.xml
-*.db
-*.db-*
 *.sqlite
 *.sqlite-*
 *.sqlite3

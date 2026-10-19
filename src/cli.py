@@ -15,7 +15,13 @@ try:
 except ImportError:  # pragma: no cover - Windows standard library
     readline = None  # type: ignore[assignment]
 
-from src.database import BookingDatabase, DEFAULT_DB_PATH, parse_date, validate_date_range
+from src.database import (
+    BookingDatabase,
+    DEFAULT_DB_PATH,
+    format_address,
+    parse_date,
+    validate_date_range,
+)
 
 ROLE_BOOKER = "apartment booker"
 ROLE_MANAGER = "system manager"
@@ -280,53 +286,54 @@ class ApartmentBookingCLI:
     # ------------------------------------------------------------------
 
     def cmd_help(self) -> None:
-        """Display all available commands with descriptions."""
+        """Display available commands specific to the active role."""
         current = self.role.title() if self.role else "None"
         self._print("\n" + "=" * 78)
         self._print(f"AVAILABLE COMMANDS (Current Role: {current})")
         self._print("Tip: Press the TAB key to autocomplete commands and apartment names!")
         self._print("=" * 78)
 
-        self._print("\nSystem Manager Commands:")
-        self._print(
-            "  apartment add      - Add a new apartment (name, address, max people, price/night EUR)"
-        )
-        self._print(
-            "  apartment update   - Update the price per night (EUR) of an apartment"
-        )
-        self._print(
-            "  apartment remove   - Remove an apartment by entering its name"
-        )
-        self._print(
-            "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
-        )
-        self._print(
-            "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
-        )
+        if self.role == ROLE_MANAGER:
+            self._print("\nSystem Manager Commands:")
+            self._print(
+                "  apartment add      - Add a new apartment (name, country, city, street & house no., max people, price/night EUR)"
+            )
+            self._print(
+                "  apartment update   - Update the price per night (EUR) of an apartment"
+            )
+            self._print(
+                "  apartment remove   - Remove an apartment by entering its name"
+            )
+            self._print(
+                "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
+            )
+            self._print(
+                "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
+            )
+        else:
+            self._print("\nApartment Booker Commands:")
+            self._print(
+                "  booking create     - Create a booking (apartment, dates, your name, number of people)"
+            )
+            self._print(
+                "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
+            )
+            self._print(
+                "  booking change     - Change an existing booking's date range and number of people"
+            )
+            self._print(
+                "  booking cancel     - Cancel a booking by apartment name and date range"
+            )
+            self._print(
+                "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
+            )
+            self._print(
+                "  apartment search   - Search available apartments by date range & people, then book [alias: booking search]"
+            )
 
-        self._print("\nApartment Booker Commands:")
+        self._print("\nGeneral Commands:")
         self._print(
-            "  booking create     - Create a booking (apartment, dates, your name, number of people)"
-        )
-        self._print(
-            "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
-        )
-        self._print(
-            "  booking change     - Change an existing booking's date range and number of people"
-        )
-        self._print(
-            "  booking cancel     - Cancel a booking by apartment name and date range"
-        )
-        self._print(
-            "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
-        )
-        self._print(
-            "  apartment search   - Search available apartments by date range & people, then book [alias: booking search]"
-        )
-
-        self._print("\nGeneral Commands (Both Roles):")
-        self._print(
-            "  help               - Show all available commands with descriptions"
+            "  help               - Show all available commands for your current role"
         )
         self._print(
             "  role               - Switch between 'apartment booker' and 'system manager'"
@@ -336,6 +343,37 @@ class ApartmentBookingCLI:
         )
         self._print("=" * 78)
 
+    def _print_dynamic_table(
+        self,
+        headers: Sequence[str],
+        rows: Sequence[Sequence[str]],
+        right_align_cols: set[int] | None = None,
+    ) -> None:
+        """Print a table with column widths dynamically calculated from headers and cell contents."""
+        right_cols = right_align_cols or set()
+        col_widths = [
+            max(len(str(headers[col_idx])), *(len(str(row[col_idx])) for row in rows))
+            for col_idx in range(len(headers))
+        ]
+
+        header_line = " | ".join(
+            f"{headers[i]:<{col_widths[i]}}" for i in range(len(headers))
+        )
+        sep = "-" * len(header_line)
+
+        self._print(sep)
+        self._print(header_line)
+        self._print(sep)
+        for row in rows:
+            cells = [
+                f"{row[i]:>{col_widths[i]}}"
+                if i in right_cols
+                else f"{row[i]:<{col_widths[i]}}"
+                for i in range(len(headers))
+            ]
+            self._print(" | ".join(cells))
+        self._print(sep)
+
     def _print_apartments_table(
         self, apartments: list[dict], show_total: bool = False
     ) -> None:
@@ -344,46 +382,54 @@ class ApartmentBookingCLI:
             return
 
         if show_total:
-            header = (
-                f"{'Apartment Name':<22} | {'Address':<26} | {'Max People':<10} | "
-                f"{'Price/Night':<12} | {'Total Price':<12}"
-            )
-            sep = "-" * len(header)
-            self._print(sep)
-            self._print(header)
-            self._print(sep)
-            for apt in apartments:
-                self._print(
-                    f"{apt['name']:<22} | {apt['address']:<26} | "
-                    f"{apt['max_people']:<10} | {apt['price_per_night']:>8.2f} EUR | "
-                    f"{apt['total_price']:>8.2f} EUR ({apt['nights']}n)"
-                )
-            self._print(sep)
+            headers = [
+                "Apartment Name",
+                "Address (Country, City, Street)",
+                "Max People",
+                "Price/Night",
+                "Total Price",
+            ]
+            rows = [
+                [
+                    str(apt["name"]),
+                    str(apt["address"]),
+                    str(apt["max_people"]),
+                    f"{apt['price_per_night']:.2f} EUR",
+                    f"{apt['total_price']:.2f} EUR ({apt['nights']}n)",
+                ]
+                for apt in apartments
+            ]
+            self._print_dynamic_table(headers, rows, right_align_cols={3, 4})
         else:
-            header = (
-                f"{'Apartment Name':<24} | {'Address':<30} | "
-                f"{'Max People':<10} | {'Price/Night':<14}"
-            )
-            sep = "-" * len(header)
-            self._print(sep)
-            self._print(header)
-            self._print(sep)
-            for apt in apartments:
-                self._print(
-                    f"{apt['name']:<24} | {apt['address']:<30} | "
-                    f"{apt['max_people']:<10} | {apt['price_per_night']:>9.2f} EUR"
-                )
-            self._print(sep)
+            headers = [
+                "Apartment Name",
+                "Address (Country, City, Street)",
+                "Max People",
+                "Price/Night",
+            ]
+            rows = [
+                [
+                    str(apt["name"]),
+                    str(apt["address"]),
+                    str(apt["max_people"]),
+                    f"{apt['price_per_night']:.2f} EUR",
+                ]
+                for apt in apartments
+            ]
+            self._print_dynamic_table(headers, rows, right_align_cols={3})
 
     # ------------------------------------------------------------------
     # System Manager Commands
     # ------------------------------------------------------------------
 
     def cmd_apartment_add(self) -> None:
-        """Add an apartment (System Manager)."""
+        """Add an apartment with standardized address (Country, City, Street and house number)."""
         self._print("\n--- Add New Apartment ---")
         name = self._prompt("Apartment name: ")
-        address = self._prompt("Address of the apartment: ")
+        country = self._prompt("Country: ")
+        city = self._prompt("City: ")
+        street = self._prompt("Street and house number: ")
+        address = format_address(country, city, street)
         max_people_str = self._prompt("Maximum number of people: ")
         price_str = self._prompt("Price per night (euros): ")
 
@@ -445,23 +491,30 @@ class ApartmentBookingCLI:
             self._print("No bookings found.")
             return
 
-        header = (
-            f"{'Apartment':<18} | {'Address':<22} | {'Max Cap':<7} | {'Price/Night':<11} | "
-            f"{'Booker':<16} | {'People':<6} | {'From -> To':<24} | {'Total Price':<12}"
-        )
-        sep = "-" * len(header)
-        self._print(sep)
-        self._print(header)
-        self._print(sep)
-        for b in bookings:
-            date_range = f"{b['start_date']} -> {b['end_date']}"
-            self._print(
-                f"{b['apartment_name']:<18} | {b['apartment_address']:<22} | "
-                f"{b['apartment_max_people']:<7} | {b['price_per_night']:>7.2f} EUR | "
-                f"{b['booker_name']:<16} | {b['num_people']:<6} | "
-                f"{date_range:<24} | {b['total_price']:>8.2f} EUR"
-            )
-        self._print(sep)
+        headers = [
+            "Apartment",
+            "Address",
+            "Max Cap",
+            "Price/Night",
+            "Booker",
+            "People",
+            "From -> To",
+            "Total Price",
+        ]
+        rows = [
+            [
+                str(b["apartment_name"]),
+                str(b["apartment_address"]),
+                str(b["apartment_max_people"]),
+                f"{b['price_per_night']:.2f} EUR",
+                str(b["booker_name"]),
+                str(b["num_people"]),
+                f"{b['start_date']} -> {b['end_date']}",
+                f"{b['total_price']:.2f} EUR",
+            ]
+            for b in bookings
+        ]
+        self._print_dynamic_table(headers, rows, right_align_cols={3, 7})
 
     # ------------------------------------------------------------------
     # Apartment Booker Commands

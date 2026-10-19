@@ -4,6 +4,41 @@ A console-based Apartment Booking System written in Python with persistent SQLit
 
 ---
 
+## Domain Concept Map
+
+```mermaid
+flowchart LR
+    Booker["Apartment Booker<br/>(CLI role)"]
+    Manager["System Manager<br/>(CLI role)"]
+    Booking["Booking"]
+    Apartment["Apartment"]
+    BookerName["Booker name"]
+    StayPeriod["Stay period<br/>(start and end dates)"]
+    GuestCount["Number of guests"]
+    Capacity["Maximum capacity"]
+    NightlyPrice["Price per night"]
+
+    Booker -->|creates, changes, or cancels| Booking
+    Manager -->|manages| Apartment
+    Booking -->|is for exactly one| Apartment
+    Apartment -->|can have multiple bookings over time| Booking
+    Booking -->|records| BookerName
+    Booking -->|covers| StayPeriod
+    Booking -->|records| GuestCount
+    Apartment -->|has| Capacity
+    Apartment -->|has| NightlyPrice
+```
+
+**Business rules:**
+- The number of guests in a booking must not exceed the apartment's maximum capacity.
+- Bookings for the same apartment must not overlap. A check-out date may be the next booking's check-in date.
+- The end date must be after the start date, and both dates must be valid calendar dates.
+- The displayed total price is calculated from the number of nights and the apartment's current price per night; it is not stored as a separate booking value.
+
+The booker and system manager are CLI roles, not user accounts stored by the system.
+
+---
+
 ## How the System Works
 
 1. **Startup & Role Selection**:
@@ -153,4 +188,3 @@ To run the automated unit and CLI integration tests:
 ```bash
 python -m unittest discover -s tests -v
 ```
-

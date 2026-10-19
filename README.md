@@ -1,4 +1,4 @@
-# Apartment Booking System (CLI)
+# Apartment Booking System (CLI) by Sebastiano Druda, Tom Springer and Jacob Wieser
 
 A console-based Apartment Booking System written in Python with persistent SQLite storage. It can be started and controlled directly in the VS Code integrated terminal or any standard command-line console.
 

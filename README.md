@@ -1,271 +1,154 @@
-# Apartment Booking CLI
+# Apartment Booking System (CLI)
 
-A local apartment and reservation manager operated through numbered terminal menus.
-SQLite preserves apartments and booking history across restarts; Rich renders readable
-tables and prompts. The application works offline after dependencies are installed.
-Built for the Continuous Integration for Software Development course.
+A console-based Apartment Booking System written in Python with persistent SQLite storage. It can be started and controlled directly in the VS Code integrated terminal or any standard command-line console.
 
-## Features
+---
 
-- Add, view, update and archive apartments with capacity and EUR nightly prices.
-- Create, view, change and cancel reservations without deleting their history.
-- Search availability by dates and guest count; prevent overlapping confirmed bookings.
-- Load a deterministic demo or deliberately reset the database to that demo.
-- Keyboard-only, **terminal-only** operation, with confirmations and recoverable errors.
+## How the System Works
 
-There is no browser interface, server, API, account requirement or telemetry.
+1. **Startup & Role Selection**:
+   When you start the program, the system first asks whether you are an **apartment booker** (`1` / `apartment booker`) or a **system manager** (`2` / `system manager`). You can also switch roles at any time during a session using the `role` command.
+2. **Tab Key (`Tab`) Autocompletion**:
+   In the console, you can press the **`Tab`** key on your keyboard at any time to autocomplete:
+   - **Roles** (`apartment booker`, `system manager`)
+   - **Commands** (e.g., typing `ap` + `Tab` or `booking c` + `Tab` cycles through matching commands)
+   - **Apartment Names** (when updating, removing, creating/changing/cancelling a booking, or choosing an available apartment from search results — press `Tab` to autocomplete the apartment name or press `Tab` repeatedly to cycle through matching apartments)
+3. **Persistent Database**:
+   All apartments and bookings are stored in a local SQLite database file (`apartment_booking.db` in the project root). Restarting the program preserves all apartments and bookings automatically.
+4. **Automatic Availability, Capacity & Calendar Validation**:
+   Whenever a booking is created, changed, or searched:
+   - **Capacity Check**: The system checks that the apartment's maximum capacity (`max_people`) is large enough for the number of people staying.
+   - **Date Overlap Check**: The system ensures there is no overlapping booking for the same apartment during the requested date range (`start_date < existing_end_date` and `end_date > existing_start_date`). Adjacent check-out / check-in dates (e.g. checking out on `2026-08-05` and the next guest checking in on `2026-08-05`) are allowed.
+   - **Calendar Month/Day Check**: Every entered date is checked against the real calendar for that specific month and year (for example, `2026-09-30` is valid, whereas `2026-09-31` or `31.09.2026` is rejected with an explicit message that September only has 30 days).
 
-## Requirements and setup
+---
 
-Python **3.12, 3.13 or 3.14**, Git for cloning, and pip. The CI matrix runs the full
-suite on Ubuntu for these Python versions and Windows with Python 3.13.
-SQLite is included with standard Python installations.
+## Requirements & Starting the Program
 
-The [GitHub repository](https://github.com/SebastianoDruda/apartment-booking-cli)
-is private. The professor must be granted access before cloning. A local delivery
-folder can also be used directly.
+- **Python 3.10+** (uses only Python's standard library — no external packages need to be installed).
 
-```bash
-git clone https://github.com/SebastianoDruda/apartment-booking-cli.git
-cd apartment-booking-cli
-python -m venv .venv
-```
-
-On macOS/Linux, use `python3` if `python` is unavailable, then activate:
+Run the program from the console / VS Code terminal using either:
 
 ```bash
-source .venv/bin/activate
+python main.py
 ```
 
-On Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-On Windows Command Prompt, use `.venv\Scripts\activate.bat` instead.
-If activation is restricted, call `.venv\Scripts\python.exe` directly on Windows,
-or `.venv/bin/python` on macOS/Linux.
-
-Install and launch **from the project root**:
+or:
 
 ```bash
-python -m pip install -e '.[dev]'
-python -m apartment_booking
+python src/main.py
 ```
 
-For Windows Command Prompt use double quotes: `python -m pip install -e ".[dev]"`.
-The first launch creates an **empty** `data/apartment_booking.db`. Subsequent
-launches preserve records. No sample data is loaded automatically.
+---
 
-## Using the menus
+## All Available Commands
+
+At the command prompt, type any of the following commands (or use `Tab` to autocomplete) and follow the interactive prompts.
+
+### System Manager Commands
+
+| Command | Alias(es) | Description |
+| :--- | :--- | :--- |
+| `apartment add` | — | Add a new apartment by entering its **name**, **address**, **maximum number of people**, and **price per night (EUR)**. |
+| `apartment update` | — | Update the **price per night (EUR)** of an existing apartment by entering the apartment's name (`Tab` autocomplete supported) and new price. |
+| `apartment remove` | `apartment delete` | Remove an apartment from the system by entering the **apartment name** (`Tab` autocomplete supported). |
+| `apartment view` | `apartment list`, `apartments` | View all apartments (without bookings), showing name, address, maximum capacity, and price per night in EUR. |
+| `booking view` | `booking list`, `bookings` | View all bookings together with the booked apartment's details. |
+
+### Apartment Booker Commands
+
+| Command | Alias(es) | Description |
+| :--- | :--- | :--- |
+| `booking create` | `booking add` | Create a new booking by entering the **apartment name** (`Tab` autocomplete supported), **start & end dates**, **your name**, and **number of people**. Checks availability and capacity before booking. |
+| `booking view` | `booking list`, `bookings` | View all bookings for all apartments together with the booked apartment's details. |
+| `booking change` | `booking update`, `booking edit` | Change an existing booking by entering the **apartment name** (`Tab` autocomplete supported) and **current booked date range**, then entering the **new date range** and **new number of people**. Validates capacity and date overlap before saving. |
+| `booking cancel` | `booking remove`, `booking delete` | Cancel a booking by entering the **apartment name** (`Tab` autocomplete supported) and the **booked date range**. |
+| `apartment view` | `apartment list`, `apartments` | View all apartments (without bookings). |
+| `apartment search` | `booking search`, `search` | Search for available apartments during a specific **date range** and for a specific **number of people**. Shows all matching available apartments and lets you directly book one by entering the **apartment name** (`Tab` autocomplete supported) and **your name**. |
+
+### General Commands (Available to Both Roles)
+
+| Command | Alias(es) | Description |
+| :--- | :--- | :--- |
+| `help` | — | Display all available commands with their descriptions. |
+| `role` | `switch` | Switch between **apartment booker** and **system manager** without restarting the program. |
+| `exit` | `quit`, `q` | Close the Apartment Booking System. |
+
+---
+
+## Supported Date Formats & Month/Day Validation
+
+When entering dates for bookings or searches, you can use:
+- `YYYY-MM-DD` (e.g., `2026-09-30`)
+- `DD.MM.YYYY` (e.g., `30.09.2026`)
+
+The system validates:
+- The month is between `1` and `12`.
+- The day exists in that exact month and year (e.g., April, June, September, and November only allow up to day `30`; February checks for `28` vs `29` days in leap years). Entering `2026-09-31` or `31.09.2026` immediately reports: `Invalid date '2026-09-31': September 2026 only has 30 days (day 31 is not possible).`
+- All dates are stored in ISO format (`YYYY-MM-DD`), and the end date (check-out) must be after the start date (check-in).
+
+---
+
+## Example Console Walkthrough
 
 ```text
-APARTMENT BOOKING
-Local apartment and reservation management
+============================================================
+       WELCOME TO THE APARTMENT BOOKING SYSTEM
+============================================================
 
-MAIN MENU
-  1. Apartments
-  2. Bookings
-  3. Search availability
-  4. Demo & data
-  0. Exit
+Please select your role:
+  [1] apartment booker
+  [2] system manager
+Are you an apartment booker or a system manager? system manager
+
+Logged in as: System Manager.
+Type 'help' to see all available commands.
+
+[Manager] > apartment add
+
+--- Add New Apartment ---
+Apartment name: Alpine View
+Address of the apartment: Bergstrasse 12, Munich
+Maximum number of people: 4
+Price per night (euros): 120
+[Success] Apartment 'Alpine View' at 'Bergstrasse 12, Munich' added (Max people: 4, Price/night: 120.00 EUR).
+
+[Manager] > role
+
+Please select your role:
+  [1] apartment booker
+  [2] system manager
+Are you an apartment booker or a system manager? apartment booker
+
+Logged in as: Apartment Booker.
+Type 'help' to see all available commands.
+
+[Booker] > apartment search
+
+--- Search Available Apartments ---
+From date (YYYY-MM-DD): 2026-08-10
+To date (YYYY-MM-DD): 2026-08-15
+Number of people staying: 3
+
+Available apartments from 2026-08-10 to 2026-08-15 for 3 people:
+------------------------------------------------------------------------------------------------
+Apartment Name         | Address                    | Max People | Price/Night  | Total Price 
+------------------------------------------------------------------------------------------------
+Alpine View            | Bergstrasse 12, Munich     | 4          |   120.00 EUR |   600.00 EUR (5n)
+------------------------------------------------------------------------------------------------
+
+Enter the name of the apartment you want to book (or press Enter to skip): Alpine View
+Enter your name to complete the booking: Max Mustermann
+[Success] Apartment 'Alpine View' is booked for Max Mustermann (3 people) from 2026-08-10 to 2026-08-15 (5 nights, Total: 600.00 EUR).
 ```
 
-1. Choose **Apartments → Add apartment**, enter a name, city, capacity (1–20) and
-   price such as `125.50`. Review the summary and select **1. Confirm**.
-2. Choose **Bookings → Create booking**. Select an apartment by row number, enter
-   the guest and dates, review the details and confirm.
-3. Choose **Search availability** and enter dates and guests (blank defaults to 1).
-4. Use **Bookings → Change booking** to edit a confirmed reservation. A blank field
-   keeps its displayed current value. The apartment cannot be changed: cancel the
-   reservation and create another instead.
-5. Use **Bookings → Cancel booking** to release its dates. All reservations,
-   including cancelled ones, remain visible under **View bookings**.
+---
 
-Apartment views default to active records and offer explicit all/archived filters.
-**Remove means archive**, preserving historical reservations and foreign keys. A
-confirmed booking with check-out after today's local date prevents archiving; the
-error identifies blocking guests and dates. Reducing capacity cannot invalidate
-confirmed ongoing or future reservations. Archived apartments cannot be edited or
-used for new/changed bookings, and never appear in availability results.
+## Running Tests
 
-**0. Back** cancels forms where advertised. **0. Cancel** declines confirmation.
-Invalid fields reprompt; failed operations offer retry/back. Ctrl+C and EOF
-(Ctrl+D on macOS/Linux, Ctrl+Z then Enter on Windows) exit gracefully.
-
-## Demonstration data
-
-Choose **Demo & data → Load sample data** on an empty database. The UTF-8
-`data/demo.json` contains 5 apartments in Bolzano, Venice, Trento, Riva del Garda and
-Verona, plus 6 fictitious reservations, including one cancelled reservation.
-Fixed UUIDs and static 2027 dates make the fixture reproducible at any time.
-
-Try these cases after loading:
-
-| Dates | Guests | Expected availability |
-| --- | --- | --- |
-| 2027-06-12 to 2027-06-14 | 1 | Garden Loft and Old Town Terrace |
-| 2027-06-12 to 2027-06-14 | 6 | None: Lakeside Retreat is occupied |
-| 2027-08-01 to 2027-08-03 | 1 | All 5 apartments |
-
-Mountain View has a confirmed stay from June 10 to June 15 and another from June
-15 to June 18. A request for June 12–16 is rejected. Cancelling Alex Morgan's
-reservation releases June 10–15 without affecting the consecutive stay.
-
-Loading twice is refused without modification. **Reset database to sample data**
-warns that **all apartments and bookings will be replaced** and requires typing
-exactly `RESET`. Any other response cancels. The entire fixture is validated in
-disposable memory using the same schema, validators and conflict query before any
-live data is changed. Replacement is one transaction and rolls back on failure.
-Missing, malformed, invalid-reference, duplicate-ID or conflicting fixtures cannot
-partially replace the live database. The fixture is an import source, not live data.
-
-## Date and price rules
-
-Dates must be real calendar dates in `YYYY-MM-DD` format. Check-out must be later
-than check-in; historical bookings are allowed. Stays occupy **[check-in, check-out)**:
-the check-out day is free. A June 10–15 stay permits another starting June 15.
-Intervals overlap exactly when `existing.check_in < requested.check_out` **and**
-`requested.check_in < existing.check_out`. Only confirmed bookings in the same
-apartment block a request; editing excludes the reservation itself.
-
-Nightly prices are positive EUR amounts with up to two decimal places, parsed with
-`Decimal` and stored as integer cents. They describe the apartment; reservation
-totals, payments and invoices are outside this version's scope.
-
-## Persistence and concurrency
-
-The default database is `data/apartment_booking.db`, relative to the **current
-working directory**. Always launch from the project root, including after editable
-installation. **Demo & data → View storage information** shows its absolute path,
-record counts and the available fixture path.
-
-To override the database on macOS/Linux:
+To run the automated unit and CLI integration tests:
 
 ```bash
-APARTMENT_BOOKING_DB=/absolute/path/bookings.db python -m apartment_booking
+python -m unittest discover -s tests -v
 ```
 
-On Windows PowerShell:
-
-```powershell
-$env:APARTMENT_BOOKING_DB = 'C:\data\bookings.db'
-python -m apartment_booking
-```
-
-Every connection enables foreign keys and a finite 5-second busy timeout. Writes
-use explicit `BEGIN IMMEDIATE` with `isolation_level=None`; capacity, archive and
-overlap checks occur after acquiring the write reservation and before commit.
-Competing writers therefore recheck committed data and cannot both book conflicting
-dates through the application. Failures roll back, and connections close even on
-interrupt. Availability is a read snapshot, not a reservation; saving rechecks it.
-
-Only two tables are used, with an index on booking apartment/status/dates, CHECK
-constraints and restricted foreign-key deletion. SQL values are parameterized.
-Direct edits with external SQLite tools bypass service rules and are unsupported.
-Generated databases, journals, caches and virtual environments are ignored by Git.
-
-## Architecture
-
-```text
-python -m apartment_booking
-           |
-           v
-cli: menus, prompts, tables, confirmations
-           |
-           v
-services: apartments, bookings, demo import
-           |
-           v
-storage: repositories, connections, transactions, schema
-           |
-           v
-SQLite (local file)
-
-models + validation + errors are shared domain building blocks.
-```
-
-Frozen dataclasses describe records. Services receive their database explicitly and
-never perform terminal I/O. The storage layer has no Rich dependency. A single
-repository conflict query is shared by creation, changes, search and fixture
-validation. This keeps booking invariants testable without menus or a server.
-
-## Tests and quality checks
-
-Install the dev extra above, then run from the root:
-
-```bash
-ruff check .
-ruff format --check .
-pytest --cov=apartment_booking --cov-report=term-missing --cov-fail-under=80
-```
-
-Use `ruff format .` to apply formatting. Tests use temporary databases only and
-override `APARTMENT_BOOKING_DB`; they never reset the operator's database. Coverage
-includes branches and must reach 80%. Tests cover validation, half-open boundaries,
-capacity and archive restrictions, cancellation, persistence, atomic fixture reset,
-rollback on injected storage failures, busy handling and competing connections.
-Subprocess smoke tests exercise the real module entry point with scripted input.
-
-## Continuous integration
-
-`.github/workflows/ci.yml` runs on pushes to `main` and pull requests targeting
-`main`, with `contents: read` permission. Every job installs dependencies, checks
-Ruff lint/format, and runs the coverage-enabled full test suite. The matrix covers
-Python 3.12/3.13/3.14 on Ubuntu and 3.13 on Windows; no required step ignores errors.
-There is no deployment step. A local pass does not imply a remote Actions run.
-The workflow uses maintained [checkout](https://github.com/actions/checkout/releases)
-and [setup-python](https://github.com/actions/setup-python/releases) v7 actions.
-
-## Project tree
-
-```text
-.github/workflows/ci.yml
-data/demo.json
-docs/PRD.md
-src/apartment_booking/
-  __main__.py                 # startup and graceful shutdown
-  models.py, errors.py, validation.py
-  cli/                       # menu.py, prompts.py, display.py
-  services/                  # apartments.py, bookings.py, demo.py
-  storage/                   # database.py, repositories.py, schema.sql
-tests/
-  conftest.py
-  unit/
-  integration/
-  e2e/
-.gitignore
-pyproject.toml
-README.md
-```
-
-## Limitations
-
-One local operator; no authentication, multiple roles, synchronization, web UI,
-external infrastructure, reporting, payments, notifications or unarchive action.
-No migration engine: schema evolution is outside v1. Fixtures are loaded from
-`data/demo.json` under the project root; this is a checkout-based application, not
-a standalone binary. SQLite write serialization protects application operations,
-but the UI does not implement collaborative editing or optimistic version checks.
-
-## Troubleshooting
-
-- **Python not found or too old:** install Python 3.12–3.14 and check
-  `python --version` (or `python3 --version` / `py --version`).
-- **Module/dependency missing:** activate the same environment used for installation
-  and rerun `python -m pip install -e '.[dev]'` from the project root.
-- **Cannot open database / permissions:** check the displayed path, directory write
-  permissions and available disk space. Use `APARTMENT_BOOKING_DB` for a writable
-  location. Startup failures exit with status 1 and a helpful message.
-- **Database is busy:** another process holds a transaction. Close that operation
-  and retry. A timed-out write reports an error and saves no partial changes.
-- **Damaged/incompatible database:** preserve a backup and choose a new database
-  path. Startup never drops or silently rebuilds existing tables.
-- **Demo fixture missing:** launch from the root containing `data/demo.json`.
-- **Terminal colors or width:** set `NO_COLOR=1` to disable colors; status words
-  remain visible. Tables wrap long content and group related fields vertically.
-- **Unexpected failure:** technical diagnostics go to stderr and the program exits
-  nonzero. Include that diagnostic when reporting the problem, without guest data.
-
-The full implementation requirements are in [docs/PRD.md](docs/PRD.md).

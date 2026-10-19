@@ -285,53 +285,47 @@ class ApartmentBookingCLI:
     # Help & Tables
     # ------------------------------------------------------------------
 
-    def cmd_help(self) -> None:
-        """Display available commands specific to the active role."""
-        current = self.role.title() if self.role else "None"
-        self._print("\n" + "=" * 78)
-        self._print(f"AVAILABLE COMMANDS (Current Role: {current})")
-        self._print("Tip: Press the TAB key to autocomplete commands and apartment names!")
-        self._print("=" * 78)
+    def _print_manager_commands(self) -> None:
+        self._print("\nSystem Manager Commands:")
+        self._print(
+            "  apartment add      - Add a new apartment (name, country, city, street & house no., max people, price/night EUR)"
+        )
+        self._print(
+            "  apartment update   - Update the price per night (EUR) of an apartment"
+        )
+        self._print(
+            "  apartment remove   - Remove an apartment by entering its name"
+        )
+        self._print(
+            "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
+        )
+        self._print(
+            "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
+        )
 
-        if self.role == ROLE_MANAGER:
-            self._print("\nSystem Manager Commands:")
-            self._print(
-                "  apartment add      - Add a new apartment (name, country, city, street & house no., max people, price/night EUR)"
-            )
-            self._print(
-                "  apartment update   - Update the price per night (EUR) of an apartment"
-            )
-            self._print(
-                "  apartment remove   - Remove an apartment by entering its name"
-            )
-            self._print(
-                "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
-            )
-            self._print(
-                "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
-            )
-        else:
-            self._print("\nApartment Booker Commands:")
-            self._print(
-                "  booking create     - Create a booking (apartment, dates, your name, number of people)"
-            )
-            self._print(
-                "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
-            )
-            self._print(
-                "  booking change     - Change an existing booking's date range and number of people"
-            )
-            self._print(
-                "  booking cancel     - Cancel a booking by apartment name and date range"
-            )
-            self._print(
-                "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
-            )
-            self._print(
-                "  apartment search   - Search available apartments by date range & people, then book [alias: booking search]"
-            )
+    def _print_booker_commands(self) -> None:
+        self._print("\nApartment Booker Commands:")
+        self._print(
+            "  booking create     - Create a booking (apartment, dates, your name, number of people)"
+        )
+        self._print(
+            "  booking view       - View all bookings together with the booked apartment [alias: booking list]"
+        )
+        self._print(
+            "  booking change     - Change an existing booking's date range and number of people"
+        )
+        self._print(
+            "  booking cancel     - Cancel a booking by apartment name and date range"
+        )
+        self._print(
+            "  apartment view     - View all apartments (without bookings) [alias: apartment list]"
+        )
+        self._print(
+            "  apartment search   - Search available apartments by date range & people, then book [alias: booking search]"
+        )
 
-        self._print("\nGeneral Commands:")
+    def _print_general_commands(self) -> None:
+        self._print("\nGeneral Commands (Both Roles):")
         self._print(
             "  help               - Show all available commands for your current role"
         )
@@ -341,6 +335,32 @@ class ApartmentBookingCLI:
         self._print(
             "  exit               - Exit the application [alias: quit]"
         )
+
+    def print_all_commands_overview(self) -> None:
+        """Display an overview of all commands for both roles when starting the program."""
+        self._print("\n" + "=" * 78)
+        self._print("OVERVIEW OF ALL COMMANDS (BOTH ROLES)")
+        self._print("Tip: Press the TAB key to autocomplete commands and apartment names!")
+        self._print("=" * 78)
+        self._print_manager_commands()
+        self._print_booker_commands()
+        self._print_general_commands()
+        self._print("=" * 78)
+
+    def cmd_help(self) -> None:
+        """Display available commands specific to the active role."""
+        current = self.role.title() if self.role else "None"
+        self._print("\n" + "=" * 78)
+        self._print(f"AVAILABLE COMMANDS (Current Role: {current})")
+        self._print("Tip: Press the TAB key to autocomplete commands and apartment names!")
+        self._print("=" * 78)
+
+        if self.role == ROLE_MANAGER:
+            self._print_manager_commands()
+        else:
+            self._print_booker_commands()
+
+        self._print_general_commands()
         self._print("=" * 78)
 
     def _print_dynamic_table(
@@ -750,9 +770,10 @@ class ApartmentBookingCLI:
 
     def run(self) -> None:
         """Start the interactive console session."""
-        self._print("=" * 60)
-        self._print("       WELCOME TO THE APARTMENT BOOKING SYSTEM")
-        self._print("=" * 60)
+        self._print("=" * 78)
+        self._print("                   WELCOME TO THE APARTMENT BOOKING SYSTEM")
+        self._print("=" * 78)
+        self.print_all_commands_overview()
 
         if not self.ask_role():
             return

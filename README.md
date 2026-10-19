@@ -8,33 +8,46 @@ A console-based Apartment Booking System written in Python with persistent SQLit
 
 ```mermaid
 flowchart LR
-    Booker["Apartment Booker<br/>(CLI role)"]
-    Manager["System Manager<br/>(CLI role)"]
-    Booking["Booking"]
-    Apartment["Apartment"]
-    BookerName["Booker name"]
-    StayPeriod["Stay period<br/>(start and end dates)"]
-    GuestCount["Number of guests"]
-    Capacity["Maximum capacity"]
-    NightlyPrice["Price per night"]
+    classDef concept fill:#ffffff,stroke:#000000,stroke-width:2px,color:#000000;
 
-    Booker -->|creates, changes, or cancels| Booking
+    Booker("Apartment Booker"):::concept
+    Manager("System Manager"):::concept
+    Search("Search"):::concept
+    Booking("Booking"):::concept
+    Apartment("Apartment"):::concept
+    DateRange("Date Range"):::concept
+    Availability("Availability"):::concept
+    NumPeople("Number of People"):::concept
+    MaxCapacity("Max Capacity"):::concept
+    PricePerNight("Price per Night (EUR)"):::concept
+    TotalPrice("Total Price (EUR)"):::concept
+    Address("Address (Country, City, Street)"):::concept
+
+    Booker -->|books| Booking
+    Booker -->|performs| Search
+    Search -->|requires| NumPeople
+    Search -->|creates| Booking
+
+    Booking -->|is for| Apartment
+    Booking -->|spans| DateRange
+    Booking -->|requires| Availability
+    Booking -->|calculates| TotalPrice
+    Booking -->|specifies| NumPeople
+
+    DateRange -->|checked against| Availability
+    DateRange -->|determines| TotalPrice
+    NumPeople -->|checked against| MaxCapacity
+
     Manager -->|manages| Apartment
-    Booking -->|is for one; an apartment can have multiple bookings over time| Apartment
-    Booking -->|records| BookerName
-    Booking -->|covers| StayPeriod
-    Booking -->|records| GuestCount
-    Apartment -->|has| Capacity
-    Apartment -->|has| NightlyPrice
+    Manager -->|updates| PricePerNight
+
+    Apartment -->|has| Availability
+    Apartment -->|costs| PricePerNight
+    Apartment -->|has| MaxCapacity
+    Apartment -->|has| Address
+
+    PricePerNight -->|determines| TotalPrice
 ```
-
-**Business rules:**
-- The number of guests in a booking must not exceed the apartment's maximum capacity.
-- Bookings for the same apartment must not overlap. A check-out date may be the next booking's check-in date.
-- The end date must be after the start date, and both dates must be valid calendar dates.
-- The displayed total price is calculated from the number of nights and the apartment's current price per night; it is not stored as a separate booking value.
-
-The booker and system manager are CLI roles, not user accounts stored by the system.
 
 ---
 

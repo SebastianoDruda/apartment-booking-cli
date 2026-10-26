@@ -3,6 +3,13 @@
 This file records named checkpoints of the project. Checkpoint names describe
 project milestones and do not imply semantic versioning or production readiness.
 
+## Unreleased
+
+- Added explicit macOS and Windows launch, interpreter-check and test commands,
+  including optional virtual-environment instructions and Windows fallback commands.
+- Reviewed the repository layout and documented why the existing filenames,
+  launchers and database location are retained; application functionality is unchanged.
+
 ## [Checkpoint 01] — 2026-10-26
 
 Tag: `checkpoint-01`.

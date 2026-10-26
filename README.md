@@ -59,39 +59,88 @@ git clone https://github.com/SebastianoDruda/apartment-booking-cli.git
 cd apartment-booking-cli
 ```
 
-Check your interpreter:
-
-```bash
-python --version
-python -c "import sqlite3; print(sqlite3.sqlite_version)"
-```
-
-On macOS/Linux, use `python3` if `python` is unavailable or selects another version.
-On Windows, `py -3` is another option. Use the same interpreter for running the
-application and its tests.
-
-There is no dependency installation step. A virtual environment is optional:
-
-```bash
-python -m venv .venv
-```
-
-Activate it with `source .venv/bin/activate` on macOS/Linux or
-`.venv\Scripts\Activate.ps1` in PowerShell. It contains no required third-party packages.
+There is no dependency installation step. The commands below run directly with
+Python; a virtual environment is optional.
 
 ## Starting the application
 
-From the repository root:
+Open a terminal **in the repository root**, the folder containing `main.py` and
+`README.md`. If you downloaded a ZIP, extract it first: the folder may be named
+`apartment-booking-cli-main` instead of `apartment-booking-cli`. In VS Code, open
+that folder and choose **Terminal → New Terminal**.
+
+### MacBook / macOS
+
+In Terminal or the VS Code integrated terminal, check Python and start the app:
 
 ```bash
+python3 --version
+python3 -c "import sqlite3; print(sqlite3.sqlite_version)"
+python3 main.py
+```
+
+The reported Python version must be **3.10 or newer**. The alternate launcher is:
+
+```bash
+python3 src/main.py
+```
+
+If your terminal is in a different folder, first use
+`cd "/full/path/to/apartment-booking-cli"`, replacing the example with the actual
+folder path. Keep the quotes if the path contains spaces. The same commands work
+on Linux with a compatible Python installation.
+
+### Windows
+
+In PowerShell, Command Prompt or the VS Code integrated terminal:
+
+```powershell
+py -3 --version
+py -3 -c "import sqlite3; print(sqlite3.sqlite_version)"
+py -3 main.py
+```
+
+The reported Python version must be **3.10 or newer**. The alternate launcher is:
+
+```powershell
+py -3 src/main.py
+```
+
+If `py` is unavailable but Python is installed and available as `python`, use:
+
+```powershell
+python --version
+python -c "import sqlite3; print(sqlite3.sqlite_version)"
 python main.py
 ```
 
-The existing alternate entry point is also supported:
+Check that this also selects Python 3.10+. If neither `py` nor `python` works,
+install Python 3.10+ with SQLite support and reopen the terminal. If `python` opens
+the Microsoft Store, try `py -3` or select your installed interpreter in VS Code.
+
+### Optional virtual environment
+
+No virtual environment is required, but you can isolate the interpreter locally.
+From the repository root on macOS:
 
 ```bash
-python src/main.py
+python3 -m venv .venv
+source .venv/bin/activate
+python main.py
 ```
+
+From the repository root in Windows PowerShell, you can run the environment's
+interpreter directly, without changing PowerShell's script execution policy:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe main.py
+```
+
+These environments need no third-party packages. Use the same interpreter for
+running the application and its tests.
+
+### Inside the application
 
 Both entry points start the same CLI and use the same root-level database. Startup
 shows an overview of commands, followed by role selection. Choose `1` for Apartment
@@ -235,8 +284,13 @@ Matching prefers case-insensitive prefixes, then substring matches.
 
 ## Repository structure
 
-The application keeps its existing layout; documentation and automation are separate
-from the source files.
+The current layout suits this small CLI: terminal interaction, persistence and tests
+already have distinct locations and descriptive filenames. `main.py` is the short
+root launcher; `src/main.py` contains startup and also supports direct execution.
+Keeping both preserves the documented launch commands. Keeping the database in the
+root preserves its existing location and data. Additional package layers or renamed
+modules are unnecessary at this size; documentation and automation remain separate
+from application code.
 
 ```text
 apartment-booking-cli/
@@ -365,10 +419,30 @@ custom paths are available through the Python `BookingDatabase` constructor.
 
 ## Testing and continuous integration
 
-Run from the repository root:
+Run from the repository root with the interpreter used to start the application.
+
+**MacBook / macOS:**
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Windows:**
+
+```powershell
+py -3 -m unittest discover -s tests -v
+```
+
+If you use `python` instead, including an activated virtual environment:
 
 ```bash
 python -m unittest discover -s tests -v
+```
+
+For the optional Windows environment without activation:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
 No test dependencies need installing. The current suite contains **9 tests** across:
@@ -379,11 +453,13 @@ No test dependencies need installing. The current suite contains **9 tests** acr
 | `TestTabAutocompletion` | Matching, completion cycling and character-input rendering using simulated keystrokes. |
 | `TestApartmentBookingCLI` | Complete command workflows, role-specific help and dynamic table alignment. |
 
-For one test class:
+For one test class on macOS:
 
 ```bash
-python -m unittest discover -s tests -p test_booking_system.py -k TestBookingDatabase -v
+python3 -m unittest discover -s tests -p test_booking_system.py -k TestBookingDatabase -v
 ```
+
+On Windows, replace `python3` with `py -3` (or your chosen Python interpreter).
 
 [GitHub Actions](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
 runs this same suite on pushes and pull requests to `main`, and through manual

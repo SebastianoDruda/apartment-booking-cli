@@ -6,14 +6,24 @@ The application uses Python 3.10+ and the standard library only.
 ## Local setup
 
 Follow the [README](README.md#requirements-and-installation), then run the existing
-suite from the repository root before making changes:
+suite from the repository root before making changes.
+
+On MacBook / macOS:
 
 ```bash
-python -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -v
 ```
 
-Use `python3` or `py -3` instead if needed for your local Python installation.
-No package installation is required.
+On Windows:
+
+```powershell
+py -3 -m unittest discover -s tests -v
+```
+
+If your selected interpreter is available as `python`, use that instead. See the
+[platform-specific launch instructions](README.md#starting-the-application) for
+running the app and using an optional virtual environment. No package installation
+is required.
 
 ## Branch workflow
 

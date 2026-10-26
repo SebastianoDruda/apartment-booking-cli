@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import calendar
+import math
 import re
 import sqlite3
+from contextlib import contextmanager
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "apartment_booking.db"
 
@@ -90,6 +92,25 @@ def format_address(country: str, city: str, street_and_number: str) -> str:
     return f"{clean_country}, {clean_city}, {clean_street}"
 
 
+def validate_price(value: float) -> float:
+    """Return a finite, positive nightly price rounded to two decimal places."""
+    price = float(value)
+    if not math.isfinite(price):
+        raise ValueError("Price per night must be a finite number.")
+    price = round(price, 2)
+    if price <= 0:
+        raise ValueError("Price per night must be greater than 0 EUR after rounding.")
+    return price
+
+
+def calculate_total_price(nights: int, price_per_night: float) -> float:
+    """Calculate a total without allowing floating-point overflow."""
+    total = nights * validate_price(price_per_night)
+    if not math.isfinite(total):
+        raise ValueError("Total price is too large. Use a lower nightly price or a shorter stay.")
+    return round(total, 2)
+
+
 class BookingDatabase:
     """SQLite persistence and validation for apartments and bookings."""
 
@@ -113,6 +134,18 @@ class BookingDatabase:
     def _close_if_needed(self, conn: sqlite3.Connection) -> None:
         if self._persistent_conn is None:
             conn.close()
+
+    @contextmanager
+    def _write_connection(self) -> Iterator[sqlite3.Connection]:
+        """Keep validation and writes atomic, rolling back on any failure."""
+        conn = self._get_connection()
+        try:
+            with conn:
+                # Reserve the writer before reading availability or existing records.
+                conn.execute("BEGIN IMMEDIATE;")
+                yield conn
+        finally:
+            self._close_if_needed(conn)
 
     def close(self) -> None:
         """Close persistent in-memory connection if open."""
@@ -168,14 +201,10 @@ class BookingDatabase:
             raise ValueError("Apartment address cannot be empty.")
         if int(max_people) <= 0:
             raise ValueError("Maximum number of people must be at least 1.")
-        if float(price_per_night) <= 0:
-            raise ValueError("Price per night must be greater than 0 EUR.")
-
         max_people_int = int(max_people)
-        price_float = round(float(price_per_night), 2)
+        price_float = validate_price(price_per_night)
 
-        conn = self._get_connection()
-        try:
+        with self._write_connection() as conn:
             existing = conn.execute(
                 "SELECT id FROM apartments WHERE name = ? COLLATE NOCASE;",
                 (clean_name,),
@@ -183,15 +212,14 @@ class BookingDatabase:
             if existing is not None:
                 raise ValueError(f"Apartment '{clean_name}' already exists.")
 
-            with conn:
-                cursor = conn.execute(
-                    """
-                    INSERT INTO apartments (name, address, max_people, price_per_night)
-                    VALUES (?, ?, ?, ?);
-                    """,
-                    (clean_name, clean_address, max_people_int, price_float),
-                )
-                apartment_id = cursor.lastrowid
+            cursor = conn.execute(
+                """
+                INSERT INTO apartments (name, address, max_people, price_per_night)
+                VALUES (?, ?, ?, ?);
+                """,
+                (clean_name, clean_address, max_people_int, price_float),
+            )
+            apartment_id = cursor.lastrowid
 
             return {
                 "id": apartment_id,
@@ -200,21 +228,15 @@ class BookingDatabase:
                 "max_people": max_people_int,
                 "price_per_night": price_float,
             }
-        finally:
-            self._close_if_needed(conn)
 
     def update_apartment_price(self, name: str, new_price_per_night: float) -> dict[str, Any]:
         """Update the price per night (EUR) of an existing apartment."""
         clean_name = name.strip()
         if not clean_name:
             raise ValueError("Apartment name cannot be empty.")
-        if float(new_price_per_night) <= 0:
-            raise ValueError("New price per night must be greater than 0 EUR.")
+        price_float = validate_price(new_price_per_night)
 
-        price_float = round(float(new_price_per_night), 2)
-
-        conn = self._get_connection()
-        try:
+        with self._write_connection() as conn:
             row = conn.execute(
                 """
                 SELECT id, name, address, max_people, price_per_night
@@ -227,11 +249,10 @@ class BookingDatabase:
                 raise ValueError(f"Apartment '{clean_name}' does not exist.")
 
             old_price = float(row["price_per_night"])
-            with conn:
-                conn.execute(
-                    "UPDATE apartments SET price_per_night = ? WHERE id = ?;",
-                    (price_float, row["id"]),
-                )
+            conn.execute(
+                "UPDATE apartments SET price_per_night = ? WHERE id = ?;",
+                (price_float, row["id"]),
+            )
 
             return {
                 "id": row["id"],
@@ -241,8 +262,6 @@ class BookingDatabase:
                 "old_price_per_night": old_price,
                 "price_per_night": price_float,
             }
-        finally:
-            self._close_if_needed(conn)
 
     def remove_apartment(self, name: str) -> dict[str, Any]:
         """Remove an apartment (and its bookings) by name."""
@@ -250,8 +269,7 @@ class BookingDatabase:
         if not clean_name:
             raise ValueError("Apartment name cannot be empty.")
 
-        conn = self._get_connection()
-        try:
+        with self._write_connection() as conn:
             row = conn.execute(
                 """
                 SELECT id, name, address, max_people, price_per_night
@@ -263,12 +281,9 @@ class BookingDatabase:
             if row is None:
                 raise ValueError(f"Apartment '{clean_name}' does not exist.")
 
-            with conn:
-                conn.execute("DELETE FROM apartments WHERE id = ?;", (row["id"],))
+            conn.execute("DELETE FROM apartments WHERE id = ?;", (row["id"],))
 
             return dict(row)
-        finally:
-            self._close_if_needed(conn)
 
     def get_apartment_by_name(self, name: str) -> dict[str, Any] | None:
         """Retrieve a single apartment by name (case-insensitive)."""
@@ -366,8 +381,7 @@ class BookingDatabase:
         if people_int <= 0:
             raise ValueError("Number of people must be at least 1.")
 
-        conn = self._get_connection()
-        try:
+        with self._write_connection() as conn:
             apt = conn.execute(
                 """
                 SELECT id, name, address, max_people, price_per_night
@@ -391,17 +405,17 @@ class BookingDatabase:
                     "(dates overlap with an existing booking)."
                 )
 
-            with conn:
-                cursor = conn.execute(
-                    """
-                    INSERT INTO bookings (apartment_id, booker_name, start_date, end_date, num_people)
-                    VALUES (?, ?, ?, ?, ?);
-                    """,
-                    (apt["id"], clean_booker, start_iso, end_iso, people_int),
-                )
-                booking_id = cursor.lastrowid
+            total_price = calculate_total_price(nights, apt["price_per_night"])
 
-            total_price = round(nights * float(apt["price_per_night"]), 2)
+            cursor = conn.execute(
+                """
+                INSERT INTO bookings (apartment_id, booker_name, start_date, end_date, num_people)
+                VALUES (?, ?, ?, ?, ?);
+                """,
+                (apt["id"], clean_booker, start_iso, end_iso, people_int),
+            )
+            booking_id = cursor.lastrowid
+
             return {
                 "id": booking_id,
                 "apartment_id": apt["id"],
@@ -416,8 +430,6 @@ class BookingDatabase:
                 "num_people": people_int,
                 "total_price": total_price,
             }
-        finally:
-            self._close_if_needed(conn)
 
     def get_booking(
         self, apartment_name: str, start_date_str: str, end_date_str: str
@@ -453,7 +465,7 @@ class BookingDatabase:
                 return None
             result = dict(row)
             result["nights"] = nights
-            result["total_price"] = round(nights * float(row["price_per_night"]), 2)
+            result["total_price"] = calculate_total_price(nights, row["price_per_night"])
             return result
         finally:
             self._close_if_needed(conn)
@@ -479,8 +491,7 @@ class BookingDatabase:
         if people_int <= 0:
             raise ValueError("Number of people must be at least 1.")
 
-        conn = self._get_connection()
-        try:
+        with self._write_connection() as conn:
             row = conn.execute(
                 """
                 SELECT
@@ -527,17 +538,17 @@ class BookingDatabase:
                     f"{new_start_iso} to {new_end_iso} (dates overlap with another booking)."
                 )
 
-            with conn:
-                conn.execute(
-                    """
-                    UPDATE bookings
-                    SET start_date = ?, end_date = ?, num_people = ?
-                    WHERE id = ?;
-                    """,
-                    (new_start_iso, new_end_iso, people_int, row["id"]),
-                )
+            total_price = calculate_total_price(new_nights, row["price_per_night"])
 
-            total_price = round(new_nights * float(row["price_per_night"]), 2)
+            conn.execute(
+                """
+                UPDATE bookings
+                SET start_date = ?, end_date = ?, num_people = ?
+                WHERE id = ?;
+                """,
+                (new_start_iso, new_end_iso, people_int, row["id"]),
+            )
+
             return {
                 "id": row["id"],
                 "apartment_id": row["apartment_id"],
@@ -555,8 +566,6 @@ class BookingDatabase:
                 "num_people": people_int,
                 "total_price": total_price,
             }
-        finally:
-            self._close_if_needed(conn)
 
     def cancel_booking(
         self, apartment_name: str, start_date_str: str, end_date_str: str
@@ -568,8 +577,7 @@ class BookingDatabase:
 
         start_iso, end_iso, nights = validate_date_range(start_date_str, end_date_str)
 
-        conn = self._get_connection()
-        try:
+        with self._write_connection() as conn:
             row = conn.execute(
                 """
                 SELECT
@@ -598,15 +606,12 @@ class BookingDatabase:
                     f"from {start_iso} to {end_iso}."
                 )
 
-            with conn:
-                conn.execute("DELETE FROM bookings WHERE id = ?;", (row["id"],))
+            conn.execute("DELETE FROM bookings WHERE id = ?;", (row["id"],))
 
             result = dict(row)
             result["nights"] = nights
-            result["total_price"] = round(nights * float(row["price_per_night"]), 2)
+            result["total_price"] = calculate_total_price(nights, row["price_per_night"])
             return result
-        finally:
-            self._close_if_needed(conn)
 
     def list_bookings(self) -> list[dict[str, Any]]:
         """Return all bookings together with their booked apartment details."""
@@ -638,7 +643,7 @@ class BookingDatabase:
                 end_dt = datetime.strptime(item["end_date"], "%Y-%m-%d").date()
                 nights = max((end_dt - start_dt).days, 1)
                 item["nights"] = nights
-                item["total_price"] = round(nights * float(item["price_per_night"]), 2)
+                item["total_price"] = calculate_total_price(nights, item["price_per_night"])
                 results.append(item)
             return results
         finally:
@@ -676,7 +681,7 @@ class BookingDatabase:
             for row in rows:
                 item = dict(row)
                 item["nights"] = nights
-                item["total_price"] = round(nights * float(item["price_per_night"]), 2)
+                item["total_price"] = calculate_total_price(nights, item["price_per_night"])
                 item["start_date"] = start_iso
                 item["end_date"] = end_iso
                 results.append(item)

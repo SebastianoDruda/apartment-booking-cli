@@ -5,6 +5,20 @@ project milestones and do not imply semantic versioning or production readiness.
 
 ## Unreleased
 
+- Reject non-finite nightly prices and prices that round to zero in both the CLI
+  and database layer; reject overflowing totals before creating/changing bookings.
+- Keep validation and writes in one immediate SQLite transaction to prevent
+  overlapping reservations from simultaneous application writers; roll back failures.
+- Report expected SQLite operational/integrity failures at the command prompt;
+  startup failures exit cleanly with status 1. Unexpected programming errors still propagate.
+- Close the database when the application exits, including exceptional exits.
+- Add 13 regression tests, bringing the suite to 22 tests; original workflow tests remain unchanged.
+- Stop tracking the runtime database; keep its path/schema unchanged and preserve
+  local data. New clones create an empty database on first run. Existing checkouts
+  must back up the formerly tracked file before pulling this change (see README).
+- Keep commands, prompts, roles, aliases, date rules and current-price booking totals
+  unchanged. Checkpoint 01 remains the original release; no migration is required.
+
 - Added explicit macOS and Windows launch, interpreter-check and test commands,
   including optional virtual-environment instructions and Windows fallback commands.
 - Reviewed the repository layout and documented why the existing filenames,

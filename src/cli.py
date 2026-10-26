@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 import sys
 from typing import Callable, Sequence, TextIO
 
@@ -21,10 +22,21 @@ from src.database import (
     format_address,
     parse_date,
     validate_date_range,
+    validate_price,
 )
 
 ROLE_BOOKER = "apartment booker"
 ROLE_MANAGER = "system manager"
+
+
+def database_error_message(error: sqlite3.Error) -> str:
+    """Explain expected storage failures without exposing a traceback to the user."""
+    return (
+        f"[Error] Database operation failed: {error}. "
+        "Close other database writers, check that the database folder is writable, "
+        "and try again."
+    )
+
 
 MANAGER_COMMAND_COMPLETIONS = [
     "apartment add",
@@ -232,9 +244,7 @@ class ApartmentBookingCLI:
             val = float(normalized)
         except ValueError as exc:
             raise ValueError("Price per night must be a valid number (e.g., 85 or 85.50).") from exc
-        if val <= 0:
-            raise ValueError("Price per night must be greater than 0 EUR.")
-        return round(val, 2)
+        return validate_price(val)
 
     # ------------------------------------------------------------------
     # Role Selection
@@ -800,5 +810,7 @@ class ApartmentBookingCLI:
                     break
             except ValueError as err:
                 self._print(f"[Error] {err}")
+            except (sqlite3.OperationalError, sqlite3.IntegrityError) as err:
+                self._print(database_error_message(err))
             except (EOFError, KeyboardInterrupt):
                 self._print("\n[Cancelled] Operation aborted.")

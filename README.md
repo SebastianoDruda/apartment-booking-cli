@@ -11,6 +11,10 @@ library: no external packages, database server or web service are required.
  · **Storage:** local SQLite
  · **Interface:** interactive terminal in English
 
+`main` includes fixes after Checkpoint 01; the release tag remains unchanged.
+**Updating an existing checkout?** Read the [database upgrade instructions](#database-location-backup-and-reset)
+before pulling: older revisions tracked the database file in Git.
+
 ## Contents
 
 - [Features](#features)
@@ -260,9 +264,11 @@ when creating the booking. At the search-result selection prompt, Enter, `no`, `
 - Capacity and guest counts must be positive whole numbers; bookings cannot exceed
   apartment capacity.
 - The CLI accepts prices such as `120`, `120.50`, `120,50` and `120 €`, normalises
-  the decimal separator and rounds to two decimal places. Prices must be positive.
+  the decimal separator and rounds to two decimal places. Prices must be finite and
+  remain positive after rounding; `nan`, infinity and values that round to zero are rejected.
 - Nights are the difference between check-out and check-in; totals are calculated
-  as `round(nights * price_per_night, 2)` in EUR.
+  as `round(nights * price_per_night, 2)` in EUR. Totals that overflow to infinity
+  are rejected before a booking is created or changed.
 - **Booking prices are not locked in.** Bookings do not store a historical nightly
   price: viewing them uses the apartment's current price. Updating that price also
   changes displayed totals for existing bookings.
@@ -302,7 +308,7 @@ apartment-booking-cli/
 ├── README.md                      # Setup, usage, architecture and maintenance
 ├── CHANGELOG.md                   # Checkpoint release history
 ├── CONTRIBUTING.md                # Contributor workflow and checks
-├── apartment_booking.db           # Existing tracked SQLite database
+├── apartment_booking.db           # Local SQLite database, created on first run (ignored)
 ├── domain_concept_map.png         # Existing domain diagram image
 ├── main.py                        # Root launcher
 ├── src/
@@ -311,7 +317,8 @@ apartment-booking-cli/
 │   ├── cli.py                      # Prompts, roles, commands and output formatting
 │   └── database.py                 # SQLite persistence and business validation
 └── tests/
-    └── test_booking_system.py      # Database, CLI and completion tests
+    ├── test_booking_system.py      # Original database, CLI and completion tests
+    └── test_robustness.py          # Prices, atomic writes and storage-error regressions
 ```
 
 ## Architecture and data model
@@ -337,6 +344,11 @@ Foreign keys are enabled on application connections. Tables are created with
 `CREATE TABLE IF NOT EXISTS` when the database is opened. There is no schema migration
 framework. Dates are stored as ISO text; nights and total prices are derived values.
 Availability, date validity and apartment-capacity checks are implemented in Python.
+Write operations use `BEGIN IMMEDIATE` to keep their reads, validation and changes
+inside one transaction. A second writer waits before checking availability, so
+simultaneous booking creation/changes through this application cannot both reserve
+the same dates. Failed operations roll back; the existing schema is unchanged.
+If SQLite's lock timeout is reached, the CLI reports the error and lets you retry.
 
 ## Domain concept map
 
@@ -394,26 +406,39 @@ The default path is resolved relative to the source files:
 working directory. Both launchers use this path. Successful operations commit to
 SQLite immediately; restarting preserves the data.
 
-**This repository already tracks `apartment_booking.db`.** A clone can therefore
-contain existing records; it is not guaranteed to start empty. This release preserves
-that file unchanged. Local use may make `git status` report database changes.
+**The current branch keeps `apartment_booking.db` local and ignored by Git.**
+New clones start with an empty database created on first launch. Existing local
+databases use the same path and schema; no data migration or reset is required.
+
+**Upgrading from Checkpoint 01 or an older checkout:** those revisions tracked the
+database. Before `git pull` or switching revisions, close the application and back
+up `apartment_booking.db` using the command below. Git can remove an unchanged
+tracked file when applying the commit that stops tracking it, or refuse the update
+if it has local modifications. Preserve your backup before resolving that situation.
+After updating, restore the backup to `apartment_booking.db` before launching if you
+want to retain your records. Do not use a hard reset to resolve database changes.
+
+Stopping tracking does not erase the database from older commits or the Checkpoint 01
+source archive. Keep future local bookings out of Git; the existing release is unchanged.
 
 Before a reset or data-changing experiment, close every application instance and
-make a backup. From the repository root, this creates a timestamped copy:
+make a backup. From the repository root on macOS, this creates a timestamped copy:
 
 ```bash
-python -c "from datetime import datetime; from shutil import copy2; copy2('apartment_booking.db', 'apartment_booking.backup-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.db')"
+python3 -c "from datetime import datetime; from shutil import copy2; copy2('apartment_booking.db', 'apartment_booking.backup-' + datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.db')"
 ```
+
+On Windows, use the same command with `py -3` instead of `python3` (or `python`
+if that is your selected interpreter). Keep this backup outside Git.
 
 To start empty, keep your backup and move the working `apartment_booking.db` out of
 the repository while the application is closed. The next launch creates an empty
 database automatically. To restore, close the application and copy your chosen backup
 back to `apartment_booking.db`, preserving the current file first if you need it.
 
-The ignore rules exclude new local `.db` files, backups and SQLite sidecar files.
-They **do not untrack the existing database**. Review `git status` before committing;
-keep personal booking data and local database experiments out of unrelated commits.
-The tests use in-memory or temporary databases and do not modify the bundled file.
+The ignore rules exclude local `.db` files, backups and SQLite sidecar files.
+Review `git status` before committing and do not force-add personal booking data.
+The tests use in-memory or temporary databases and do not modify your local file.
 There are no CLI options or environment variables for choosing a database path;
 custom paths are available through the Python `BookingDatabase` constructor.
 
@@ -445,13 +470,16 @@ For the optional Windows environment without activation:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-No test dependencies need installing. The current suite contains **9 tests** across:
+No test dependencies need installing. The current suite contains **22 tests** across:
 
 | Test class | Coverage |
 | --- | --- |
 | `TestBookingDatabase` | Calendar validation, apartment operations and persistence, booking creation, overlap/capacity checks, booking changes/cancellation and availability search. |
 | `TestTabAutocompletion` | Matching, completion cycling and character-input rendering using simulated keystrokes. |
 | `TestApartmentBookingCLI` | Complete command workflows, role-specific help and dynamic table alignment. |
+| `TestPriceValidation` | Invalid/non-finite prices, accepted price formats, CLI recovery, total overflow and unchanged current-price calculations. |
+| `TestAtomicWrites` | Rollback and connection reuse, plus concurrent creation and changes using independent SQLite connections. |
+| `TestDatabaseErrorHandling` | Recoverable storage errors, actual database locking, startup failure, cleanup and propagation of programming errors. |
 
 For one test class on macOS:
 
@@ -479,9 +507,9 @@ These automated checks do not replace manual testing of real-terminal completion
 | Invalid date, overlap or insufficient capacity | Check the actual calendar, ensure check-out follows check-in, inspect bookings, and select dates/capacity that fit. |
 | Apartment already exists | Names are unique under SQLite `NOCASE`; view existing apartments or use another name. |
 | Booking cannot be found for change/cancellation | Use the apartment name and exact current start/end dates, including any previous changes. |
-| Database is locked or read-only | Close other writers and ensure the project folder/database are writable. Relaunch after the other connection has closed. |
+| Database is locked or read-only | The CLI reports the failure and returns to the prompt. Close other writers or fix folder/database permissions, then retry. A startup failure prints a message and exits with status 1. |
 | A booking total changed | Totals use the apartment's current nightly price; they are recalculated when viewed. |
-| Git reports `apartment_booking.db` modified | Local application use changes this tracked file. Preserve any needed data and avoid staging it with documentation/source changes. |
+| Git reports `apartment_booking.db` modified | You may still be on an older revision that tracks it. Follow the database upgrade/backup instructions before updating; current `main` ignores it. |
 
 ## Current scope and limitations
 
@@ -495,10 +523,11 @@ payment processing or invoices. Dates have no time-of-day/time-zone handling and
 future-only restriction. Apartment updates change the price only; booking changes
 change dates and guest count only.
 
-Availability checks and writes are separate operations, with no database-level
-constraint preventing overlapping bookings under concurrent writers. The application
-is intended for local, sequential CLI use; it has no multi-user server, automated
-backup, schema migration tooling or production deployment configuration.
+Application write transactions protect booking availability against simultaneous
+CLI writers. Direct SQL writes from other tools can bypass the Python validation;
+there is no database-level overlap constraint. SQLite still allows only one writer
+at a time. The application has no multi-user server, automated backup, schema
+migration tooling or production deployment configuration.
 
 ## Contributing
 

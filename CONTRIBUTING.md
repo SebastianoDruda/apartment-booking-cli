@@ -27,7 +27,9 @@ is required.
 
 ## Branch workflow
 
-Start with a clean working tree. Preserve any local database changes before pulling.
+Start with a clean working tree. When upgrading an older checkout that tracked the
+database, follow the [database backup/upgrade instructions](README.md#database-location-backup-and-reset)
+**before pulling**; the update may remove the formerly tracked file.
 
 ```bash
 git switch main
@@ -56,7 +58,8 @@ change, and record the checks actually performed.
 
 - Keep the existing separation: launchers in `main.py` and `src/main.py`, terminal
   interaction in `src/cli.py`, persistence/business rules in `src/database.py`, and
-  automated checks in `tests/test_booking_system.py`.
+  automated checks in `tests/` (`test_booking_system.py` for the original workflows
+  and `test_robustness.py` for robustness regressions).
 - Preserve existing commands and aliases unless a behaviour change is intentional
   and documented. Avoid unrelated renames, moves, formatting or refactors.
 - Follow the surrounding Python style, type hints and docstrings.
@@ -69,9 +72,11 @@ change, and record the checks actually performed.
 
 ## Data handling
 
-`apartment_booking.db` is already tracked and can change when running the application.
-The `.gitignore` patterns cover new local databases and sidecar files; they do not
-hide changes to this existing tracked file.
+`apartment_booking.db` is local application data and is ignored by Git, along with
+backup databases and SQLite sidecar files. New clones create an empty database on
+first launch. Do not force-add database files. Older revisions, including Checkpoint 01,
+still contain the formerly tracked database; back up existing data before updating
+or switching to/from those revisions.
 
 Use in-memory or temporary databases for tests, following the existing test suite.
 Back up your database before manual experiments. Do not include personal bookings,
@@ -88,6 +93,9 @@ git diff --check
 For CLI behaviour changes, also manually check the affected commands and roles.
 For terminal-input changes, check the relevant real terminals: simulated completion
 tests cannot fully validate Windows `msvcrt` or macOS/Linux `readline` behaviour.
+Keep availability checks and mutations inside the write transaction when changing
+database operations. Retain concurrency and rollback tests; do not replace them
+with mocks that skip SQLite's actual locking behaviour.
 Document platform limitations or checks you could not run.
 
 The GitHub Actions workflow runs the existing suite on Python 3.10 and 3.14 across

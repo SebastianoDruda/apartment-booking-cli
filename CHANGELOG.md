@@ -3,7 +3,11 @@
 This file records named checkpoints of the project. Checkpoint names describe
 project milestones and do not imply semantic versioning or production readiness.
 
-## Unreleased
+## [Checkpoint 02] — 2026-10-26
+
+Tag: `checkpoint-02`.
+
+### Docker and storage configuration
 
 - Add a non-root Docker image, test build target, restricted build context and
   Docker Compose service with an interactive terminal and persistent SQLite volume.
@@ -13,6 +17,8 @@ project milestones and do not imply semantic versioning or production readiness.
 - Add three storage-configuration regressions (25 unit/integration tests total), a
   Docker smoke check and a CI job for container builds and persistence.
 
+### Reliability fixes
+
 - Reject non-finite nightly prices and prices that round to zero in both the CLI
   and database layer; reject overflowing totals before creating/changing bookings.
 - Keep validation and writes in one immediate SQLite transaction to prevent
@@ -20,12 +26,17 @@ project milestones and do not imply semantic versioning or production readiness.
 - Report expected SQLite operational/integrity failures at the command prompt;
   startup failures exit cleanly with status 1. Unexpected programming errors still propagate.
 - Close the database when the application exits, including exceptional exits.
-- Add 13 regression tests, bringing the suite to 22 tests; original workflow tests remain unchanged.
+- Add 13 robustness regressions plus three storage-configuration tests, bringing the
+  full suite to 25 tests; original workflow tests remain unchanged.
+### Compatibility and upgrade notes
+
 - Stop tracking the runtime database; keep its path/schema unchanged and preserve
   local data. New clones create an empty database on first run. Existing checkouts
   must back up the formerly tracked file before pulling this change (see README).
 - Keep commands, prompts, roles, aliases, date rules and current-price booking totals
   unchanged. Checkpoint 01 remains the original release; no migration is required.
+
+### Documentation
 
 - Added explicit macOS and Windows launch, interpreter-check and test commands,
   including optional virtual-environment instructions and Windows fallback commands.
@@ -65,4 +76,5 @@ Tag: `checkpoint-01`.
 - Roles are not authentication; displayed booking totals use current apartment prices.
 - This checkpoint does not add a license or multi-user/concurrent-booking guarantees.
 
+[Checkpoint 02]: https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02
 [Checkpoint 01]: https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01

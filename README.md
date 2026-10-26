@@ -6,12 +6,13 @@ A terminal application for managing apartments, searching availability, and crea
 changing or cancelling bookings. Built with Python and SQLite using only the standard
 library: no external packages, database server or web service are required.
 
-**Release:** [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
+**Release:** [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
  · **Runtime:** Python 3.10+
  · **Storage:** local SQLite
  · **Interface:** interactive terminal in English
 
-`main` includes fixes after Checkpoint 01; the release tag remains unchanged.
+Checkpoint 02 adds Docker Compose and reliability fixes while preserving the terminal
+workflow. The original Checkpoint 01 release remains available.
 **Updating an existing checkout?** Read the [database upgrade instructions](#database-location-backup-and-reset)
 before pulling: older revisions tracked the database file in Git.
 
@@ -693,7 +694,7 @@ These automated checks do not replace manual testing of real-terminal completion
 
 ## Current scope and limitations
 
-Checkpoint 01 captures the existing local CLI. Its roles are a user-interface feature:
+Checkpoint 02 packages the local CLI for direct Python and Docker use. Its roles are a user-interface feature:
 there is no authentication, per-user booking ownership or access isolation. Any user
 can switch roles, and both roles can inspect all bookings. Apartment removal cascades
 to bookings, and deletion operations have no undo.
@@ -718,13 +719,20 @@ preserve the existing source layout unless a restructuring is explicitly agreed.
 
 ## Releases
 
-[Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
-uses the Git tag `checkpoint-01`. It records the existing application together with
-expanded documentation and repository maintenance files. See
-[CHANGELOG.md](CHANGELOG.md) for the release contents.
+[Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
+uses the Git tag `checkpoint-02`. It includes Docker Compose with persistent storage,
+price validation and transaction fixes, 25 automated tests, Docker integration checks,
+and expanded macOS/Windows instructions. See [CHANGELOG.md](CHANGELOG.md) for details.
 
-GitHub provides source archives for the tag; there is no separate executable or
-package to install. Run the downloaded source with Python as described above.
+[Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
+remains available under `checkpoint-01` as the original CLI checkpoint. When upgrading
+from it, follow the [database backup instructions](#database-location-backup-and-reset)
+before updating: Checkpoint 02 no longer tracks the runtime database.
+
+GitHub provides source archives for each tag. Checkpoint 02 includes the Dockerfile
+and Compose configuration; build the image locally using the Docker guide above.
+No prebuilt image is published to a container registry, and no separate executable
+or Python package is required. Direct Python startup remains supported.
 
 ## Authors and licensing
 

@@ -128,7 +128,8 @@ without posting credentials.
 
 ## Release convention
 
-Checkpoint 01 is published as `checkpoint-01` with the title **Checkpoint 01**.
+Checkpoint 02 is published as `checkpoint-02` with the title **Checkpoint 02**.
+Checkpoint 01 remains available as `checkpoint-01`.
 Release tags identify tested commits and should not be moved or overwritten.
 For future releases, update the changelog, verify the selected commit's checks,
 and publish notes describing changes and known limitations. Repository source

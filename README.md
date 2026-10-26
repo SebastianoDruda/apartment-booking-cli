@@ -4,10 +4,12 @@
 
 A terminal application for managing apartments, searching availability, and creating,
 changing or cancelling bookings. Built with Python and SQLite using only the standard
-library: no external packages, database server or web service are required.
+library: no external Python packages, database server or web service are required.
+Run it with **Docker Compose** or directly with **Python**; both use the same
+interactive terminal commands.
 
 **Release:** [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
- · **Runtime:** Python 3.10+
+ · **Run with:** Docker Compose or Python 3.10+
  · **Storage:** local SQLite
  · **Interface:** interactive terminal in English
 
@@ -16,12 +18,45 @@ workflow. The original Checkpoint 01 release remains available.
 **Updating an existing checkout?** Read the [database upgrade instructions](#database-location-backup-and-reset)
 before pulling: older revisions tracked the database file in Git.
 
+## Quick start with Docker
+
+1. Start **Docker Desktop** and wait for its engine to be running. On Windows,
+   use Linux containers. Python does not need to be installed on your computer.
+2. Open Terminal on macOS or PowerShell on Windows in the project folder containing
+   [compose.yaml](compose.yaml) and [Dockerfile](Dockerfile).
+3. Build and start the application using the same commands on either system:
+
+   ```bash
+   docker compose build --pull
+   docker compose run --rm booking
+   ```
+
+4. Choose `1` for Apartment Booker or `2` for System Manager. Type `help` for commands.
+5. Type `exit` to close the session. Next time, run `docker compose run --rm booking` again.
+
+**Your Docker bookings persist between sessions.** They live in the `booking-data`
+volume, separately from the database used when running Python directly. Docker does
+not automatically import your existing local records.
+
+See the [complete Docker guide](#running-with-docker-and-compose) for installation,
+backups, importing existing data, updates and troubleshooting.
+
+Prefer to run without Docker? From the project folder:
+
+| System | Start directly with Python 3.10+ |
+| --- | --- |
+| MacBook / macOS | `python3 main.py` |
+| Windows | `py -3 main.py` (or `python main.py` if that is your installed interpreter) |
+
+See [Starting the application](#starting-the-application) for the full Python instructions.
+
 ## Contents
 
+- [Quick start with Docker](#quick-start-with-docker)
 - [Features](#features)
+- [Running with Docker and Compose](#running-with-docker-and-compose)
 - [Requirements and installation](#requirements-and-installation)
 - [Starting the application](#starting-the-application)
-- [Running with Docker and Compose](#running-with-docker-and-compose)
 - [First booking walkthrough](#first-booking-walkthrough)
 - [Roles and command reference](#roles-and-command-reference)
 - [Input rules and booking behaviour](#input-rules-and-booking-behaviour)
@@ -47,123 +82,24 @@ before pulling: older revisions tracked the database file in Git.
 - Real-calendar validation, capacity checks and overlapping-booking rejection.
 - Persistent SQLite storage and automatically created tables.
 - Contextual command help, terminal completion and dynamically sized output tables.
-- Automated database, CLI integration and completion tests.
-
-## Requirements and installation
-
-For the Docker option, follow [Running with Docker and Compose](#running-with-docker-and-compose);
-you do not need Python installed on your host. The requirements below are for running Python directly.
-
-- **Python 3.10 or newer**, with the standard-library `sqlite3` module.
-- A terminal, such as the VS Code integrated terminal, Terminal on macOS/Linux,
-  or PowerShell on Windows.
-- Git for cloning and contributing. Downloading a source archive is also possible,
-  but archives do not contain Git history or a configured remote.
-- Access to this repository on GitHub; it is currently private.
-
-Clone the repository and enter its root directory:
-
-```bash
-git clone https://github.com/SebastianoDruda/apartment-booking-cli.git
-cd apartment-booking-cli
-```
-
-There is no dependency installation step. The commands below run directly with
-Python; a virtual environment is optional.
-
-## Starting the application
-
-Open a terminal **in the repository root**, the folder containing `main.py` and
-`README.md`. If you downloaded a ZIP, extract it first: the folder may be named
-`apartment-booking-cli-main` instead of `apartment-booking-cli`. In VS Code, open
-that folder and choose **Terminal → New Terminal**.
-
-### MacBook / macOS
-
-In Terminal or the VS Code integrated terminal, check Python and start the app:
-
-```bash
-python3 --version
-python3 -c "import sqlite3; print(sqlite3.sqlite_version)"
-python3 main.py
-```
-
-The reported Python version must be **3.10 or newer**. The alternate launcher is:
-
-```bash
-python3 src/main.py
-```
-
-If your terminal is in a different folder, first use
-`cd "/full/path/to/apartment-booking-cli"`, replacing the example with the actual
-folder path. Keep the quotes if the path contains spaces. The same commands work
-on Linux with a compatible Python installation.
-
-### Windows
-
-In PowerShell, Command Prompt or the VS Code integrated terminal:
-
-```powershell
-py -3 --version
-py -3 -c "import sqlite3; print(sqlite3.sqlite_version)"
-py -3 main.py
-```
-
-The reported Python version must be **3.10 or newer**. The alternate launcher is:
-
-```powershell
-py -3 src/main.py
-```
-
-If `py` is unavailable but Python is installed and available as `python`, use:
-
-```powershell
-python --version
-python -c "import sqlite3; print(sqlite3.sqlite_version)"
-python main.py
-```
-
-Check that this also selects Python 3.10+. If neither `py` nor `python` works,
-install Python 3.10+ with SQLite support and reopen the terminal. If `python` opens
-the Microsoft Store, try `py -3` or select your installed interpreter in VS Code.
-
-### Optional virtual environment
-
-No virtual environment is required, but you can isolate the interpreter locally.
-From the repository root on macOS:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python main.py
-```
-
-From the repository root in Windows PowerShell, you can run the environment's
-interpreter directly, without changing PowerShell's script execution policy:
-
-```powershell
-py -3 -m venv .venv
-.\.venv\Scripts\python.exe main.py
-```
-
-These environments need no third-party packages. Use the same interpreter for
-running the application and its tests.
-
-### Inside the application
-
-Both entry points start the same CLI and use the same root-level database. Startup
-shows an overview of commands, followed by role selection. Choose `1` for Apartment
-Booker or `2` for System Manager. Type `help` to see commands for your active role,
-`role` to switch roles, and `exit` to finish.
-
-Commands such as `apartment add` are entered **inside the running application**;
-they are not shell commands or command-line arguments.
+- Docker Compose startup with an interactive terminal and persistent database volume.
+- Automated database, CLI integration, completion and Docker checks.
 
 ## Running with Docker and Compose
 
 Docker packages Python and this application together. The CLI commands, prompts and
 booking rules are the same. It runs in your terminal, with no browser, web server,
 exposed ports or separate database service.
+
+The configuration is included in this repository:
+
+| File | Purpose |
+| --- | --- |
+| [Dockerfile](Dockerfile) | Builds the non-root Python runtime and the separate test target. |
+| [compose.yaml](compose.yaml) | Defines the `booking` service, interactive terminal and persistent `booking-data` volume. |
+| [.dockerignore](.dockerignore) | Keeps local databases, backups and unrelated files out of the build context. |
+
+Run Compose commands from the project folder; Compose reads `compose.yaml` automatically.
 
 ### 1. Install and start Docker
 
@@ -189,7 +125,7 @@ includes Compose. The commands below use `docker compose` with a space.
 
 Open the folder containing `compose.yaml` and `Dockerfile` in your terminal. You can
 use your existing checkout, or clone it with the Git commands in the installation
-section above. In VS Code, open the project folder and choose **Terminal → New Terminal**.
+section below. In VS Code, open the project folder and choose **Terminal → New Terminal**.
 
 ### 3. Build the image
 
@@ -325,6 +261,116 @@ Docker volume merely to make room for an import without backing up its data firs
 - **No matching manifest / Windows image error:** switch Docker Desktop to Linux containers.
 - **Empty apartment list:** a new Docker volume starts empty; it does not read your
   local Python database. Also check that you are using the same Compose project name.
+
+## Requirements and installation
+
+For the Docker option, follow [Running with Docker and Compose](#running-with-docker-and-compose);
+you do not need Python installed on your host. The requirements below are for running Python directly.
+
+- **Python 3.10 or newer**, with the standard-library `sqlite3` module.
+- A terminal, such as the VS Code integrated terminal, Terminal on macOS/Linux,
+  or PowerShell on Windows.
+- Git for cloning and contributing. Downloading a source archive is also possible,
+  but archives do not contain Git history or a configured remote.
+- Access to this repository on GitHub; it is currently private.
+
+Clone the repository and enter its root directory:
+
+```bash
+git clone https://github.com/SebastianoDruda/apartment-booking-cli.git
+cd apartment-booking-cli
+```
+
+There is no dependency installation step. The commands below run directly with
+Python; a virtual environment is optional.
+
+## Starting the application
+
+Open a terminal **in the repository root**, the folder containing `main.py` and
+`README.md`. If you downloaded a ZIP, extract it first: the folder may be named
+`apartment-booking-cli-main` instead of `apartment-booking-cli`. In VS Code, open
+that folder and choose **Terminal → New Terminal**.
+
+### MacBook / macOS
+
+In Terminal or the VS Code integrated terminal, check Python and start the app:
+
+```bash
+python3 --version
+python3 -c "import sqlite3; print(sqlite3.sqlite_version)"
+python3 main.py
+```
+
+The reported Python version must be **3.10 or newer**. The alternate launcher is:
+
+```bash
+python3 src/main.py
+```
+
+If your terminal is in a different folder, first use
+`cd "/full/path/to/apartment-booking-cli"`, replacing the example with the actual
+folder path. Keep the quotes if the path contains spaces. The same commands work
+on Linux with a compatible Python installation.
+
+### Windows
+
+In PowerShell, Command Prompt or the VS Code integrated terminal:
+
+```powershell
+py -3 --version
+py -3 -c "import sqlite3; print(sqlite3.sqlite_version)"
+py -3 main.py
+```
+
+The reported Python version must be **3.10 or newer**. The alternate launcher is:
+
+```powershell
+py -3 src/main.py
+```
+
+If `py` is unavailable but Python is installed and available as `python`, use:
+
+```powershell
+python --version
+python -c "import sqlite3; print(sqlite3.sqlite_version)"
+python main.py
+```
+
+Check that this also selects Python 3.10+. If neither `py` nor `python` works,
+install Python 3.10+ with SQLite support and reopen the terminal. If `python` opens
+the Microsoft Store, try `py -3` or select your installed interpreter in VS Code.
+
+### Optional virtual environment
+
+No virtual environment is required, but you can isolate the interpreter locally.
+From the repository root on macOS:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python main.py
+```
+
+From the repository root in Windows PowerShell, you can run the environment's
+interpreter directly, without changing PowerShell's script execution policy:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe main.py
+```
+
+These environments need no third-party packages. Use the same interpreter for
+running the application and its tests.
+
+### Inside the application
+
+Both entry points start the same CLI and use the same root-level database. Startup
+shows an overview of commands, followed by role selection. Choose `1` for Apartment
+Booker or `2` for System Manager. Type `help` to see commands for your active role,
+`role` to switch roles, and `exit` to finish.
+
+Commands such as `apartment add` are entered **inside the running application**;
+they are not shell commands or command-line arguments.
 
 ## First booking walkthrough
 

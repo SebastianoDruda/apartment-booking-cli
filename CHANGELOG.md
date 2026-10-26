@@ -5,6 +5,14 @@ project milestones and do not imply semantic versioning or production readiness.
 
 ## Unreleased
 
+- Add a non-root Docker image, test build target, restricted build context and
+  Docker Compose service with an interactive terminal and persistent SQLite volume.
+- Support an optional `APARTMENT_BOOKING_DB_PATH` environment variable for container
+  storage; unset/empty values retain the existing local database path.
+- Document macOS/Windows Docker installation, startup, rebuilds, tests, backup and import.
+- Add three storage-configuration regressions (25 unit/integration tests total), a
+  Docker smoke check and a CI job for container builds and persistence.
+
 - Reject non-finite nightly prices and prices that round to zero in both the CLI
   and database layer; reject overflowing totals before creating/changing bookings.
 - Keep validation and writes in one immediate SQLite transaction to prevent

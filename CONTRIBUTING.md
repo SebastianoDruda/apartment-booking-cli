@@ -25,6 +25,22 @@ If your selected interpreter is available as `python`, use that instead. See the
 running the app and using an optional virtual environment. No package installation
 is required.
 
+## Docker checks
+
+With Docker running, validate container changes using:
+
+```bash
+docker compose config --quiet
+docker build --target test --tag apartment-booking-cli:test .
+docker compose build
+python3 tests/docker_smoke.py
+```
+
+On Windows use `py -3` for the last command. The smoke check uses a random Compose
+project and disposable volume, leaving normal user data alone. Do not run cleanup
+commands with `--volumes` against the user's usual project. See the
+[Docker guide](README.md#running-with-docker-and-compose) for interactive use and backups.
+
 ## Branch workflow
 
 Start with a clean working tree. When upgrading an older checkout that tracked the
@@ -58,8 +74,9 @@ change, and record the checks actually performed.
 
 - Keep the existing separation: launchers in `main.py` and `src/main.py`, terminal
   interaction in `src/cli.py`, persistence/business rules in `src/database.py`, and
-  automated checks in `tests/` (`test_booking_system.py` for the original workflows
-  and `test_robustness.py` for robustness regressions).
+  automated checks in `tests/` (`test_booking_system.py` for the original workflows,
+  `test_robustness.py` for robustness regressions, and `test_database_path.py` for
+  storage configuration). `docker_smoke.py` runs container checks separately.
 - Preserve existing commands and aliases unless a behaviour change is intentional
   and documented. Avoid unrelated renames, moves, formatting or refactors.
 - Follow the surrounding Python style, type hints and docstrings.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import calendar
 import math
+import os
 import re
 import sqlite3
 from contextlib import contextmanager
@@ -11,7 +12,10 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Iterator
 
-DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "apartment_booking.db"
+DEFAULT_DB_PATH = Path(
+    os.environ.get("APARTMENT_BOOKING_DB_PATH")
+    or Path(__file__).resolve().parent.parent / "apartment_booking.db"
+)
 
 _DATE_PATTERNS = (
     # YYYY-MM-DD or YYYY/MM/DD

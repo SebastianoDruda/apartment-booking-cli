@@ -1,0 +1,21 @@
+services:
+  booking:
+    build:
+      context: .
+      target: runtime
+    image: apartment-booking-cli:local
+    stdin_open: true
+    tty: true
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - booking-data:/data
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  booking-data:

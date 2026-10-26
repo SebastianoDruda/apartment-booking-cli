@@ -20,6 +20,7 @@ before pulling: older revisions tracked the database file in Git.
 - [Features](#features)
 - [Requirements and installation](#requirements-and-installation)
 - [Starting the application](#starting-the-application)
+- [Running with Docker and Compose](#running-with-docker-and-compose)
 - [First booking walkthrough](#first-booking-walkthrough)
 - [Roles and command reference](#roles-and-command-reference)
 - [Input rules and booking behaviour](#input-rules-and-booking-behaviour)
@@ -48,6 +49,9 @@ before pulling: older revisions tracked the database file in Git.
 - Automated database, CLI integration and completion tests.
 
 ## Requirements and installation
+
+For the Docker option, follow [Running with Docker and Compose](#running-with-docker-and-compose);
+you do not need Python installed on your host. The requirements below are for running Python directly.
 
 - **Python 3.10 or newer**, with the standard-library `sqlite3` module.
 - A terminal, such as the VS Code integrated terminal, Terminal on macOS/Linux,
@@ -153,6 +157,173 @@ Booker or `2` for System Manager. Type `help` to see commands for your active ro
 
 Commands such as `apartment add` are entered **inside the running application**;
 they are not shell commands or command-line arguments.
+
+## Running with Docker and Compose
+
+Docker packages Python and this application together. The CLI commands, prompts and
+booking rules are the same. It runs in your terminal, with no browser, web server,
+exposed ports or separate database service.
+
+### 1. Install and start Docker
+
+- **MacBook / macOS:** install [Docker Desktop for Mac](https://docs.docker.com/desktop/setup/install/mac-install/),
+  choosing Apple silicon or Intel for your Mac. Open Docker Desktop and wait for its
+  engine to be running.
+- **Windows:** install [Docker Desktop for Windows](https://docs.docker.com/desktop/setup/install/windows-install/)
+  and follow its WSL 2 setup instructions. Start Docker Desktop using **Linux containers**.
+- **Linux:** install Docker Engine and the Docker Compose plugin using the
+  [Docker installation instructions](https://docs.docker.com/engine/install/).
+
+Check the installation in Terminal on macOS or PowerShell on Windows:
+
+```bash
+docker version
+docker compose version
+```
+
+`docker version` must show a working **Server**, not just the client. Docker Desktop
+includes Compose. The commands below use `docker compose` with a space.
+
+### 2. Open the project folder
+
+Open the folder containing `compose.yaml` and `Dockerfile` in your terminal. You can
+use your existing checkout, or clone it with the Git commands in the installation
+section above. In VS Code, open the project folder and choose **Terminal → New Terminal**.
+
+### 3. Build the image
+
+These commands are the same on macOS and Windows:
+
+```bash
+docker compose config --quiet
+docker compose build --pull
+```
+
+The first build downloads the official `python:3.14-slim-bookworm` image. It builds
+for your machine's architecture, including Apple silicon. Subsequent builds can
+reuse cached layers. No account login is needed to build the application itself;
+network access is needed to download the base image.
+
+### 4. Start the interactive CLI
+
+```bash
+docker compose run --rm booking
+```
+
+Choose `1` for Apartment Booker or `2` for System Manager, then use the same commands
+as in a normal Python session. `help`, `role`, Tab completion and `exit` still work.
+Inside the Linux container, completion uses `readline`, including when Docker runs
+on a Windows host.
+
+Use [`docker compose run`](https://docs.docker.com/reference/cli/docker/compose/run/)
+for this interactive application; `docker compose up -d` is not the interactive
+startup command. `--rm` removes the session's container after it exits.
+
+### 5. Exit and return later
+
+Type `exit` inside the application. To start another session:
+
+```bash
+docker compose run --rm booking
+```
+
+Records are stored at `/data/apartment_booking.db` in the Compose **`booking-data`
+named volume**. They survive container removal and image rebuilds because
+[Docker volumes persist separately from containers](https://docs.docker.com/engine/storage/volumes/).
+
+Docker starts with its own empty database. The root-level `apartment_booking.db`
+used by direct Python runs remains separate and is never copied into the image or
+imported automatically. Keep using the same Compose project/directory: changing
+its project name (for example with `-p`) selects a different volume.
+
+### 6. Rebuild after code changes
+
+After updating the source, exit the CLI and run:
+
+```bash
+docker compose build --pull
+docker compose run --rm booking
+```
+
+Source code is copied into the image at build time, so editing local files requires
+a rebuild. Your Docker database is retained.
+
+### 7. Run checks inside Docker
+
+The test target builds the same application environment and runs all 25 tests:
+
+```bash
+docker build --target test --tag apartment-booking-cli:test .
+```
+
+The normal runtime image contains only the application, without tests or local data.
+For maintainers with Python installed, the additional integration check is:
+
+```bash
+python3 tests/docker_smoke.py
+```
+
+On Windows use `py -3 tests/docker_smoke.py`. It uses an isolated, randomly named
+Compose project to check both launchers, database persistence, backup and startup
+errors, then removes **only its own** test containers and volume.
+
+### 8. Back up Docker data
+
+Exit all booking sessions first. After at least one application run has created the
+database, create a stopped service container and copy the database out:
+
+```bash
+docker compose create booking
+docker compose cp booking:/data/apartment_booking.db ./docker-booking-backup-01.db
+```
+
+These commands work in both macOS Terminal and Windows PowerShell. Choose a new
+backup filename each time to avoid overwriting an earlier copy. The stopped service
+container can be removed along with the project's network using:
+
+```bash
+docker compose down
+```
+
+This keeps the named data volume. **Do not add `--volumes` or `-v` to `down` unless
+you intentionally want to delete the Docker database.** Backup files are ignored by Git.
+
+### Optional: import a database before the first Docker session
+
+To start with existing data, close the local application and copy its database to
+`docker-booking-backup-01.db`, or use a backup exported above. Run this **before the
+first application launch in a fresh Compose project**, after building the image.
+It refuses to overwrite an existing Docker database.
+
+From the repository root, in macOS Terminal or Windows PowerShell:
+
+```bash
+docker compose run --rm -T --volume "${PWD}/docker-booking-backup-01.db:/restore.db:ro" booking python -c "import os, sqlite3; from pathlib import Path; p=Path(os.environ['APARTMENT_BOOKING_DB_PATH']); assert not p.exists(), 'Destination database already exists; import cancelled'; source=sqlite3.connect('file:/restore.db?mode=ro', uri=True); destination=sqlite3.connect(p); source.backup(destination); destination.close(); source.close()"
+```
+
+The source backup must exist and be readable. It is mounted read-only and copied
+using SQLite's backup API; the original file is unchanged. Then start the CLI with
+`docker compose run --rm booking`. Import is optional; do not delete an existing
+Docker volume merely to make room for an import without backing up its data first.
+
+### Container configuration and troubleshooting
+
+- The application runs as a non-root user. Compose makes its root filesystem
+  read-only and mounts a writable data volume plus temporary `/tmp` storage.
+- `.dockerignore` allows only source and test files into the build context; local
+  databases, backups, Git metadata and credentials are excluded.
+- `APARTMENT_BOOKING_DB_PATH` selects the database file. The image sets it to
+  `/data/apartment_booking.db`; direct Python runs retain the original root-level
+  default when the variable is unset or empty. A custom parent directory must exist
+  and be writable. Prefer an absolute path; relative paths use the working directory.
+- **Cannot connect to the Docker daemon:** start Docker Desktop and wait for the
+  engine, then retry `docker version`.
+- **No configuration file found:** run commands from the folder containing `compose.yaml`.
+- **Input or Tab does not work:** use `docker compose run --rm booking` in a real
+  terminal. `-T` is intended for piped input/automation, not interactive completion.
+- **No matching manifest / Windows image error:** switch Docker Desktop to Linux containers.
+- **Empty apartment list:** a new Docker volume starts empty; it does not read your
+  local Python database. Also check that you are using the same Compose project name.
 
 ## First booking walkthrough
 
@@ -304,6 +475,9 @@ apartment-booking-cli/
 │   ├── pull_request_template.md    # Review and validation checklist
 │   └── workflows/
 │       └── tests.yml               # Standard-library test suite on GitHub Actions
+├── .dockerignore                  # Allowlist for the Docker build context
+├── Dockerfile                     # Non-root Python runtime and test build target
+├── compose.yaml                   # Interactive CLI and persistent database volume
 ├── .gitignore                     # Local environments, caches and temporary data
 ├── README.md                      # Setup, usage, architecture and maintenance
 ├── CHANGELOG.md                   # Checkpoint release history
@@ -318,7 +492,9 @@ apartment-booking-cli/
 │   └── database.py                 # SQLite persistence and business validation
 └── tests/
     ├── test_booking_system.py      # Original database, CLI and completion tests
-    └── test_robustness.py          # Prices, atomic writes and storage-error regressions
+    ├── test_robustness.py          # Prices, atomic writes and storage-error regressions
+    ├── test_database_path.py       # Optional storage path and launcher compatibility
+    └── docker_smoke.py             # Isolated Docker integration checks (run separately)
 ```
 
 ## Architecture and data model
@@ -439,8 +615,10 @@ back to `apartment_booking.db`, preserving the current file first if you need it
 The ignore rules exclude local `.db` files, backups and SQLite sidecar files.
 Review `git status` before committing and do not force-add personal booking data.
 The tests use in-memory or temporary databases and do not modify your local file.
-There are no CLI options or environment variables for choosing a database path;
-custom paths are available through the Python `BookingDatabase` constructor.
+There are no new CLI options. Set `APARTMENT_BOOKING_DB_PATH` before starting Python
+to select another database file, or pass a path to the `BookingDatabase` constructor.
+An unset or empty environment variable keeps the original root-level path. Docker
+sets this variable to its persistent volume path; see the Docker guide above.
 
 ## Testing and continuous integration
 
@@ -470,7 +648,7 @@ For the optional Windows environment without activation:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-No test dependencies need installing. The current suite contains **22 tests** across:
+No test dependencies need installing. The current suite contains **25 tests** across:
 
 | Test class | Coverage |
 | --- | --- |
@@ -480,6 +658,7 @@ No test dependencies need installing. The current suite contains **22 tests** ac
 | `TestPriceValidation` | Invalid/non-finite prices, accepted price formats, CLI recovery, total overflow and unchanged current-price calculations. |
 | `TestAtomicWrites` | Rollback and connection reuse, plus concurrent creation and changes using independent SQLite connections. |
 | `TestDatabaseErrorHandling` | Recoverable storage errors, actual database locking, startup failure, cleanup and propagation of programming errors. |
+| `TestDatabasePath` | Default-path compatibility, configurable storage across both launchers and missing-directory errors. |
 
 For one test class on macOS:
 
@@ -492,6 +671,7 @@ On Windows, replace `python3` with `py -3` (or your chosen Python interpreter).
 [GitHub Actions](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
 runs this same suite on pushes and pull requests to `main`, and through manual
 workflow dispatch. The matrix uses Python 3.10 and 3.14 on Linux, macOS and Windows.
+A separate Docker job builds/tests the image and checks persistence across containers.
 These automated checks do not replace manual testing of real-terminal completion.
 
 ## Troubleshooting
@@ -527,7 +707,8 @@ Application write transactions protect booking availability against simultaneous
 CLI writers. Direct SQL writes from other tools can bypass the Python validation;
 there is no database-level overlap constraint. SQLite still allows only one writer
 at a time. The application has no multi-user server, automated backup, schema
-migration tooling or production deployment configuration.
+migration tooling or hosted production service. Docker provides a local container
+runtime for the same CLI.
 
 ## Contributing
 

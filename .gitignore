@@ -9,6 +9,9 @@ dist/
 .coverage*
 htmlcov/
 coverage.xml
+# Local databases and SQLite sidecars. Already tracked files remain tracked.
+*.db
+*.db-*
 *.sqlite
 *.sqlite-*
 *.sqlite3

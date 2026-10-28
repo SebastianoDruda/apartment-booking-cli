@@ -413,7 +413,7 @@ class BookingDatabase:
                 (clean_apt_name,),
             ).fetchone()
             if apt is None:
-                raise ValueError(f"Apartment '{clean_apt_name}' does not exist.")
+                raise RecordNotFoundError(f"Apartment '{clean_apt_name}' does not exist.")
 
             if people_int > apt["max_people"]:
                 raise ValueError(
@@ -422,7 +422,7 @@ class BookingDatabase:
                 )
 
             if self._has_overlapping_booking(conn, apt["id"], start_iso, end_iso):
-                raise ValueError(
+                raise BookingConflictError(
                     f"Apartment '{apt['name']}' is not available from {start_iso} to {end_iso} "
                     "(dates overlap with an existing booking)."
                 )
@@ -537,7 +537,7 @@ class BookingDatabase:
             ).fetchone()
 
             if row is None:
-                raise ValueError(
+                raise RecordNotFoundError(
                     f"No booking found for apartment '{clean_apt_name}' "
                     f"from {old_start_iso} to {old_end_iso}."
                 )
@@ -555,7 +555,7 @@ class BookingDatabase:
                 new_end_iso,
                 exclude_booking_id=row["id"],
             ):
-                raise ValueError(
+                raise BookingConflictError(
                     f"Apartment '{row['apartment_name']}' is not available from "
                     f"{new_start_iso} to {new_end_iso} (dates overlap with another booking)."
                 )
@@ -623,7 +623,7 @@ class BookingDatabase:
             ).fetchone()
 
             if row is None:
-                raise ValueError(
+                raise RecordNotFoundError(
                     f"No booking found for apartment '{clean_apt_name}' "
                     f"from {start_iso} to {end_iso}."
                 )

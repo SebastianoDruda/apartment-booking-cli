@@ -192,4 +192,45 @@ def create_app(config: dict | None = None) -> Flask:
     def remove_apartment(name):
         return jsonify(data=get_database().remove_apartment(name))
 
+    @app.get("/api/bookings")
+    def list_bookings():
+        return jsonify(data=get_database().list_bookings())
+
+    @app.post("/api/bookings")
+    def create_booking():
+        values = parameters("apartment_name", "start_date", "end_date", "booker_name", "num_people")
+        result = get_database().create_booking(
+            text_value(values, "apartment_name"), text_value(values, "start_date"),
+            text_value(values, "end_date"), text_value(values, "booker_name"),
+            integer_value(values, "num_people"),
+        )
+        return jsonify(data=result), 201
+
+    @app.patch("/api/bookings")
+    def change_booking():
+        values = parameters("apartment_name", "start_date", "end_date",
+                            "new_start_date", "new_end_date", "num_people")
+        result = get_database().change_booking(
+            text_value(values, "apartment_name"), text_value(values, "start_date"),
+            text_value(values, "end_date"), text_value(values, "new_start_date"),
+            text_value(values, "new_end_date"), integer_value(values, "num_people"),
+        )
+        return jsonify(data=result)
+
+    @app.delete("/api/bookings")
+    def cancel_booking():
+        values = parameters("apartment_name", "start_date", "end_date")
+        return jsonify(data=get_database().cancel_booking(
+            text_value(values, "apartment_name"), text_value(values, "start_date"),
+            text_value(values, "end_date"),
+        ))
+
+    @app.get("/api/availability")
+    def availability():
+        values = parameters("start_date", "end_date", "num_people", query=True)
+        return jsonify(data=get_database().search_available_apartments(
+            text_value(values, "start_date"), text_value(values, "end_date"),
+            integer_value(values, "num_people"),
+        ))
+
     return app

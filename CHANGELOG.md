@@ -3,6 +3,28 @@
 This file records named checkpoints of the project. Checkpoint names describe
 project milestones and do not imply semantic versioning or production readiness.
 
+## Unreleased
+
+- Add offline interactive REST documentation at `/docs`, covering GET, POST, PATCH
+  and DELETE with editable inputs, real responses and curl/JSON copying.
+- Publish an OpenAPI 3.1 contract at `/api/openapi.json`; add documentation coverage
+  and example regressions (43 tests total) and verify assets in Docker smoke checks.
+
+- Add a Flask application factory with a JSON route overview, database health check,
+  apartment CRUD, booking CRUD and availability endpoints using `BookingDatabase`.
+- Keep GET requests free of business writes. Add typed HTTP input validation,
+  consistent JSON/status codes, request/error logging and request-local cleanup.
+- Preserve all CLI commands, domain messages, schema and transaction rules. Share
+  price parsing; introduce `ValueError` subclasses for missing records/conflicts.
+- Pin Flask in `requirements.txt` for web/full tests; CLI execution remains dependency-free.
+- Add the non-interactive `web` Compose service on `127.0.0.1:8000`, sharing the
+  existing SQLite volume and non-root security settings with `booking`.
+- Disable web debugging/reloading by default; document the local-only, unauthenticated API.
+- Add HTTP regressions and documentation contract tests, real HTTP Docker smoke checks,
+  cross-interface data/persistence verification and dependency installation in CI.
+- Document local/Docker startup, all HTTP endpoints, curl requests and error handling.
+- Work delivered on `feature/flask-http-interface` for PR review; existing release tags unchanged.
+
 ## [Checkpoint 02] — 2026-10-26
 
 Tag: `checkpoint-02`.
@@ -28,6 +50,7 @@ Tag: `checkpoint-02`.
 - Close the database when the application exits, including exceptional exits.
 - Add 13 robustness regressions plus three storage-configuration tests, bringing the
   full suite to 25 tests; original workflow tests remain unchanged.
+
 ### Compatibility and upgrade notes
 
 - Stop tracking the runtime database; keep its path/schema unchanged and preserve

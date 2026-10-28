@@ -18,9 +18,18 @@ USER booking
 
 CMD ["python", "main.py"]
 
-# Run the same test suite inside the image without shipping tests in production.
-FROM base AS test
+# Flask is installed only in the web/test targets; the CLI target stays dependency-free.
+FROM base AS web-base
+USER root
+COPY requirements.txt ./
+RUN python -m pip install --no-cache-dir -r requirements.txt
+USER booking
+CMD ["python", "-m", "flask", "--app", "src.web:create_app", "--no-debug", "run", "--host", "0.0.0.0", "--port", "8000", "--no-debugger", "--no-reload"]
+
+FROM web-base AS test
 COPY tests/ ./tests/
 RUN python -m unittest discover -s tests -v
+
+FROM web-base AS web
 
 FROM base AS runtime

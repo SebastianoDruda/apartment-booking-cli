@@ -30,10 +30,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Run unit and CLI integration tests
-        run: python -m unittest discover -s tests -v
+        run: |
+          python -m pip install -r requirements.txt
+          python -m unittest discover -s tests -v
 
   docker:
-    name: Docker build and persistent CLI workflow
+    name: Docker CLI and HTTP workflows
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -49,3 +51,5 @@ jobs:
         run: docker compose build
       - name: Check CLI and data persistence across containers
         run: python3 tests/docker_smoke.py
+      - name: Check HTTP and shared CLI storage across web restarts
+        run: python3 tests/docker_web_smoke.py

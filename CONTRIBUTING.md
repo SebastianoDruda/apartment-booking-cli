@@ -1,12 +1,14 @@
 # Contributing
 
 This project is maintained by Sebastiano Druda, Tom Springer and Jacob Wieser.
-The application uses Python 3.10+ and the standard library only.
+The CLI uses Python 3.10+ and the standard library. The HTTP interface and full
+test suite also require the pinned Flask dependency in `requirements.txt`.
 
 ## Local setup
 
 Follow the [README](README.md#requirements-and-installation), then run the existing
-suite from the repository root before making changes.
+suite from the repository root before making changes. Create a virtual environment
+and install `python -m pip install -r requirements.txt` using your chosen interpreter.
 
 On MacBook / macOS:
 
@@ -23,7 +25,7 @@ py -3 -m unittest discover -s tests -v
 If your selected interpreter is available as `python`, use that instead. See the
 [platform-specific launch instructions](README.md#starting-the-application) for
 running the app and using an optional virtual environment. No package installation
-is required.
+is required for the CLI alone.
 
 ## Docker checks
 
@@ -34,9 +36,10 @@ docker compose config --quiet
 docker build --target test --tag apartment-booking-cli:test .
 docker compose build
 python3 tests/docker_smoke.py
+python3 tests/docker_web_smoke.py
 ```
 
-On Windows use `py -3` for the last command. The smoke check uses a random Compose
+On Windows use `py -3` for the Python commands. The smoke check uses a random Compose
 project and disposable volume, leaving normal user data alone. Do not run cleanup
 commands with `--volumes` against the user's usual project. See the
 [Docker guide](README.md#running-with-docker-and-compose) for interactive use and backups.
@@ -76,7 +79,8 @@ change, and record the checks actually performed.
   interaction in `src/cli.py`, persistence/business rules in `src/database.py`, and
   automated checks in `tests/` (`test_booking_system.py` for the original workflows,
   `test_robustness.py` for robustness regressions, and `test_database_path.py` for
-  storage configuration). `docker_smoke.py` runs container checks separately.
+  storage configuration). `test_web.py` covers HTTP behaviour; the two Docker smoke
+  scripts run CLI and web container checks separately.
 - Preserve existing commands and aliases unless a behaviour change is intentional
   and documented. Avoid unrelated renames, moves, formatting or refactors.
 - Follow the surrounding Python style, type hints and docstrings.
@@ -115,7 +119,7 @@ database operations. Retain concurrency and rollback tests; do not replace them
 with mocks that skip SQLite's actual locking behaviour.
 Document platform limitations or checks you could not run.
 
-The GitHub Actions workflow runs the existing suite on Python 3.10 and 3.14 across
+The GitHub Actions workflow installs Flask and runs the full suite on Python 3.10 and 3.14 across
 Linux, macOS and Windows. Review its results before merging.
 
 ## Reporting issues
@@ -125,6 +129,19 @@ actual output and whether a clean or existing database reproduces the problem.
 Use fictitious names and addresses when sharing examples; a full database is usually
 unnecessary. For private access or credential problems, contact the maintainers
 without posting credentials.
+
+## HTTP development
+
+Use `create_app({"DATABASE_PATH": temporary_path, "TESTING": True})` with Flask's
+client for API tests. Each test must own a temporary SQLite file. Do not use the
+normal Docker project for write tests; the web smoke script assigns its own project
+name, volume and temporary loopback port. Never reset the existing user volume.
+
+Keep SQL and booking validation in `src/database.py`. HTTP routes only translate
+input/output and errors. Domain errors remain `ValueError` subclasses so CLI callers
+continue to work. No authentication or debugger is exposed; maintain loopback-only
+host publishing. Work on `feature/flask-http-interface` and submit a PR against
+`main`; do not merge automatically.
 
 ## Release convention
 

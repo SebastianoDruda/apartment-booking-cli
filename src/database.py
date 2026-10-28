@@ -25,6 +25,24 @@ _DATE_PATTERNS = (
 )
 
 
+class RecordNotFoundError(ValueError):
+    """The apartment or booking requested by an operation does not exist."""
+
+
+class BookingConflictError(ValueError):
+    """An apartment name or date range conflicts with existing data."""
+
+
+def parse_price_input(value: str) -> float:
+    """Parse the price formats accepted by both the CLI and HTTP interface."""
+    normalized = value.strip().replace(",", ".").replace("€", "").strip()
+    try:
+        price = float(normalized)
+    except ValueError as exc:
+        raise ValueError("Price per night must be a valid number (e.g., 85 or 85.50).") from exc
+    return validate_price(price)
+
+
 def parse_date(date_str: str) -> str:
     """Parse a date string into ISO format (YYYY-MM-DD) with strict month/day validation.
 
@@ -214,7 +232,7 @@ class BookingDatabase:
                 (clean_name,),
             ).fetchone()
             if existing is not None:
-                raise ValueError(f"Apartment '{clean_name}' already exists.")
+                raise BookingConflictError(f"Apartment '{clean_name}' already exists.")
 
             cursor = conn.execute(
                 """
@@ -250,7 +268,7 @@ class BookingDatabase:
                 (clean_name,),
             ).fetchone()
             if row is None:
-                raise ValueError(f"Apartment '{clean_name}' does not exist.")
+                raise RecordNotFoundError(f"Apartment '{clean_name}' does not exist.")
 
             old_price = float(row["price_per_night"])
             conn.execute(
@@ -283,7 +301,7 @@ class BookingDatabase:
                 (clean_name,),
             ).fetchone()
             if row is None:
-                raise ValueError(f"Apartment '{clean_name}' does not exist.")
+                raise RecordNotFoundError(f"Apartment '{clean_name}' does not exist.")
 
             conn.execute("DELETE FROM apartments WHERE id = ?;", (row["id"],))
 
@@ -395,7 +413,7 @@ class BookingDatabase:
                 (clean_apt_name,),
             ).fetchone()
             if apt is None:
-                raise ValueError(f"Apartment '{clean_apt_name}' does not exist.")
+                raise RecordNotFoundError(f"Apartment '{clean_apt_name}' does not exist.")
 
             if people_int > apt["max_people"]:
                 raise ValueError(
@@ -404,7 +422,7 @@ class BookingDatabase:
                 )
 
             if self._has_overlapping_booking(conn, apt["id"], start_iso, end_iso):
-                raise ValueError(
+                raise BookingConflictError(
                     f"Apartment '{apt['name']}' is not available from {start_iso} to {end_iso} "
                     "(dates overlap with an existing booking)."
                 )
@@ -519,7 +537,7 @@ class BookingDatabase:
             ).fetchone()
 
             if row is None:
-                raise ValueError(
+                raise RecordNotFoundError(
                     f"No booking found for apartment '{clean_apt_name}' "
                     f"from {old_start_iso} to {old_end_iso}."
                 )
@@ -537,7 +555,7 @@ class BookingDatabase:
                 new_end_iso,
                 exclude_booking_id=row["id"],
             ):
-                raise ValueError(
+                raise BookingConflictError(
                     f"Apartment '{row['apartment_name']}' is not available from "
                     f"{new_start_iso} to {new_end_iso} (dates overlap with another booking)."
                 )
@@ -605,7 +623,7 @@ class BookingDatabase:
             ).fetchone()
 
             if row is None:
-                raise ValueError(
+                raise RecordNotFoundError(
                     f"No booking found for apartment '{clean_apt_name}' "
                     f"from {start_iso} to {end_iso}."
                 )

@@ -4,7 +4,13 @@
 !Dockerfile
 !.dockerignore
 !main.py
+!requirements.txt
 !src/
 !src/*.py
+!src/templates/
+!src/templates/*.html
+!src/static/
+!src/static/*.css
+!src/static/*.js
 !tests/
 !tests/*.py

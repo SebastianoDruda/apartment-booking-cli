@@ -13,7 +13,56 @@ from time import perf_counter
 from flask import Flask, current_app, g, jsonify, request
 from werkzeug.exceptions import HTTPException
 
-from src.database import BookingDatabase, DEFAULT_DB_PATH
+from src.database import (
+    BookingDatabase, BookingConflictError, DEFAULT_DB_PATH, RecordNotFoundError,
+    format_address, parse_price_input,
+)
+
+
+def parameters(*fields: str, query: bool = False) -> dict:
+    """Validate the HTTP envelope; business validation stays in BookingDatabase."""
+    if query:
+        values = request.args.to_dict()
+        if any(len(request.args.getlist(key)) != 1 for key in request.args):
+            raise ValueError("Query parameters must appear exactly once.")
+    else:
+        values = request.get_json()
+        if not isinstance(values, dict):
+            raise ValueError("The JSON body must be an object.")
+    missing = sorted(set(fields) - values.keys())
+    unknown = sorted(values.keys() - set(fields))
+    if missing:
+        raise ValueError("Missing fields: " + ", ".join(missing) + ".")
+    if unknown:
+        raise ValueError("Unknown fields: " + ", ".join(unknown) + ".")
+    return values
+
+
+def text_value(values: dict, field: str) -> str:
+    value = values[field]
+    if not isinstance(value, str):
+        raise ValueError(f"{field} must be a string.")
+    return value.strip()
+
+
+def integer_value(values: dict, field: str) -> int:
+    value = values[field]
+    if isinstance(value, bool) or not isinstance(value, (str, int)):
+        raise ValueError(f"{field} must be a whole number.")
+    try:
+        value = int(value)
+    except ValueError as error:
+        raise ValueError(f"{field} must be a whole number.") from error
+    if not -(2 ** 63) <= value < 2 ** 63:
+        raise ValueError(f"{field} is outside the supported integer range.")
+    return value
+
+
+def price_value(values: dict) -> float:
+    value = values["price_per_night"]
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        raise ValueError("price_per_night must be a number or price string.")
+    return parse_price_input(str(value))
 
 
 def get_database() -> BookingDatabase:
@@ -64,6 +113,14 @@ def create_app(config: dict | None = None) -> Flask:
     def invalid_input(error):
         return error_response("invalid_request", str(error), 400)
 
+    @app.errorhandler(RecordNotFoundError)
+    def record_not_found(error):
+        return error_response("not_found", str(error), 404)
+
+    @app.errorhandler(BookingConflictError)
+    def booking_conflict(error):
+        return error_response("conflict", str(error), 409)
+
     @app.errorhandler(sqlite3.OperationalError)
     def database_unavailable(error):
         app.logger.exception("Database operation failed")
@@ -111,5 +168,28 @@ def create_app(config: dict | None = None) -> Flask:
         # Reuse a read-only business operation to verify that the database is accessible.
         get_database().list_apartments()
         return jsonify(data={"status": "ok", "database": "ok"})
+
+    @app.get("/api/apartments")
+    def list_apartments():
+        return jsonify(data=get_database().list_apartments())
+
+    @app.post("/api/apartments")
+    def add_apartment():
+        values = parameters("name", "country", "city", "street_and_number", "max_people", "price_per_night")
+        address = format_address(text_value(values, "country"), text_value(values, "city"),
+                                 text_value(values, "street_and_number"))
+        result = get_database().add_apartment(
+            text_value(values, "name"), address, integer_value(values, "max_people"), price_value(values)
+        )
+        return jsonify(data=result), 201
+
+    @app.patch("/api/apartments/<path:name>/price")
+    def update_apartment_price(name):
+        values = parameters("price_per_night")
+        return jsonify(data=get_database().update_apartment_price(name, price_value(values)))
+
+    @app.delete("/api/apartments/<path:name>")
+    def remove_apartment(name):
+        return jsonify(data=get_database().remove_apartment(name))
 
     return app

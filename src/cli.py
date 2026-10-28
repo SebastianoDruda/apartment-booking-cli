@@ -22,7 +22,7 @@ from src.database import (
     format_address,
     parse_date,
     validate_date_range,
-    validate_price,
+    parse_price_input,
 )
 
 ROLE_BOOKER = "apartment booker"
@@ -239,12 +239,7 @@ class ApartmentBookingCLI:
 
     @staticmethod
     def _parse_price(value_str: str) -> float:
-        normalized = value_str.strip().replace(",", ".").replace("€", "").strip()
-        try:
-            val = float(normalized)
-        except ValueError as exc:
-            raise ValueError("Price per night must be a valid number (e.g., 85 or 85.50).") from exc
-        return validate_price(val)
+        return parse_price_input(value_str)
 
     # ------------------------------------------------------------------
     # Role Selection

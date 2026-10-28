@@ -17,5 +17,29 @@ services:
     cap_drop:
       - ALL
 
+  web:
+    build:
+      context: .
+      target: web
+    image: apartment-booking-web:local
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    volumes:
+      - booking-data:/data
+    ports:
+      - "127.0.0.1:${BOOKING_WEB_PORT:-8000}:8000"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
 volumes:
   booking-data:

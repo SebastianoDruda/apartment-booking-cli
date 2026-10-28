@@ -4,6 +4,7 @@
 !Dockerfile
 !.dockerignore
 !main.py
+!requirements.txt
 !src/
 !src/*.py
 !tests/

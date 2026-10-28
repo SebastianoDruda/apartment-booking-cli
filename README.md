@@ -1,24 +1,42 @@
-# Apartment Booking System (CLI)
+# Apartment Booking System — CLI and Flask API
 
 **By Sebastiano Druda, Tom Springer and Jacob Wieser**
 
-A terminal application for managing apartments, searching availability, and creating,
-changing or cancelling bookings. Built with Python and SQLite using only the standard
-library: no external Python packages, database server or web service are required.
-Run it with **Docker Compose** or directly with **Python**; both use the same
-interactive terminal commands.
+Manage apartments, availability and bookings through the original interactive CLI
+or a Flask HTTP API. Both interfaces call the same `BookingDatabase` operations,
+use the same SQLite schema and enforce the same validation and transaction rules.
+The CLI remains standard-library-only; the optional web interface uses Flask.
 
-**Release:** [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
- · **Run with:** Docker Compose or Python 3.10+
- · **Storage:** local SQLite
- · **Interface:** interactive terminal in English
+**Latest tagged release:** [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
+ · **Python:** 3.10+
+ · **Storage:** SQLite
+ · **Interfaces:** terminal and local JSON API
 
-Checkpoint 02 adds Docker Compose and reliability fixes while preserving the terminal
-workflow. The original Checkpoint 01 release remains available.
+The Flask interface is an incremental change after Checkpoint 02, available on
+`feature/flask-http-interface` while its PR is under review. The Checkpoint 01 and
+Checkpoint 02 tags are unchanged; their source archives do not include Flask.
 **Updating an existing checkout?** Read the [database upgrade instructions](#database-location-backup-and-reset)
 before pulling: older revisions tracked the database file in Git.
 
 ## Quick start with Docker
+
+To start the HTTP interface, open Docker Desktop, then run from the project folder:
+
+```bash
+docker compose up --build web
+```
+
+Open **http://localhost:8000** for the JSON route overview, or
+**http://localhost:8000/api/apartments** to inspect apartments. The service listens
+only on the host's `127.0.0.1:8000`. Keep the terminal open; Ctrl+C stops the web
+service without deleting data. For background operation use
+`docker compose up --build -d web`, then `docker compose logs -f web` to follow logs.
+
+This is a local API without authentication. Do not publish its port to the network
+or enable the interactive debugger. See [Flask HTTP interface](#flask-http-interface)
+for all endpoints, examples and local Python startup.
+
+**The original interactive CLI is still available:**
 
 1. Start **Docker Desktop** and wait for its engine to be running. On Windows,
    use Linux containers. Python does not need to be installed on your computer.
@@ -34,8 +52,9 @@ before pulling: older revisions tracked the database file in Git.
 4. Choose `1` for Apartment Booker or `2` for System Manager. Type `help` for commands.
 5. Type `exit` to close the session. Next time, run `docker compose run --rm booking` again.
 
-**Your Docker bookings persist between sessions.** They live in the `booking-data`
-volume, separately from the database used when running Python directly. Docker does
+**Your Docker bookings persist between sessions.** The `booking` and `web` services
+share the same `booking-data` volume, so changes through either interface are visible
+to the other. This volume is separate from the database used by direct Python runs. Docker does
 not automatically import your existing local records.
 
 See the [complete Docker guide](#running-with-docker-and-compose) for installation,
@@ -55,6 +74,7 @@ See [Starting the application](#starting-the-application) for the full Python in
 - [Quick start with Docker](#quick-start-with-docker)
 - [Features](#features)
 - [Running with Docker and Compose](#running-with-docker-and-compose)
+- [Flask HTTP interface](#flask-http-interface)
 - [Requirements and installation](#requirements-and-installation)
 - [Starting the application](#starting-the-application)
 - [First booking walkthrough](#first-booking-walkthrough)
@@ -83,20 +103,22 @@ See [Starting the application](#starting-the-application) for the full Python in
 - Persistent SQLite storage and automatically created tables.
 - Contextual command help, terminal completion and dynamically sized output tables.
 - Docker Compose startup with an interactive terminal and persistent database volume.
-- Automated database, CLI integration, completion and Docker checks.
+- Flask JSON endpoints for all apartment/booking operations, availability and health.
+- Automated database, CLI, HTTP, concurrency and Docker checks.
 
 ## Running with Docker and Compose
 
 Docker packages Python and this application together. The CLI commands, prompts and
-booking rules are the same. It runs in your terminal, with no browser, web server,
-exposed ports or separate database service.
+booking rules are the same. `booking` runs the terminal CLI; `web` runs Flask on
+localhost:8000. Both use SQLite in the existing named volume, without a separate
+database server. The CLI service configuration and entry points are preserved.
 
 The configuration is included in this repository:
 
 | File | Purpose |
 | --- | --- |
-| [Dockerfile](Dockerfile) | Builds the non-root Python runtime and the separate test target. |
-| [compose.yaml](compose.yaml) | Defines the `booking` service, interactive terminal and persistent `booking-data` volume. |
+| [Dockerfile](Dockerfile) | Builds non-root `runtime` (CLI), `web` (Flask) and `test` targets; Flask is installed only in web/test images. |
+| [compose.yaml](compose.yaml) | Defines interactive `booking`, non-interactive `web` and their shared `booking-data` volume. |
 | [.dockerignore](.dockerignore) | Keeps local databases, backups and unrelated files out of the build context. |
 
 Run Compose commands from the project folder; Compose reads `compose.yaml` automatically.
@@ -153,8 +175,8 @@ Inside the Linux container, completion uses `readline`, including when Docker ru
 on a Windows host.
 
 Use [`docker compose run`](https://docs.docker.com/reference/cli/docker/compose/run/)
-for this interactive application; `docker compose up -d` is not the interactive
-startup command. `--rm` removes the session's container after it exits.
+for the interactive CLI; `docker compose up -d booking` does not attach terminal
+input. The separate HTTP service uses `docker compose up --build web`. `--rm` removes the session's container after it exits.
 
 ### 5. Exit and return later
 
@@ -164,8 +186,8 @@ Type `exit` inside the application. To start another session:
 docker compose run --rm booking
 ```
 
-Records are stored at `/data/apartment_booking.db` in the Compose **`booking-data`
-named volume**. They survive container removal and image rebuilds because
+Both Docker services store records at `/data/apartment_booking.db` in the same
+Compose **`booking-data` named volume**. They survive container removal and image rebuilds because
 [Docker volumes persist separately from containers](https://docs.docker.com/engine/storage/volumes/).
 
 Docker starts with its own empty database. The root-level `apartment_booking.db`
@@ -187,7 +209,7 @@ a rebuild. Your Docker database is retained.
 
 ### 7. Run checks inside Docker
 
-The test target builds the same application environment and runs all 25 tests:
+The test target builds the same application environment and runs all 40 tests:
 
 ```bash
 docker build --target test --tag apartment-booking-cli:test .
@@ -198,15 +220,19 @@ For maintainers with Python installed, the additional integration check is:
 
 ```bash
 python3 tests/docker_smoke.py
+python3 tests/docker_web_smoke.py
 ```
 
-On Windows use `py -3 tests/docker_smoke.py`. It uses an isolated, randomly named
-Compose project to check both launchers, database persistence, backup and startup
-errors, then removes **only its own** test containers and volume.
+On Windows use `py -3` instead of `python3`. Each script uses its own randomly named
+Compose project and disposable volume. The CLI check covers launchers, persistence,
+backup/import and startup errors; the web check covers real HTTP requests, CLI/API
+shared data, conflicts, localhost binding and restart persistence. Cleanup removes
+**only the test project**, never your existing database volume.
 
 ### 8. Back up Docker data
 
-Exit all booking sessions first. After at least one application run has created the
+Exit all booking sessions and stop web writes with `docker compose stop web` first.
+After at least one application run has created the
 database, create a stopped service container and copy the database out:
 
 ```bash
@@ -216,7 +242,7 @@ docker compose cp booking:/data/apartment_booking.db ./docker-booking-backup-01.
 
 These commands work in both macOS Terminal and Windows PowerShell. Choose a new
 backup filename each time to avoid overwriting an earlier copy. The stopped service
-container can be removed along with the project's network using:
+containers and project network can be removed using:
 
 ```bash
 docker compose down
@@ -247,7 +273,7 @@ Docker volume merely to make room for an import without backing up its data firs
 
 - The application runs as a non-root user. Compose makes its root filesystem
   read-only and mounts a writable data volume plus temporary `/tmp` storage.
-- `.dockerignore` allows only source and test files into the build context; local
+- `.dockerignore` allows only source, tests and dependency specifications into the build context; local
   databases, backups, Git metadata and credentials are excluded.
 - `APARTMENT_BOOKING_DB_PATH` selects the database file. The image sets it to
   `/data/apartment_booking.db`; direct Python runs retain the original root-level
@@ -261,6 +287,184 @@ Docker volume merely to make room for an import without backing up its data firs
 - **No matching manifest / Windows image error:** switch Docker Desktop to Linux containers.
 - **Empty apartment list:** a new Docker volume starts empty; it does not read your
   local Python database. Also check that you are using the same Compose project name.
+
+## Flask HTTP interface
+
+The web interface is a JSON API for local inspection and testing with a browser,
+curl or Postman. It adds no frontend framework or authentication. GET requests only
+read business data; writes require POST, PATCH or DELETE. The `/` URL returns a JSON
+route overview rather than an HTML booking form.
+
+### Start with Docker
+
+```bash
+docker compose up --build web
+```
+
+Then open:
+
+- http://localhost:8000/ — API overview and route list.
+- http://localhost:8000/api/health — HTTP and database readiness.
+- http://localhost:8000/api/apartments — current apartments.
+- http://localhost:8000/api/bookings — current bookings.
+- http://localhost:8000/api/availability?start_date=2026-11-10&end_date=2026-11-15&num_people=2 — available apartments.
+
+For background operation: `docker compose up --build -d web`. Inspect logs with
+`docker compose logs -f web`, inspect readiness with `docker compose ps`, and stop
+only the HTTP service with `docker compose stop web`. The CLI remains available:
+
+```bash
+docker compose run --rm booking
+```
+
+The `web` service uses no interactive terminal. Inside its Linux container it listens
+on `0.0.0.0:8000`, while Compose publishes only `127.0.0.1:8000` on the host.
+If that host port is already occupied, set `BOOKING_WEB_PORT` before starting:
+`BOOKING_WEB_PORT=8001 docker compose up --build web` on macOS/Linux, or
+`$env:BOOKING_WEB_PORT="8001"` followed by the normal Compose command in PowerShell.
+The internal port remains 8000. Use the chosen host port in your browser.
+
+### Start with Python on macOS
+
+From the repository root:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m flask --app src.web:create_app --no-debug run --host 127.0.0.1 --port 8000 --no-debugger --no-reload
+```
+
+### Start with Python on Windows
+
+From PowerShell in the repository root, no activation is required:
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m flask --app src.web:create_app --no-debug run --host 127.0.0.1 --port 8000 --no-debugger --no-reload
+```
+
+Ctrl+C stops the server. Locally, both Flask and the CLI use the root-level
+`apartment_booking.db` unless `APARTMENT_BOOKING_DB_PATH` is set. Inside Compose,
+both services use `/data/apartment_booking.db` in the **existing** `booking-data`
+volume. No volume reset or database schema migration is needed. Direct Python
+and Docker storage remain separate unless you explicitly import a backup.
+
+### Endpoints and request fields
+
+Send a JSON object with `Content-Type: application/json` for POST/PATCH and booking
+DELETE requests. All listed fields are required; unknown fields are rejected.
+Names and dates must be strings. Counts accept integers or whole-number strings
+(not booleans/fractions). Prices accept numbers or the existing CLI formats such
+as `"120,50 €"`. Apartment names in paths must be URL-encoded (space becomes `%20`).
+
+| Method | Endpoint | Body or query fields | Success |
+| --- | --- | --- | --- |
+| GET | `/` | None | 200: overview/routes |
+| GET | `/api/health` | None | 200: server/database ready |
+| GET | `/api/apartments` | None | 200: apartments |
+| POST | `/api/apartments` | JSON: `name`, `country`, `city`, `street_and_number`, `max_people`, `price_per_night` | 201: created apartment |
+| PATCH | `/api/apartments/<name>/price` | JSON: `price_per_night` | 200: updated apartment |
+| DELETE | `/api/apartments/<name>` | None | 200: deleted apartment; its bookings are also deleted |
+| GET | `/api/bookings` | None | 200: bookings |
+| POST | `/api/bookings` | JSON: `apartment_name`, `start_date`, `end_date`, `booker_name`, `num_people` | 201: created booking |
+| PATCH | `/api/bookings` | JSON: `apartment_name`, `start_date`, `end_date`, `new_start_date`, `new_end_date`, `num_people` | 200: changed booking |
+| DELETE | `/api/bookings` | JSON: `apartment_name`, `start_date`, `end_date` | 200: cancelled booking |
+| GET | `/api/availability` | Query: `start_date`, `end_date`, `num_people`, each exactly once | 200: available apartments |
+
+For PATCH/DELETE bookings, `start_date` and `end_date` identify the **current** booking.
+PATCH replaces the dates and guest count; it does not move the booking to another
+apartment or change the booker's name. Past dates, calendar validation, adjacent
+check-out/check-in, capacity, overlaps and current-price totals behave as in the CLI.
+
+### curl walkthrough
+
+The following examples use macOS/Linux shell quoting. They create and later remove
+an example apartment and booking. Use a distinct name if `API Demo` already exists;
+do not run write examples against records you want to preserve.
+
+Read readiness and available data:
+
+```bash
+curl -i http://localhost:8000/api/health
+curl http://localhost:8000/api/apartments
+curl http://localhost:8000/api/bookings
+curl "http://localhost:8000/api/availability?start_date=2026-11-10&end_date=2026-11-15&num_people=2"
+```
+
+Create an apartment (HTTP 201):
+
+```bash
+curl -i -X POST http://localhost:8000/api/apartments -H 'Content-Type: application/json' -d '{"name":"API Demo","country":"Italy","city":"Rome","street_and_number":"Example 1","max_people":3,"price_per_night":100}'
+```
+
+Update its price (HTTP 200), then create a booking (HTTP 201):
+
+```bash
+curl -i -X PATCH 'http://localhost:8000/api/apartments/API%20Demo/price' -H 'Content-Type: application/json' -d '{"price_per_night":120}'
+curl -i -X POST http://localhost:8000/api/bookings -H 'Content-Type: application/json' -d '{"apartment_name":"API Demo","start_date":"2026-11-10","end_date":"2026-11-15","booker_name":"Demo Guest","num_people":2}'
+```
+
+Change the booking (HTTP 200):
+
+```bash
+curl -i -X PATCH http://localhost:8000/api/bookings -H 'Content-Type: application/json' -d '{"apartment_name":"API Demo","start_date":"2026-11-10","end_date":"2026-11-15","new_start_date":"2026-11-11","new_end_date":"2026-11-16","num_people":3}'
+```
+
+Cancel it using the new dates, then remove the apartment (HTTP 200):
+
+```bash
+curl -i -X DELETE http://localhost:8000/api/bookings -H 'Content-Type: application/json' -d '{"apartment_name":"API Demo","start_date":"2026-11-11","end_date":"2026-11-16"}'
+curl -i -X DELETE 'http://localhost:8000/api/apartments/API%20Demo'
+```
+
+On Windows PowerShell, use **`curl.exe`** (avoids the legacy `curl` alias). GET
+commands work directly. For JSON writes, save the JSON object from an example as
+`request.json` in UTF-8 without a BOM, then avoid native-argument quoting issues with:
+
+```powershell
+curl.exe -i -X POST http://localhost:8000/api/apartments -H "Content-Type: application/json" --data-binary "@request.json"
+```
+
+Use the same file technique with PATCH/DELETE and the appropriate JSON fields.
+Alternatively, in Postman choose the method/URL and **Body → raw → JSON**.
+
+### Responses, errors and logs
+
+Success responses wrap their result in `data`; lists are arrays (possibly empty):
+
+```json
+{"data": {"status": "ok", "database": "ok"}}
+```
+
+Errors use a consistent shape, with a readable message and machine-readable code:
+
+```json
+{"error": {"code": "conflict", "message": "Apartment 'API Demo' already exists."}}
+```
+
+| Status | Meaning |
+| --- | --- |
+| 200 / 201 | Successful read/update/delete or creation |
+| 400 | Invalid JSON/object, missing/unknown fields, invalid dates, price or capacity |
+| 404 | Apartment/booking or route not found |
+| 405 | HTTP method not allowed; response includes `Allow` |
+| 409 | Duplicate apartment, overlapping booking or integrity conflict |
+| 413 | JSON body exceeds 64 KiB |
+| 415 | Write request is not sent as JSON |
+| 503 | Database unavailable/locked; retry after resolving storage access (`Retry-After: 1`) |
+| 500 | Unexpected failure; inspect server logs |
+
+Application logs include HTTP method, route template, status and duration. Unexpected
+and storage failures include diagnostic server logs; HTTP responses never expose
+Python tracebacks or internal database error details. Flask/Werkzeug also writes
+request access logs. Responses use `Cache-Control: no-store`.
+
+The API is **unauthenticated and for local development only**. Anyone with local
+access can create, modify or delete records; CLI role selection is not HTTP access
+control. No CORS support is added. Keep the default loopback host binding, debugger
+off and reloader off. The Flask development server is not a public production server.
 
 ## Requirements and installation
 
@@ -281,8 +485,9 @@ git clone https://github.com/SebastianoDruda/apartment-booking-cli.git
 cd apartment-booking-cli
 ```
 
-There is no dependency installation step. The commands below run directly with
-Python; a virtual environment is optional.
+The CLI requires no dependency installation. Flask and the complete test suite
+require `python -m pip install -r requirements.txt`; use a virtual environment as
+described in the HTTP section. Direct CLI commands below remain unchanged.
 
 ## Starting the application
 
@@ -359,8 +564,9 @@ py -3 -m venv .venv
 .\.venv\Scripts\python.exe main.py
 ```
 
-These environments need no third-party packages. Use the same interpreter for
-running the application and its tests.
+The CLI itself needs no third-party packages. Install `requirements.txt` in your
+environment for Flask and the full test suite. Use the same interpreter for running
+the application and its tests.
 
 ### Inside the application
 
@@ -524,32 +730,52 @@ apartment-booking-cli/
 │       └── tests.yml               # Standard-library test suite on GitHub Actions
 ├── .dockerignore                  # Allowlist for the Docker build context
 ├── Dockerfile                     # Non-root Python runtime and test build target
-├── compose.yaml                   # Interactive CLI and persistent database volume
+├── compose.yaml                   # CLI + web services sharing a persistent database
 ├── .gitignore                     # Local environments, caches and temporary data
 ├── README.md                      # Setup, usage, architecture and maintenance
 ├── CHANGELOG.md                   # Checkpoint release history
 ├── CONTRIBUTING.md                # Contributor workflow and checks
 ├── apartment_booking.db           # Local SQLite database, created on first run (ignored)
 ├── domain_concept_map.png         # Existing domain diagram image
-├── main.py                        # Root launcher
+├── requirements.txt               # Pinned Flask dependency for web/full tests
+├── main.py                        # Original root CLI launcher
 ├── src/
 │   ├── __init__.py                 # Package marker
 │   ├── main.py                     # Alternate launcher and CLI startup
 │   ├── cli.py                      # Prompts, roles, commands and output formatting
+│   ├── web.py                      # Flask factory, HTTP parsing, routes and error handling
 │   └── database.py                 # SQLite persistence and business validation
 └── tests/
     ├── test_booking_system.py      # Original database, CLI and completion tests
     ├── test_robustness.py          # Prices, atomic writes and storage-error regressions
     ├── test_database_path.py       # Optional storage path and launcher compatibility
-    └── docker_smoke.py             # Isolated Docker integration checks (run separately)
+    ├── test_web.py                 # Isolated HTTP, parity and concurrent request tests
+    ├── docker_smoke.py             # Isolated CLI Docker checks (run separately)
+    └── docker_web_smoke.py         # Isolated HTTP/CLI Docker checks (run separately)
 ```
 
 ## Architecture and data model
 
 `main.py` delegates to `src.main.main()`, which creates `ApartmentBookingCLI`.
 The CLI handles input, command dispatch and presentation. `BookingDatabase` handles
-persistence, apartment/booking operations, availability and validation. There is no
-HTTP API or background server.
+persistence, apartment/booking operations, availability and validation.
+
+`src.web.create_app()` adds a Flask presentation layer. Routes validate HTTP field
+types and delegate to the same `BookingDatabase` methods; they contain no SQL.
+The price parser and address formatter are shared with the CLI. Domain exceptions
+remain subclasses of `ValueError`, preserving CLI compatibility while allowing
+HTTP to distinguish validation errors, missing records and conflicts.
+
+```text
+HTTP client -> Flask routes --------+
+                                   +-> BookingDatabase -> SQLite
+Terminal ----> ApartmentBookingCLI -+
+```
+
+Flask creates a request-local database wrapper and closes it on teardown. SQLite
+connections are never shared between HTTP threads. Existing `BEGIN IMMEDIATE`
+transactions still protect validation and writes. There are no schema changes.
+The factory accepts `DATABASE_PATH` in its config so tests can use isolated files.
 
 `ApartmentBookingCLI` accepts an injected database, input function and output stream,
 so the tests can exercise interactive workflows without a real terminal.
@@ -695,7 +921,8 @@ For the optional Windows environment without activation:
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-No test dependencies need installing. The current suite contains **25 tests** across:
+Install the pinned web dependency first (`python -m pip install -r requirements.txt`,
+or `python3`/`py -3` for your interpreter). The current suite contains **40 tests** across:
 
 | Test class | Coverage |
 | --- | --- |
@@ -706,6 +933,7 @@ No test dependencies need installing. The current suite contains **25 tests** ac
 | `TestAtomicWrites` | Rollback and connection reuse, plus concurrent creation and changes using independent SQLite connections. |
 | `TestDatabaseErrorHandling` | Recoverable storage errors, actual database locking, startup failure, cleanup and propagation of programming errors. |
 | `TestDatabasePath` | Default-path compatibility, configurable storage across both launchers and missing-directory errors. |
+| `TestWebAPI` | Endpoint lifecycle, HTTP errors, unchanged GET data, CLI parity, persistence, request cleanup and concurrent booking changes. |
 
 For one test class on macOS:
 
@@ -718,7 +946,8 @@ On Windows, replace `python3` with `py -3` (or your chosen Python interpreter).
 [GitHub Actions](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
 runs this same suite on pushes and pull requests to `main`, and through manual
 workflow dispatch. The matrix uses Python 3.10 and 3.14 on Linux, macOS and Windows.
-A separate Docker job builds/tests the image and checks persistence across containers.
+A separate Docker job builds/tests both images, runs the original CLI smoke check
+and verifies the real HTTP service, shared data and restart persistence.
 These automated checks do not replace manual testing of real-terminal completion.
 
 ## Troubleshooting
@@ -740,7 +969,7 @@ These automated checks do not replace manual testing of real-terminal completion
 
 ## Current scope and limitations
 
-Checkpoint 02 packages the local CLI for direct Python and Docker use. Its roles are a user-interface feature:
+The application supports the original CLI and a local Flask HTTP interface. Its roles are a user-interface feature:
 there is no authentication, per-user booking ownership or access isolation. Any user
 can switch roles, and both roles can inspect all bookings. Apartment removal cascades
 to bookings, and deletion operations have no undo.
@@ -753,9 +982,10 @@ change dates and guest count only.
 Application write transactions protect booking availability against simultaneous
 CLI writers. Direct SQL writes from other tools can bypass the Python validation;
 there is no database-level overlap constraint. SQLite still allows only one writer
-at a time. The application has no multi-user server, automated backup, schema
-migration tooling or hosted production service. Docker provides a local container
-runtime for the same CLI.
+at a time. Flask uses its development server with debugging/reloading disabled by
+default. The API has no authentication, user ownership or production hosting setup;
+any local HTTP client can perform all operations. There is no automated backup or
+schema migration tooling. Keep HTTP bound to localhost and do not expose it publicly.
 
 ## Contributing
 
@@ -764,6 +994,9 @@ repository conventions and database-handling guidance. Keep changes focused and
 preserve the existing source layout unless a restructuring is explicitly agreed.
 
 ## Releases
+
+The Flask interface is currently on `feature/flask-http-interface` pending PR review;
+it is not included in the existing release tags below.
 
 [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
 uses the Git tag `checkpoint-02`. It includes Docker Compose with persistent storage,

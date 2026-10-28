@@ -5,6 +5,11 @@ project milestones and do not imply semantic versioning or production readiness.
 
 ## Unreleased
 
+- Add offline interactive REST documentation at `/docs`, covering GET, POST, PATCH
+  and DELETE with editable inputs, real responses and curl/JSON copying.
+- Publish an OpenAPI 3.1 contract at `/api/openapi.json`; add documentation coverage
+  and example regressions (43 tests total) and verify assets in Docker smoke checks.
+
 - Add a Flask application factory with a JSON route overview, database health check,
   apartment CRUD, booking CRUD and availability endpoints using `BookingDatabase`.
 - Keep GET requests free of business writes. Add typed HTTP input validation,
@@ -15,7 +20,7 @@ project milestones and do not imply semantic versioning or production readiness.
 - Add the non-interactive `web` Compose service on `127.0.0.1:8000`, sharing the
   existing SQLite volume and non-root security settings with `booking`.
 - Disable web debugging/reloading by default; document the local-only, unauthenticated API.
-- Add 15 HTTP regressions (40 tests total), real HTTP Docker smoke checks,
+- Add HTTP regressions and documentation contract tests, real HTTP Docker smoke checks,
   cross-interface data/persistence verification and dependency installation in CI.
 - Document local/Docker startup, all HTTP endpoints, curl requests and error handling.
 - Work delivered on `feature/flask-http-interface` for PR review; existing release tags unchanged.

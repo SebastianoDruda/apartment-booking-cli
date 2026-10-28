@@ -10,9 +10,10 @@ import os
 import sqlite3
 from time import perf_counter
 
-from flask import Flask, current_app, g, jsonify, request
+from flask import Flask, current_app, g, jsonify, render_template, request
 from werkzeug.exceptions import HTTPException
 
+from src.api_docs import openapi_document
 from src.database import (
     BookingDatabase, BookingConflictError, DEFAULT_DB_PATH, RecordNotFoundError,
     format_address, parse_price_input,
@@ -160,8 +161,24 @@ def create_app(config: dict | None = None) -> Flask:
             "name": "Apartment Booking HTTP API",
             "usage": "GET reads data. Send JSON with POST, PATCH or DELETE to make changes.",
             "authentication": "None. Local development only; do not expose publicly.",
+            "documentation": "/docs",
+            "openapi": "/api/openapi.json",
             "routes": routes,
         })
+
+    @app.get("/docs")
+    def documentation():
+        response = app.make_response(render_template("api_docs.html"))
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self'; "
+            "connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'"
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
+    @app.get("/api/openapi.json")
+    def openapi():
+        return jsonify(openapi_document())
 
     @app.get("/api/health")
     def health():

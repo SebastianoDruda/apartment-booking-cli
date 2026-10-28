@@ -263,6 +263,49 @@ class TestWebAPI(unittest.TestCase):
         self.assertEqual(response.json["data"], {"status": "ok", "database": "ok"})
         self.assertEqual(response.headers["Cache-Control"], "no-store")
 
+    def test_documentation_and_assets_load_without_touching_database(self) -> None:
+        response = self.client.get("/docs")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/html")
+        self.assertIn("API Explorer", response.text)
+        self.assertIn("script-src 'self'", response.headers["Content-Security-Policy"])
+        for asset in ("api_docs.css", "api_docs.js"):
+            with self.client.get("/static/" + asset) as asset_response:
+                self.assertEqual(asset_response.status_code, 200)
+        self.assertFalse(self.db_path.exists())
+
+    def test_openapi_contract_covers_all_business_routes(self) -> None:
+        response = self.client.get("/api/openapi.json")
+        self.assertEqual(response.status_code, 200)
+        spec = response.json
+        self.assertEqual(spec["openapi"], "3.1.0")
+        documented = {(method.upper(), path) for path, operations in spec["paths"].items()
+                      for method in operations}
+        actual = {(method, rule.rule.replace("<path:name>", "{name}"))
+                  for rule in self.app.url_map.iter_rules()
+                  if rule.endpoint not in {"static", "documentation", "openapi"}
+                  for method in rule.methods - {"HEAD", "OPTIONS"}}
+        self.assertEqual(documented, actual)
+        self.assertFalse(self.db_path.exists())
+
+    def test_documentation_examples_can_create_change_and_cancel(self) -> None:
+        paths = self.client.get("/api/openapi.json").json["paths"]
+
+        def example(path, method):
+            return paths[path][method]["requestBody"]["content"]["application/json"]["example"].copy()
+
+        apartment = self.client.post("/api/apartments", json=example("/api/apartments", "post"))
+        self.assertEqual(apartment.status_code, 201)
+        booking = self.client.post("/api/bookings", json=example("/api/bookings", "post"))
+        self.assertEqual(booking.status_code, 201)
+        changed = self.client.patch("/api/bookings", json=example("/api/bookings", "patch"))
+        self.assertEqual(changed.status_code, 200)
+        cancel = example("/api/bookings", "delete")
+        cancel.update(start_date=changed.json["data"]["start_date"], end_date=changed.json["data"]["end_date"])
+        self.assertEqual(self.client.delete("/api/bookings", json=cancel).status_code, 200)
+        self.assertEqual(self.client.delete("/api/apartments/API%20Demo").status_code, 200)
+        self.assertEqual(self.client.get("/api/bookings").json["data"], [])
+
     def test_http_errors_are_json_and_preserve_allowed_methods(self) -> None:
         response = self.client.get("/does-not-exist")
         self.assertEqual(response.status_code, 404)

@@ -3,7 +3,7 @@
 **By Sebastiano Druda, Tom Springer and Jacob Wieser**
 
 Manage apartments, availability and bookings through the original interactive CLI
-or a Flask HTTP API. Both interfaces call the same `BookingDatabase` operations,
+or a Flask HTTP API with an interactive documentation page. Both interfaces call the same `BookingDatabase` operations,
 use the same SQLite schema and enforce the same validation and transaction rules.
 The CLI remains standard-library-only; the optional web interface uses Flask.
 
@@ -26,7 +26,8 @@ To start the HTTP interface, open Docker Desktop, then run from the project fold
 docker compose up --build web
 ```
 
-Open **http://localhost:8000** for the JSON route overview, or
+Open **http://localhost:8000/docs** for the interactive API explorer,
+**http://localhost:8000** for the JSON route overview, or
 **http://localhost:8000/api/apartments** to inspect apartments. The service listens
 only on the host's `127.0.0.1:8000`. Keep the terminal open; Ctrl+C stops the web
 service without deleting data. For background operation use
@@ -209,7 +210,7 @@ a rebuild. Your Docker database is retained.
 
 ### 7. Run checks inside Docker
 
-The test target builds the same application environment and runs all 40 tests:
+The test target builds the same application environment and runs all 43 tests:
 
 ```bash
 docker build --target test --tag apartment-booking-cli:test .
@@ -291,7 +292,8 @@ Docker volume merely to make room for an import without backing up its data firs
 ## Flask HTTP interface
 
 The web interface is a JSON API for local inspection and testing with a browser,
-curl or Postman. It adds no frontend framework or authentication. GET requests only
+curl or Postman. The `/docs` page includes an API explorer built with local HTML, CSS
+and JavaScript, with no external assets or frontend framework. It adds no authentication. GET requests only
 read business data; writes require POST, PATCH or DELETE. The `/` URL returns a JSON
 route overview rather than an HTML booking form.
 
@@ -303,6 +305,8 @@ docker compose up --build web
 
 Then open:
 
+- http://localhost:8000/docs — interactive documentation; edit and send GET/POST/PATCH/DELETE requests.
+- http://localhost:8000/api/openapi.json — OpenAPI 3.1 specification.
 - http://localhost:8000/ — API overview and route list.
 - http://localhost:8000/api/health — HTTP and database readiness.
 - http://localhost:8000/api/apartments — current apartments.
@@ -351,6 +355,24 @@ both services use `/data/apartment_booking.db` in the **existing** `booking-data
 volume. No volume reset or database schema migration is needed. Direct Python
 and Docker storage remain separate unless you explicitly import a backup.
 
+### Try requests in the browser
+
+Open http://localhost:8000/docs and select an endpoint from the sidebar. Edit its
+path/query fields or JSON example, then press **Send GET**, **Send POST**, **Send PATCH**
+or **Send DELETE**. The response panel shows the actual HTTP status, elapsed time
+and formatted JSON. You can copy the response or the equivalent curl command.
+
+The page sends nothing automatically: selecting an operation only loads its example.
+Start with GET health or apartment listing, then create a uniquely named apartment
+if you want to try writes. POST, PATCH and DELETE change the same real records used
+by the CLI. For booking cancellation, enter the booking's current dates, including
+any dates changed by an earlier PATCH. Examples use `API Demo`; replace that name
+if it already exists. Reset example restores the request fields without changing data.
+
+The explorer loads its request definitions from `/api/openapi.json`. The specification
+can also be imported into an HTTP client. Contract tests check that it covers every
+business endpoint, and all assets are served locally so the page works without a CDN.
+
 ### Endpoints and request fields
 
 Send a JSON object with `Content-Type: application/json` for POST/PATCH and booking
@@ -361,6 +383,8 @@ as `"120,50 €"`. Apartment names in paths must be URL-encoded (space becomes `
 
 | Method | Endpoint | Body or query fields | Success |
 | --- | --- | --- | --- |
+| GET | `/docs` | None | 200: interactive HTML documentation |
+| GET | `/api/openapi.json` | None | 200: OpenAPI JSON specification |
 | GET | `/` | None | 200: overview/routes |
 | GET | `/api/health` | None | 200: server/database ready |
 | GET | `/api/apartments` | None | 200: apartments |
@@ -744,6 +768,12 @@ apartment-booking-cli/
 │   ├── main.py                     # Alternate launcher and CLI startup
 │   ├── cli.py                      # Prompts, roles, commands and output formatting
 │   ├── web.py                      # Flask factory, HTTP parsing, routes and error handling
+│   ├── api_docs.py                 # OpenAPI contract and explorer request examples
+│   ├── templates/
+│   │   └── api_docs.html           # Interactive API documentation page
+│   ├── static/
+│   │   ├── api_docs.css            # Responsive documentation styling
+│   │   └── api_docs.js             # Same-origin request console
 │   └── database.py                 # SQLite persistence and business validation
 └── tests/
     ├── test_booking_system.py      # Original database, CLI and completion tests
@@ -922,7 +952,7 @@ For the optional Windows environment without activation:
 ```
 
 Install the pinned web dependency first (`python -m pip install -r requirements.txt`,
-or `python3`/`py -3` for your interpreter). The current suite contains **40 tests** across:
+or `python3`/`py -3` for your interpreter). The current suite contains **43 tests** across:
 
 | Test class | Coverage |
 | --- | --- |
@@ -933,7 +963,7 @@ or `python3`/`py -3` for your interpreter). The current suite contains **40 test
 | `TestAtomicWrites` | Rollback and connection reuse, plus concurrent creation and changes using independent SQLite connections. |
 | `TestDatabaseErrorHandling` | Recoverable storage errors, actual database locking, startup failure, cleanup and propagation of programming errors. |
 | `TestDatabasePath` | Default-path compatibility, configurable storage across both launchers and missing-directory errors. |
-| `TestWebAPI` | Endpoint lifecycle, HTTP errors, unchanged GET data, CLI parity, persistence, request cleanup and concurrent booking changes. |
+| `TestWebAPI` | Endpoint lifecycle, HTTP errors, unchanged GET data, CLI parity, persistence, concurrency, documentation assets and OpenAPI coverage/examples. |
 
 For one test class on macOS:
 

@@ -255,6 +255,8 @@ component. The API should therefore remain bound to localhost.
 - [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03)
   — Flask REST API, OpenAPI contract and local dashboard
 - [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
+  — Docker Compose, persistent storage and reliability improvements
 - [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
+  — original Python and SQLite command-line booking application
 
 Created by **Sebastiano Druda, Tom Springer and Jacob Wieser**.

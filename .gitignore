@@ -10,6 +10,7 @@ dist/
 .coverage.*
 htmlcov/
 coverage.xml
+.artifacts/
 # Local runtime databases, backups and SQLite sidecars. Do not force-add these.
 *.db
 *.db-*

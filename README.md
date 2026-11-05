@@ -2,6 +2,7 @@
 
 [![Tests](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
 [![Code coverage](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml)
+[![API load test](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml)
 
 **By Sebastiano Druda, Tom Springer and Jacob Wieser**
 
@@ -988,6 +989,30 @@ report, while the downloadable `python-coverage-report` artifact contains XML an
 HTML reports and is retained for 14 days. Both workflows can also be started manually
 from the Actions tab.
 These automated checks do not replace manual testing of real-terminal completion.
+
+### API load testing with Locust
+
+The [Locust scenario](tests/locustfile.py) exercises the primary domain journey:
+list apartments, search availability, create and list a booking, change it, and
+cancel it. Each simulated user owns a uniquely named apartment and removes its
+test data on exit, so users cannot conflict with one another or pollute the normal
+database.
+
+To inspect the load test interactively, start the web service and install the
+separate load-test dependency:
+
+```bash
+docker compose up --build --detach --wait web
+python3 -m pip install -r requirements-load.txt
+python3 -m locust --locustfile tests/locustfile.py --host http://127.0.0.1:8000
+```
+
+Open http://localhost:8089 for the Locust UI. Stop the API afterwards with
+`docker compose stop web`. The [automated load-test workflow](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml)
+runs headlessly on every push and pull request to `main` with 10 users for 30 seconds.
+It fails if requests exceed 1% failures, 500 ms average response time, or 1,000 ms
+p95 response time. Its HTML and CSV reports are retained as a downloadable artifact
+for 14 days.
 
 ## Troubleshooting
 

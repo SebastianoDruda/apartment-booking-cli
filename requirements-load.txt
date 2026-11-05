@@ -1,0 +1,2 @@
+# Load testing is intentionally separate from the runtime Flask dependency.
+locust==2.47.0

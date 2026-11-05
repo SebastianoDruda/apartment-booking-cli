@@ -15,6 +15,15 @@ transaction safety therefore behave consistently whether a request originates fr
 the CLI or HTTP. SQLite provides lightweight local persistence, while Docker Compose
 offers a reproducible runtime with shared storage.
 
+## Features
+
+- Apartment catalogue management with capacity and nightly pricing.
+- Booking creation, modification, cancellation and availability search.
+- Calendar, capacity and overlap validation shared by the CLI and REST API.
+- Persistent SQLite storage with transactional writes and Docker volumes.
+- Interactive terminal completion and browser-based API exploration.
+- Automated unit, integration, Docker, coverage and Locust load tests.
+
 ## Getting started
 
 The recommended way to run the project is with Docker. It avoids local dependency
@@ -60,11 +69,17 @@ adding properties, changing nightly prices and removing apartments, while retain
 visibility over bookings.
 
 Commands follow a consistent `resource action` format, such as `apartment search`,
-`booking create` or `apartment price`. Enter `help` for role-specific guidance,
+`booking create` or `apartment update`. Enter `help` for role-specific guidance,
 `role` to switch responsibility and `exit` to close the application.
 
-Dates accept ISO and common European formats: `YYYY-MM-DD`, `DD-MM-YYYY`,
-`DD/MM/YYYY` and `DD.MM.YYYY`. Apartment names are matched case-insensitively.
+| Role | Main commands |
+| --- | --- |
+| System Manager | `apartment add`, `apartment update`, `apartment remove`, `apartment view`, `booking view` |
+| Apartment Booker | `apartment search`, `apartment view`, `booking create`, `booking change`, `booking cancel`, `booking view` |
+| Both | `help`, `role`, `exit` |
+
+Dates accept `YYYY-MM-DD`, `YYYY/MM/DD`, `DD/MM/YYYY` and `DD.MM.YYYY`.
+Apartment names are matched case-insensitively.
 Check-out must follow check-in, the selected apartment must fit the party, and two
 bookings for the same apartment may not overlap.
 
@@ -82,6 +97,16 @@ Operational endpoints are deliberately separate from business operations:
 OpenAPI 3.1 contract, and `/docs` renders the interactive explorer. The explorer
 loads its examples directly from the contract, so the documentation and executable
 requests remain aligned.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET`, `POST` | `/api/apartments` | List or create apartments |
+| `PATCH` | `/api/apartments/<name>/price` | Update the nightly price |
+| `DELETE` | `/api/apartments/<name>` | Remove an apartment and its bookings |
+| `GET`, `POST` | `/api/bookings` | List or create bookings |
+| `PATCH`, `DELETE` | `/api/bookings` | Change or cancel a booking |
+| `GET` | `/api/availability` | Search by dates and party size |
+| `GET` | `/api/health` | Check application and database readiness |
 
 Successful responses use a `{"data": ...}` envelope. Validation, missing records
 and conflicts return structured errors as
@@ -240,6 +265,18 @@ The command `docker compose down --volumes` deletes the normal Docker database a
 should only be used when a complete reset is intentional. Removing an apartment from
 the application also removes its bookings through the configured cascade.
 
+## Troubleshooting
+
+- If Docker commands cannot reach the daemon, start Docker Desktop and wait for the
+  engine before retrying.
+- Run application, Compose and test commands from the repository root.
+- If a command is unavailable, enter `role` and select the role that owns it.
+- For booking failures, verify the calendar dates, capacity and existing overlaps.
+- If SQLite is locked or read-only, close other writers and check database directory
+  permissions before retrying.
+- Terminal completion is optional and depends on the local `readline` or Windows
+  console backend; full commands always remain available.
+
 ## Project scope
 
 This repository is an educational local application rather than a production
@@ -259,4 +296,7 @@ component. The API should therefore remain bound to localhost.
 - [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
   — original Python and SQLite command-line booking application
 
-Created by **Sebastiano Druda, Tom Springer and Jacob Wieser**.
+## Authors and licensing
+
+Created by **Sebastiano Druda, Tom Springer and Jacob Wieser**. No license file is
+currently included; contact the authors before reuse or redistribution.

@@ -216,6 +216,8 @@ Keep the API bound to localhost.
 
 ## Releases and authors
 
+- [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04) — complete CI pipeline, coverage and Locust load testing
+- [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03) — Flask REST API, OpenAPI contract and local dashboard
 - [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
 - [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
 

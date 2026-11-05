@@ -1,5 +1,8 @@
 # Apartment Booking System — CLI and Flask API
 
+[![Tests](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
+[![Code coverage](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml)
+
 **By Sebastiano Druda, Tom Springer and Jacob Wieser**
 
 Manage apartments, availability and bookings through the original interactive CLI
@@ -12,9 +15,8 @@ The CLI remains standard-library-only; the optional web interface uses Flask.
  · **Storage:** SQLite
  · **Interfaces:** terminal and local JSON API
 
-The Flask interface is an incremental change after Checkpoint 02, available on
-`feature/flask-http-interface` while its PR is under review. The Checkpoint 01 and
-Checkpoint 02 tags are unchanged; their source archives do not include Flask.
+The Flask interface is an incremental change after Checkpoint 02. The Checkpoint 01
+and Checkpoint 02 tags are unchanged; their source archives do not include Flask.
 **Updating an existing checkout?** Read the [database upgrade instructions](#database-location-backup-and-reset)
 before pulling: older revisions tracked the database file in Git.
 
@@ -978,6 +980,13 @@ runs this same suite on pushes and pull requests to `main`, and through manual
 workflow dispatch. The matrix uses Python 3.10 and 3.14 on Linux, macOS and Windows.
 A separate Docker job builds/tests both images, runs the original CLI smoke check
 and verifies the real HTTP service, shared data and restart persistence.
+
+The separate [code coverage workflow](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml)
+runs the complete suite on every push and pull request to `main`, measures statement
+and branch coverage, and fails below **85%**. Its workflow summary contains the text
+report, while the downloadable `python-coverage-report` artifact contains XML and
+HTML reports and is retained for 14 days. Both workflows can also be started manually
+from the Actions tab.
 These automated checks do not replace manual testing of real-terminal completion.
 
 ## Troubleshooting

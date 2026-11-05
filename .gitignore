@@ -6,7 +6,8 @@ build/
 dist/
 .pytest_cache/
 .ruff_cache/
-.coverage*
+.coverage
+.coverage.*
 htmlcov/
 coverage.xml
 # Local runtime databases, backups and SQLite sidecars. Do not force-add these.

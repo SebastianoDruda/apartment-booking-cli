@@ -50,6 +50,6 @@ jobs:
       - name: Build runtime image
         run: docker compose build
       - name: Check CLI and data persistence across containers
-        run: python3 tests/docker_smoke.py
+        run: python3 tests/smoke/docker_cli.py
       - name: Check HTTP and shared CLI storage across web restarts
-        run: python3 tests/docker_web_smoke.py
+        run: python3 tests/smoke/docker_web.py

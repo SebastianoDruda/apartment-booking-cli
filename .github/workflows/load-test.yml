@@ -44,7 +44,7 @@ jobs:
         run: |
           mkdir -p .artifacts/locust
           python -m locust \
-            --locustfile tests/locustfile.py \
+            --locustfile tests/performance/locustfile.py \
             --host http://127.0.0.1:8000 \
             --headless \
             --users 10 \

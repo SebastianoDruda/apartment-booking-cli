@@ -16,7 +16,7 @@ try:
 except ImportError:  # pragma: no cover - Windows standard library
     readline = None  # type: ignore[assignment]
 
-from src.database import (
+from apartment_booking.database import (
     BookingDatabase,
     DEFAULT_DB_PATH,
     format_address,

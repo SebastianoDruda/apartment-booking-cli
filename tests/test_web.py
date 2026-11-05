@@ -11,9 +11,9 @@ from unittest.mock import patch
 import unittest
 from pathlib import Path
 
-from src.web import create_app
-from src.cli import ApartmentBookingCLI
-from src.database import BookingDatabase
+from apartment_booking.web import create_app
+from apartment_booking.cli import ApartmentBookingCLI
+from apartment_booking.database import BookingDatabase
 
 
 class TestWebAPI(unittest.TestCase):

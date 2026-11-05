@@ -11,9 +11,9 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from pathlib import Path
 from unittest.mock import patch
 
-from src.cli import ApartmentBookingCLI
-from src.database import BookingDatabase
-from src.main import main
+from apartment_booking.cli import ApartmentBookingCLI
+from apartment_booking.database import BookingDatabase
+from apartment_booking.__main__ import main
 
 
 class TestPriceValidation(unittest.TestCase):
@@ -215,7 +215,7 @@ class TestDatabaseErrorHandling(unittest.TestCase):
 
     def test_startup_database_error_has_friendly_message_and_failure_status(self) -> None:
         output = io.StringIO()
-        with patch("src.main.ApartmentBookingCLI", side_effect=sqlite3.OperationalError("unable to open database file")), \
+        with patch("apartment_booking.__main__.ApartmentBookingCLI", side_effect=sqlite3.OperationalError("unable to open database file")), \
              patch("sys.stderr", output):
             with self.assertRaises(SystemExit) as error:
                 main()
@@ -233,7 +233,7 @@ class TestDatabaseErrorHandling(unittest.TestCase):
 
     def test_main_closes_database_on_normal_and_exceptional_exit(self) -> None:
         for error in (None, RuntimeError("unexpected failure")):
-            with self.subTest(error=error), patch("src.main.ApartmentBookingCLI") as factory:
+            with self.subTest(error=error), patch("apartment_booking.__main__.ApartmentBookingCLI") as factory:
                 factory.return_value.run.side_effect = error
                 if error is None:
                     main()

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.main import main
+from apartment_booking.__main__ import main
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 [run]
 branch = True
-source = src
+source = apartment_booking
 
 [report]
 fail_under = 85

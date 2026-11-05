@@ -1,6 +1,6 @@
 """Exercise the built Compose service using an isolated, disposable data volume.
 
-Run after `docker compose build`: python tests/docker_smoke.py
+Run after `docker compose build`: python tests/smoke/docker_cli.py
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import uuid
 from pathlib import Path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def main() -> None:
@@ -44,7 +44,7 @@ def main() -> None:
         assert "is booked for Demo Guest" in output, output
         assert "200.00 EUR" in output, output
         # A new container must find records created by the removed first container.
-        output = run("run", "--rm", "-T", "booking", "python", "src/main.py",
+        output = run("run", "--rm", "-T", "booking", "python", "-m", "apartment_booking",
                      input_text="1\nbooking view\nexit\n")
         assert "Demo Guest" in output and "200.00 EUR" in output, output
         # Verify the documented stopped-service backup procedure.

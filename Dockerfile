@@ -12,7 +12,7 @@ RUN groupadd --gid 10001 booking \
     && chown booking:booking /data
 
 COPY main.py ./
-COPY src/ ./src/
+COPY apartment_booking/ ./apartment_booking/
 
 USER booking
 
@@ -24,7 +24,7 @@ USER root
 COPY requirements.txt ./
 RUN python -m pip install --no-cache-dir -r requirements.txt
 USER booking
-CMD ["python", "-m", "flask", "--app", "src.web:create_app", "--no-debug", "run", "--host", "0.0.0.0", "--port", "8000", "--no-debugger", "--no-reload"]
+CMD ["python", "-m", "flask", "--app", "apartment_booking.web:create_app", "--no-debug", "run", "--host", "0.0.0.0", "--port", "8000", "--no-debugger", "--no-reload"]
 
 FROM web-base AS test
 COPY tests/ ./tests/

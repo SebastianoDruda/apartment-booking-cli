@@ -7,13 +7,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.cli import (
+from apartment_booking.cli import (
     ApartmentBookingCLI,
     BOOKER_COMMAND_COMPLETIONS,
     find_tab_completions,
     read_line_with_tab_completion,
 )
-from src.database import BookingDatabase, parse_date
+from apartment_booking.database import BookingDatabase, parse_date
 
 
 class TestBookingDatabase(unittest.TestCase):

@@ -50,14 +50,10 @@ function selectOperation(index) {
   });
   byId("operation-title").textContent = selected.operation.summary;
   byId("operation-tag").textContent = selected.operation.tags[0];
-  byId("operation-description").textContent =
-    selected.method === "GET"
-      ? "Read-only request. This operation does not change booking records."
-      : "This request changes stored data. Review the values before sending.";
   byId("method").textContent = selected.method;
   byId("method").className = "method " + selected.method.toLowerCase();
   byId("endpoint").textContent = selected.path;
-  byId("send-request").firstChild.textContent = "Send " + selected.method + " ";
+  byId("send-request").textContent = "Send " + selected.method;
   byId("parameters").replaceChildren();
   for (const parameter of selected.operation.parameters || []) {
     const wrapper = document.createElement("div");

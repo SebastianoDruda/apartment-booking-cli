@@ -23,7 +23,7 @@ class TestDatabasePath(unittest.TestCase):
                 if value is not None:
                     env["APARTMENT_BOOKING_DB_PATH"] = value
                 result = subprocess.run(
-                    [sys.executable, "-c", "from src.database import DEFAULT_DB_PATH; print(DEFAULT_DB_PATH)"],
+                    [sys.executable, "-c", "from apartment_booking.database import DEFAULT_DB_PATH; print(DEFAULT_DB_PATH)"],
                     cwd=PROJECT_ROOT, env=env, capture_output=True, text=True, timeout=10,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -41,8 +41,8 @@ class TestDatabasePath(unittest.TestCase):
             self.assertEqual(create.returncode, 0, create.stderr)
             self.assertTrue(path.is_file())
             view = subprocess.run(
-                [sys.executable, str(PROJECT_ROOT / "src/main.py")],
-                cwd=directory, env=env, capture_output=True, text=True, timeout=10,
+                [sys.executable, "-m", "apartment_booking"],
+                cwd=PROJECT_ROOT, env=env, capture_output=True, text=True, timeout=10,
                 input="1\napartment view\nexit\n",
             )
             self.assertEqual(view.returncode, 0, view.stderr)

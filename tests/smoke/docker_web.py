@@ -1,7 +1,7 @@
 """Exercise real HTTP and CLI clients against a disposable Compose project.
 
 Build both images first: docker compose build
-Run: python tests/docker_web_smoke.py
+Run: python tests/smoke/docker_web.py
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from urllib.request import Request, urlopen
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parent.parent
+    root = Path(__file__).resolve().parents[2]
     compose = ["docker", "compose", "--project-name", "booking-http-test-" + uuid.uuid4().hex[:12]]
     # Docker selects a free loopback-only port; never use the user's web service/volume.
     env = dict(os.environ, BOOKING_WEB_PORT="0")

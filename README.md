@@ -1,77 +1,93 @@
-# Apartment Booking
+# Apartment Booking System
 
 [![Tests](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
 [![Coverage](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml)
 [![Load test](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml)
 
-A small apartment booking system with two interfaces over one domain layer:
+Apartment Booking is a compact, fully tested Python application developed to
+demonstrate how one domain model can support different delivery interfaces without
+duplicating business logic. Users can work through an interactive terminal client
+or through a Flask REST API with a local browser-based request explorer.
 
-- an interactive terminal application;
-- a Flask REST API with a browser-based request explorer.
+Both interfaces delegate to the same application and persistence layer. Calendar
+validation, apartment capacity, price handling, booking overlap detection and
+transaction safety therefore behave consistently whether a request originates from
+the CLI or HTTP. SQLite provides lightweight local persistence, while Docker Compose
+offers a reproducible runtime with shared storage.
 
-Both use the same SQLite database and enforce the same calendar, capacity, price,
-overlap and transaction rules.
+## Getting started
 
-## Quick start
-
-Docker is the simplest option. Start the API:
+The recommended way to run the project is with Docker. It avoids local dependency
+setup and creates a persistent volume shared by the CLI and web service. From the
+repository root, build and start the API in the background:
 
 ```bash
 docker compose up --build --detach --wait web
 ```
 
-Open:
+When the health check is ready, the following local endpoints are available:
 
 - http://localhost:8000/docs — API explorer;
 - http://localhost:8000/api/health — readiness check;
 - http://localhost:8000/api/openapi.json — OpenAPI 3.1 contract.
 
-Start the CLI in a separate terminal:
+The API explorer at `/docs` is the main entry point for inspecting and exercising
+the HTTP interface. To use the terminal workflow against the same database, open a
+second terminal and run:
 
 ```bash
 docker compose run --rm booking
 ```
 
-Stop the web service without deleting bookings:
+When finished, stop the web process without deleting stored bookings:
 
 ```bash
 docker compose stop web
 ```
 
-The CLI and API share the `booking-data` Docker volume. The HTTP port is published
-only on `127.0.0.1`; the API has no authentication and must remain local.
+Both services use the `booking-data` Docker volume. The HTTP port is intentionally
+published only on `127.0.0.1`; because this educational API has no authentication,
+it should not be exposed to a public network.
 
-## Main workflows
+## Using the application
 
-The CLI starts with a role selection:
+### Command-line interface
 
-| Role | Commands |
-| --- | --- |
-| Apartment Booker | `apartment view`, `apartment search`, `booking create`, `booking view`, `booking change`, `booking cancel` |
-| System Manager | `apartment add`, `apartment view`, `apartment price`, `apartment remove`, `booking view` |
+The CLI begins with a role selection. An **Apartment Booker** can inspect and search
+apartments, create bookings, review existing reservations, change dates or party
+size, and cancel bookings. A **System Manager** maintains the apartment catalogue by
+adding properties, changing nightly prices and removing apartments, while retaining
+visibility over bookings.
 
-Use `help` for contextual help, `role` to switch roles and `exit` to close the
-application. Dates accept `YYYY-MM-DD`, `DD-MM-YYYY`, `DD/MM/YYYY` and `DD.MM.YYYY`.
-Apartment names are case-insensitive. Check-out must be later than check-in, capacity
-must fit, and bookings for the same apartment cannot overlap.
+Commands follow a consistent `resource action` format, such as `apartment search`,
+`booking create` or `apartment price`. Enter `help` for role-specific guidance,
+`role` to switch responsibility and `exit` to close the application.
+
+Dates accept ISO and common European formats: `YYYY-MM-DD`, `DD-MM-YYYY`,
+`DD/MM/YYYY` and `DD.MM.YYYY`. Apartment names are matched case-insensitively.
+Check-out must follow check-in, the selected apartment must fit the party, and two
+bookings for the same apartment may not overlap.
 
 ### REST API
 
-| Method | Path | Purpose |
-| --- | --- | --- |
-| `GET` | `/api/health` | Check API and database readiness |
-| `GET` / `POST` | `/api/apartments` | List or create apartments |
-| `PATCH` | `/api/apartments/{name}/price` | Change the nightly price |
-| `DELETE` | `/api/apartments/{name}` | Delete an apartment and its bookings |
-| `GET` / `POST` | `/api/bookings` | List or create bookings |
-| `PATCH` / `DELETE` | `/api/bookings` | Change or cancel a booking |
-| `GET` | `/api/availability` | Search by dates and party size |
+The HTTP interface models apartments and bookings as resources. `GET` and `POST`
+requests to `/api/apartments` list and create apartments, while the resource-specific
+price and delete routes update or remove a named apartment. The `/api/bookings`
+collection supports listing and creation; `PATCH` changes an identified booking and
+`DELETE` cancels it. Availability searches are expressed as query parameters on
+`/api/availability`.
 
-Successful responses use `{"data": ...}`. Errors use
-`{"error": {"code": "...", "message": "..."}}`. The interactive explorer at
-`/docs` provides editable examples for every endpoint.
+Operational endpoints are deliberately separate from business operations:
+`/api/health` checks both the server and database, `/api/openapi.json` publishes the
+OpenAPI 3.1 contract, and `/docs` renders the interactive explorer. The explorer
+loads its examples directly from the contract, so the documentation and executable
+requests remain aligned.
 
-## Architecture
+Successful responses use a `{"data": ...}` envelope. Validation, missing records
+and conflicts return structured errors as
+`{"error": {"code": "...", "message": "..."}}` with the appropriate HTTP status.
+
+## Design and architecture
 
 ```text
 HTTP client -> Flask routes --------+
@@ -79,14 +95,18 @@ HTTP client -> Flask routes --------+
 Terminal ----> ApartmentBookingCLI -+
 ```
 
-- `apartment_booking.database` owns persistence, validation and transactions.
-- `apartment_booking.cli` owns terminal interaction and presentation.
-- `apartment_booking.web` translates HTTP input/output and contains no SQL.
-- `apartment_booking.api_docs` generates the OpenAPI contract used by the explorer.
+The application follows a simple layered design. `apartment_booking.database` is the
+domain and persistence boundary: it owns validation, SQLite access and transactional
+mutations. `apartment_booking.cli` handles terminal input and presentation, while
+`apartment_booking.web` translates HTTP requests and responses without containing
+SQL or reimplementing booking rules. `apartment_booking.api_docs` generates the
+contract consumed by the browser explorer.
 
-Flask creates one database wrapper per request. SQLite connections are not shared
-between threads. Mutations use `BEGIN IMMEDIATE`, so availability validation and the
-following write happen in one transaction.
+Flask creates a database wrapper for each request, and SQLite connections are never
+shared between HTTP threads. Write operations use `BEGIN IMMEDIATE`, ensuring that
+availability checks and their corresponding changes occur inside one transaction.
+This keeps concurrent booking attempts consistent and allows failures to roll back
+without leaving partial state.
 
 The domain relationships are summarized in the
 [concept map](docs/domain-concept-map.png).
@@ -116,12 +136,15 @@ apartment-booking-cli/
 └── requirements-load.txt       # Load-test dependency
 ```
 
-Generated data, virtual environments, caches, reports and local databases are
-ignored. The repository keeps source, tests and automation only.
+The layout keeps runtime code, automated checks, performance scenarios and
+documentation assets clearly separated. Generated data, virtual environments,
+caches, reports and local databases are ignored so the repository contains only
+source, tests and reproducible automation.
 
-## Run locally without Docker
+## Local development
 
-Python 3.10 or newer is required.
+Docker is recommended for normal use, but the project can also run directly with
+Python 3.10 or newer. Create an isolated environment and install the web dependency:
 
 ```bash
 python3 -m venv .venv
@@ -130,7 +153,7 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
-The equivalent package entry point is:
+The root launcher is retained for convenience. The equivalent package entry point is:
 
 ```bash
 python -m apartment_booking
@@ -143,22 +166,26 @@ python -m flask --app apartment_booking.web:create_app --no-debug run \
   --host 127.0.0.1 --port 8000 --no-debugger --no-reload
 ```
 
-On Windows, use `py -3` instead of `python3`, activate with
-`.venv\Scripts\activate`, and use one line for the Flask command.
+On Windows, use `py -3` instead of `python3`, activate the environment with
+`.venv\Scripts\activate`, and enter the Flask command on one line.
 
 Direct Python runs store data in the ignored `apartment_booking.db` file by default.
 Set `APARTMENT_BOOKING_DB_PATH` to use another location.
 
-## Tests and CI
+## Quality assurance
 
-Install the web dependency, then run all 43 unit and integration tests:
+The automated suite covers the domain model, CLI workflows, HTTP contract, storage
+configuration, concurrency, rollback behaviour and error handling. After installing
+the web dependency, run all 43 unit and integration tests with:
 
 ```bash
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
 ```
 
-Run the container checks:
+Docker smoke tests then verify properties that unit tests cannot: non-root execution,
+image contents, shared persistent storage, backup/import behaviour, HTTP readiness
+and persistence across service restarts.
 
 ```bash
 docker compose config --quiet
@@ -168,21 +195,23 @@ python tests/smoke/docker_cli.py
 python tests/smoke/docker_web.py
 ```
 
-The smoke scripts create random Compose projects and disposable volumes. They never
-use the normal `booking-data` volume.
+These scripts create random Compose projects with disposable volumes, so they never
+read or modify the normal `booking-data` volume.
 
-GitHub Actions automatically runs:
+Every push and pull request to `main` runs three independent GitHub Actions
+workflows. The primary test pipeline executes the full suite on Python 3.10 and 3.14
+across Linux, macOS and Windows, then validates both Docker interfaces, persistence
+and service restarts. A separate coverage workflow enforces an 85% branch-coverage
+minimum, while the performance workflow runs the booking journey under load and
+publishes downloadable HTML and CSV reports.
 
-- the full suite on Python 3.10 and 3.14 across Linux, macOS and Windows;
-- CLI/API Docker build, persistence and restart checks;
-- branch coverage with an 85% minimum;
-- the API load test with downloadable HTML and CSV reports.
+### Performance testing
 
-### Load test
-
-The Locust scenario models the primary journey: browse apartments, search
-availability, create a booking, list it, change it and cancel it. Each simulated
-user owns and cleans up uniquely named data.
+The Locust scenario models a complete customer journey rather than isolated health
+requests. A simulated user browses apartments, searches availability, creates and
+lists a booking, changes it and finally cancels it. Each user owns uniquely named
+fixtures and removes them on exit, preventing cross-user conflicts and persistent
+test pollution.
 
 ```bash
 python -m pip install -r requirements-load.txt
@@ -193,10 +222,13 @@ python -m locust --locustfile tests/performance/locustfile.py \
 Open http://localhost:8089 for the Locust UI. CI uses 10 users for 30 seconds and
 fails above 1% errors, 500 ms average response time or 1,000 ms p95.
 
-## Data and backups
+## Persistence and backups
 
-Local `*.db` files are deliberately not tracked. Before replacing or importing data,
-stop all writers:
+Direct Python execution uses an ignored `apartment_booking.db` file. Docker stores
+the same schema in the named `booking-data` volume, shared by the CLI and API. Local
+database files are deliberately excluded from version control.
+
+Before replacing, exporting or importing data, stop all writers and create a backup:
 
 ```bash
 docker compose stop web
@@ -204,20 +236,24 @@ docker compose create booking
 docker compose cp booking:/data/apartment_booking.db ./booking-backup.db
 ```
 
-Do not run `docker compose down --volumes` unless you intentionally want to delete
-the normal Docker database. Removing an apartment also removes its bookings.
+The command `docker compose down --volumes` deletes the normal Docker database and
+should only be used when a complete reset is intentional. Removing an apartment from
+the application also removes its bookings through the configured cascade.
 
-## Scope
+## Project scope
 
-This is a local course project, not a production service. It has no authentication,
-payments, booking ownership, schema migrations or multi-node database. Prices use
-SQLite `REAL`, totals use the apartment's current price, and dates have no time zone.
-Keep the API bound to localhost.
+This repository is an educational local application rather than a production
+booking platform. It intentionally omits authentication, payments, customer booking
+ownership, schema migrations and multi-node persistence. Prices use SQLite `REAL`,
+displayed totals follow the apartment's current price, and dates have no time-zone
+component. The API should therefore remain bound to localhost.
 
-## Releases and authors
+## Releases
 
-- [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04) — complete CI pipeline, coverage and Locust load testing
-- [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03) — Flask REST API, OpenAPI contract and local dashboard
+- [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04)
+  — complete CI pipeline, coverage and Locust load testing
+- [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03)
+  — Flask REST API, OpenAPI contract and local dashboard
 - [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
 - [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
 

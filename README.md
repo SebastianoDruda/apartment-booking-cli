@@ -56,7 +56,9 @@ docker compose stop web
 
 Both services use the `booking-data` Docker volume. The HTTP port is intentionally
 published only on `127.0.0.1`; because this educational API has no authentication,
-it should not be exposed to a public network.
+it should not be exposed to a public network. If port 8000 is already in use, set
+`BOOKING_WEB_PORT` to another host port, for example
+`BOOKING_WEB_PORT=8080 docker compose up --build --detach --wait web`.
 
 ## Using the application
 

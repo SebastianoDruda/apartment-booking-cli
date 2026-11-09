@@ -1,0 +1,4 @@
+# Test, coverage and lint tooling for CI; web and load-test dependencies have their own files.
+coverage==7.11.0
+pytest==9.2.0
+ruff==0.17.3

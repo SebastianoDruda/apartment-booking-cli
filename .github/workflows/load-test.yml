@@ -32,10 +32,10 @@ jobs:
         with:
           python-version: '3.14'
           cache: pip
-          cache-dependency-path: requirements-load.txt
+          cache-dependency-path: requirements/load.txt
 
       - name: Install Locust
-        run: python -m pip install --disable-pip-version-check -r requirements-load.txt
+        run: python -m pip install --disable-pip-version-check -r requirements/load.txt
 
       - name: Build and start an isolated API
         run: docker compose up --build --detach --wait web

@@ -39,11 +39,11 @@ lint:
   cache:
     key:
       files:
-        - requirements-ci.txt
+        - requirements/ci.txt
     paths:
       - .cache/pip
   script:
-    - python -m pip install -r requirements-ci.txt
+    - python -m pip install -r requirements/ci.txt
     # Correctness rules only (syntax errors, undefined names, unused imports).
     - python -m ruff check --isolated --select E4,E7,E9,F .
     - python -m compileall -q apartment_booking ci tests main.py
@@ -53,13 +53,13 @@ lint:
   cache:
     key:
       files:
-        - requirements.txt
-        - requirements-ci.txt
+        - requirements/web.txt
+        - requirements/ci.txt
     paths:
       - .cache/pip
   before_script:
     - python --version
-    - python -m pip install -r requirements.txt -r requirements-ci.txt
+    - python -m pip install -r requirements/web.txt -r requirements/ci.txt
 
 unit-tests:python3.10:
   extends: .unit-tests
@@ -107,12 +107,12 @@ load-test:
   cache:
     key:
       files:
-        - requirements.txt
-        - requirements-load.txt
+        - requirements/web.txt
+        - requirements/load.txt
     paths:
       - .cache/pip
   script:
-    - python -m pip install -r requirements.txt -r requirements-load.txt
+    - python -m pip install -r requirements/web.txt -r requirements/load.txt
     - mkdir -p .artifacts/locust
     - >-
       python -m flask --app apartment_booking.web:create_app --no-debug run

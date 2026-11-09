@@ -21,8 +21,8 @@ CMD ["python", "main.py"]
 # Flask is installed only in the web/test targets; the CLI target stays dependency-free.
 FROM base AS web-base
 USER root
-COPY requirements.txt ./
-RUN python -m pip install --no-cache-dir -r requirements.txt
+COPY requirements/web.txt ./requirements/web.txt
+RUN python -m pip install --no-cache-dir -r requirements/web.txt
 USER booking
 CMD ["python", "-m", "flask", "--app", "apartment_booking.web:create_app", "--no-debug", "run", "--host", "0.0.0.0", "--port", "8000", "--no-debugger", "--no-reload"]
 

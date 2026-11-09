@@ -4,7 +4,7 @@
 !Dockerfile
 !.dockerignore
 !main.py
-!requirements.txt
+!requirements/web.txt
 !apartment_booking/
 !apartment_booking/*.py
 !apartment_booking/web/
@@ -18,3 +18,8 @@
 !tests/*.py
 !tests/smoke/
 !tests/smoke/*.py
+# Never ship OS, interpreter or load-test files, even inside the allowed folders.
+**/.DS_Store
+**/__pycache__
+**/*.py[cod]
+tests/performance/

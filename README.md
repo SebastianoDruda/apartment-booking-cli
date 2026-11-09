@@ -157,16 +157,17 @@ apartment-booking-cli/
 │   ├── test_*.py               # Unit and integration tests
 │   ├── smoke/                  # Disposable Docker checks
 │   └── performance/            # Locust user journey
+├── requirements/
+│   ├── web.txt                 # Flask, for the HTTP interface
+│   ├── ci.txt                  # Test, coverage and lint tooling
+│   └── load.txt                # Locust, for load testing
 ├── docs/                       # Architecture assets
 ├── ci/gitlab/                  # GitLab runner scripts and pipeline summary
 ├── .github/workflows/          # Test, coverage and load-test pipelines
 ├── .gitlab-ci.yml              # GitLab pipeline
 ├── Dockerfile
 ├── compose.yaml
-├── main.py                     # Small compatibility launcher
-├── requirements.txt            # Web dependency
-├── requirements-ci.txt         # GitLab pipeline tooling
-└── requirements-load.txt       # Load-test dependency
+└── main.py                     # Small compatibility launcher
 ```
 
 The layout keeps runtime code, automated checks, performance scenarios and
@@ -182,7 +183,7 @@ Python 3.10 or newer. Create an isolated environment and install the web depende
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r requirements/web.txt
 python main.py
 ```
 
@@ -212,7 +213,7 @@ configuration, concurrency, rollback behaviour and error handling. After install
 the web dependency, run all 46 unit and integration tests with:
 
 ```bash
-python -m pip install -r requirements.txt
+python -m pip install -r requirements/web.txt
 python -m unittest discover -s tests -v
 ```
 
@@ -247,7 +248,7 @@ fixtures and removes them on exit, preventing cross-user conflicts and persisten
 test pollution.
 
 ```bash
-python -m pip install -r requirements-load.txt
+python -m pip install -r requirements/load.txt
 python -m locust --locustfile tests/performance/locustfile.py \
   --host http://127.0.0.1:8000
 ```

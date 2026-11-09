@@ -23,6 +23,7 @@ offers a reproducible runtime with shared storage.
 - Persistent SQLite storage with transactional writes and Docker volumes.
 - Interactive terminal completion and browser-based API exploration.
 - Automated unit, integration, Docker, coverage and Locust load tests.
+- Continuous integration on GitHub Actions and on a self-managed GitLab runner.
 
 ## Getting started
 
@@ -155,11 +156,14 @@ apartment-booking-cli/
 │   ├── smoke/                  # Disposable Docker checks
 │   └── performance/            # Locust user journey
 ├── docs/                       # Architecture assets
+├── ci/gitlab/                  # GitLab runner scripts and pipeline summary
 ├── .github/workflows/          # Test, coverage and load-test pipelines
+├── .gitlab-ci.yml              # GitLab pipeline
 ├── Dockerfile
 ├── compose.yaml
 ├── main.py                     # Small compatibility launcher
 ├── requirements.txt            # Web dependency
+├── requirements-ci.txt         # GitLab pipeline tooling
 └── requirements-load.txt       # Load-test dependency
 ```
 
@@ -249,6 +253,50 @@ python -m locust --locustfile tests/performance/locustfile.py \
 Open http://localhost:8089 for the Locust UI. CI uses 10 users for 30 seconds and
 fails above 1% errors, 500 ms average response time or 1,000 ms p95.
 
+### GitLab CI and the self-managed runner
+
+The project is also hosted in the private university GitLab project
+[`gitlab-ci-docker-lab`](https://gitlab.inf.unibz.it/Sebastiano.Druda/gitlab-ci-docker-lab).
+GitHub remains the primary repository; GitLab receives the same commits by merging
+GitHub `main`, so both contain identical files. The GitLab pipeline is defined in
+`.gitlab-ci.yml` and runs only on a dedicated, project-scoped runner, because shared
+runners are disabled for the project.
+
+```text
+GitLab project -> tagged job -> GitLab Runner container -> Docker Desktop
+                                                       -> isolated ARM64 job container
+```
+
+The runner runs in the `gitlab-runner` Docker container on an Apple Silicon Mac and
+uses the Docker executor. It accepts only jobs tagged `local`, `docker` and `arm64`,
+processes one job at a time and limits each job container to 2 CPUs and 2 GB of
+memory. It never uses privileged mode or Docker-in-Docker, and job images are pinned
+by digest.
+
+| Stage | Job | Purpose |
+| --- | --- | --- |
+| validate | `lint` | Ruff correctness rules and bytecode compilation |
+| test | `unit-tests:python3.10`, `unit-tests:python3.14` | Full suite with JUnit reports; branch coverage, Cobertura and HTML reports on 3.14 |
+| performance | `load-test` | Locust booking journey against a Flask server inside the job |
+| report | `pipeline-summary` | Markdown summary of tests, coverage and load results |
+
+Because job containers are unprivileged, GitLab does not build Docker images; the
+Docker build and Compose smoke checks run in the GitHub workflow.
+
+The scripts in `ci/gitlab/` manage the runner. They require Docker Desktop and
+`glab` authenticated against `gitlab.inf.unibz.it` with the `api` scope. Credentials
+stay in the macOS Keychain and in `~/.gitlab-runner/config.toml`, never in the
+repository.
+
+```bash
+./ci/gitlab/setup-runner.sh                         # register if needed, start the container
+./ci/gitlab/verify-runner.sh                        # check container, executor and registration
+UNINSTALL_CONFIRM=yes ./ci/gitlab/remove-runner.sh  # unregister and remove the container
+```
+
+If jobs remain pending, start Docker Desktop and run `./ci/gitlab/verify-runner.sh`;
+`docker logs --tail 100 gitlab-runner` shows the runner log.
+
 ## Persistence and backups
 
 Direct Python execution uses an ignored `apartment_booking.db` file. Docker stores
@@ -291,14 +339,13 @@ component. The API should therefore remain bound to localhost.
 
 ## Releases
 
-- [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04)
-  — complete CI pipeline, coverage and Locust load testing
-- [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03)
-  — Flask REST API, OpenAPI contract and local dashboard
-- [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02)
-  — Docker Compose, persistent storage and reliability improvements
-- [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01)
-  — original Python and SQLite command-line booking application
+| Release | Focus |
+| --- | --- |
+| [Checkpoint 05](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-05) | GitLab CI with a self-managed Docker executor runner |
+| [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04) | GitHub Actions pipeline with coverage and Locust load testing |
+| [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03) | Flask REST API, OpenAPI contract and interactive API documentation |
+| [Checkpoint 02](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-02) | Docker Compose, persistent storage and reliability fixes |
+| [Checkpoint 01](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-01) | Terminal booking application with SQLite persistence |
 
 ## Authors and licensing
 

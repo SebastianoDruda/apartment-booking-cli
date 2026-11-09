@@ -201,7 +201,7 @@ Set `APARTMENT_BOOKING_DB_PATH` to use another location.
 
 The automated suite covers the domain model, CLI workflows, HTTP contract, storage
 configuration, concurrency, rollback behaviour and error handling. After installing
-the web dependency, run all 43 unit and integration tests with:
+the web dependency, run all 46 unit and integration tests with:
 
 ```bash
 python -m pip install -r requirements.txt
@@ -274,8 +274,10 @@ the application also removes its bookings through the configured cascade.
 - For booking failures, verify the calendar dates, capacity and existing overlaps.
 - If SQLite is locked or read-only, close other writers and check database directory
   permissions before retrying.
-- Terminal completion is optional and depends on the local `readline` or Windows
-  console backend; full commands always remain available.
+- Terminal completion is optional and uses GNU readline, macOS editline or the
+  Windows console; full commands always remain available.
+- If the configured database file is not a valid SQLite database, the CLI stops
+  with an error instead of changing it; restore the file from a backup.
 
 ## Project scope
 

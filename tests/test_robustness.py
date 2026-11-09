@@ -183,7 +183,8 @@ class TestDatabaseErrorHandling(unittest.TestCase):
     def test_cli_recovers_from_expected_sqlite_errors(self) -> None:
         for error in (sqlite3.OperationalError("database is locked"),
                       sqlite3.OperationalError("attempt to write a readonly database"),
-                      sqlite3.IntegrityError("constraint failed")):
+                      sqlite3.IntegrityError("constraint failed"),
+                      sqlite3.DatabaseError("file is not a database")):
             with self.subTest(error=str(error)):
                 db = BookingDatabase(":memory:")
                 self.addCleanup(db.close)
@@ -230,6 +231,9 @@ class TestDatabaseErrorHandling(unittest.TestCase):
         with patch.object(db, "list_apartments", side_effect=sqlite3.ProgrammingError("bug")):
             with self.assertRaises(sqlite3.ProgrammingError):
                 ApartmentBookingCLI(db=db, input_fn=lambda _: next(inputs), output_stream=io.StringIO()).run()
+        with patch("apartment_booking.__main__.ApartmentBookingCLI", side_effect=sqlite3.ProgrammingError("bug")):
+            with self.assertRaises(sqlite3.ProgrammingError):
+                main()
 
     def test_main_closes_database_on_normal_and_exceptional_exit(self) -> None:
         for error in (None, RuntimeError("unexpected failure")):

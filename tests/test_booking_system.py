@@ -6,12 +6,16 @@ import io
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 from apartment_booking.cli import (
     ApartmentBookingCLI,
     BOOKER_COMMAND_COMPLETIONS,
+    MANAGER_COMMAND_COMPLETIONS,
     find_tab_completions,
     read_line_with_tab_completion,
+    tab_completion_binding,
 )
 from apartment_booking.database import BookingDatabase, parse_date
 
@@ -251,6 +255,42 @@ class TestTabAutocompletion(unittest.TestCase):
         )
         self.assertEqual(normal_result, "help")
         self.assertEqual(normal_out.getvalue(), "[Booker] > help\n")
+
+    def test_tab_binding_matches_readline_backend(self) -> None:
+        # Python 3.13+ exposes readline.backend; older versions only mention libedit in __doc__.
+        for fake_readline, binding in (
+            (SimpleNamespace(backend="readline"), "tab: complete"),
+            (SimpleNamespace(backend="editline"), "bind ^I rl_complete"),
+            (SimpleNamespace(__doc__="Command line editing using GNU readline."), "tab: complete"),
+            (SimpleNamespace(__doc__="Command line editing using libedit readline."), "bind ^I rl_complete"),
+        ):
+            with self.subTest(binding=binding), patch("apartment_booking.cli.readline", fake_readline):
+                self.assertEqual(tab_completion_binding(), binding)
+
+    def test_terminal_prompts_never_reuse_previous_completions(self) -> None:
+        db = BookingDatabase(":memory:")
+        self.addCleanup(db.close)
+        cli = ApartmentBookingCLI(db=db, output_stream=io.StringIO())
+        terminal = MagicMock()
+        terminal.isatty.return_value = True
+        for backend, binding in (("readline", "tab: complete"), ("editline", "bind ^I rl_complete")):
+            with self.subTest(backend=backend):
+                fake_readline = MagicMock(backend=backend)
+                with patch("apartment_booking.cli.readline", fake_readline), \
+                        patch("apartment_booking.cli.msvcrt", None), \
+                        patch("sys.stdin", terminal), \
+                        patch("builtins.input", side_effect=[" apartment view ", "Alpine"]):
+                    self.assertEqual(cli._prompt("> ", MANAGER_COMMAND_COMPLETIONS), "apartment view")
+                    command_completer = fake_readline.set_completer.call_args.args[0]
+                    self.assertEqual(cli._prompt("Apartment name: "), "Alpine")
+                    name_completer = fake_readline.set_completer.call_args.args[0]
+
+                    fake_readline.get_line_buffer.return_value = "apartment v"
+                    self.assertEqual(command_completer("apartment v", 0), "apartment view")
+                    self.assertIsNone(command_completer("apartment v", 1))
+                    # Free-text prompts get an empty completer, never commands or file names.
+                    self.assertIsNone(name_completer("apartment v", 0))
+                fake_readline.parse_and_bind.assert_called_with(binding)
 
 
 class TestApartmentBookingCLI(unittest.TestCase):

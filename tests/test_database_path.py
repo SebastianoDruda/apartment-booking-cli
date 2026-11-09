@@ -66,6 +66,21 @@ class TestDatabasePath(unittest.TestCase):
             self.assertFalse(path.exists())
             self.assertEqual(list(Path(directory).iterdir()), [])
 
+    def test_non_sqlite_configured_file_fails_without_traceback_or_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "notes.db"
+            content = b"This text file is not a SQLite database.\n" * 20
+            path.write_bytes(content)
+            env = dict(os.environ, APARTMENT_BOOKING_DB_PATH=str(path))
+            result = subprocess.run(
+                [sys.executable, str(PROJECT_ROOT / "main.py")],
+                cwd=directory, env=env, input="", capture_output=True, text=True, timeout=10,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Database operation failed", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertEqual(path.read_bytes(), content)
+
 
 if __name__ == "__main__":
     unittest.main()

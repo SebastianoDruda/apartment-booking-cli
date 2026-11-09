@@ -33,9 +33,31 @@ def database_error_message(error: sqlite3.Error) -> str:
     """Explain expected storage failures without exposing a traceback to the user."""
     return (
         f"[Error] Database operation failed: {error}. "
-        "Close other database writers, check that the database folder is writable, "
-        "and try again."
+        "Close other database writers, check that the database folder is writable "
+        "and that the file is a valid SQLite database, and try again."
     )
+
+
+def is_storage_error(error: BaseException) -> bool:
+    """Return True for SQLite failures that the user can resolve.
+
+    Locked, read-only, missing, corrupt or non-SQLite database files qualify. Subclasses
+    such as sqlite3.ProgrammingError indicate bugs and must keep propagating.
+    """
+    return isinstance(error, (sqlite3.OperationalError, sqlite3.IntegrityError)) or (
+        type(error) is sqlite3.DatabaseError
+    )
+
+
+def tab_completion_binding() -> str:
+    """Return the Tab key binding understood by the active readline backend.
+
+    macOS Python builds use editline (libedit), which ignores GNU readline syntax.
+    """
+    backend = getattr(readline, "backend", None)  # Available from Python 3.13.
+    if backend is None:
+        backend = "editline" if "libedit" in (readline.__doc__ or "") else "readline"
+    return "bind ^I rl_complete" if backend == "editline" else "tab: complete"
 
 
 MANAGER_COMMAND_COMPLETIONS = [
@@ -207,7 +229,7 @@ class ApartmentBookingCLI:
                 output_stream=self.output_stream,
             ).strip()
 
-        if is_tty and readline is not None and completions:
+        if is_tty and readline is not None:
             matches_cache: list[str] = []
 
             def completer(text: str, state: int) -> str | None:
@@ -217,9 +239,11 @@ class ApartmentBookingCLI:
                     matches_cache = find_tab_completions(line or text, completions)
                 return matches_cache[state] if state < len(matches_cache) else None
 
+            # Replace the completer on every prompt: free-text fields must not reuse the
+            # previous prompt's candidates, and an empty completer avoids file-name completion.
             readline.set_completer_delims("")
             readline.set_completer(completer)
-            readline.parse_and_bind("tab: complete")
+            readline.parse_and_bind(tab_completion_binding())
 
         return input(prompt_text).strip()
 
@@ -805,7 +829,9 @@ class ApartmentBookingCLI:
                     break
             except ValueError as err:
                 self._print(f"[Error] {err}")
-            except (sqlite3.OperationalError, sqlite3.IntegrityError) as err:
+            except sqlite3.DatabaseError as err:
+                if not is_storage_error(err):
+                    raise
                 self._print(database_error_message(err))
             except (EOFError, KeyboardInterrupt):
                 self._print("\n[Cancelled] Operation aborted.")

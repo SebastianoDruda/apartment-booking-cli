@@ -44,8 +44,8 @@ lint:
       - .cache/pip
   script:
     - python -m pip install -r requirements/ci.txt
-    # Correctness rules only (syntax errors, undefined names, unused imports).
-    - python -m ruff check --isolated --select E4,E7,E9,F .
+    # Rules and target version come from pyproject.toml.
+    - python -m ruff check .
     - python -m compileall -q apartment_booking ci tests main.py
 
 .unit-tests:
@@ -65,7 +65,7 @@ unit-tests:python3.10:
   extends: .unit-tests
   image: $PYTHON_310_IMAGE
   script:
-    - python -m pytest tests -p no:cacheprovider --junitxml=junit-py3.10.xml
+    - python -m pytest --junitxml=junit-py3.10.xml
   artifacts:
     when: always
     name: "unit-tests-py3.10-$CI_COMMIT_SHORT_SHA"
@@ -79,10 +79,10 @@ unit-tests:python3.14:
   extends: .unit-tests
   image: $PYTHON_314_IMAGE
   script:
-    - python -m coverage run -m pytest tests -p no:cacheprovider --junitxml=junit-py3.14.xml
+    - python -m coverage run -m pytest --junitxml=junit-py3.14.xml
     - python -m coverage xml
     - python -m coverage html
-    # Enforces the 85% branch-coverage minimum configured in .coveragerc.
+    # Enforces the 85% branch-coverage minimum configured in pyproject.toml.
     - python -m coverage report
   coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'
   artifacts:

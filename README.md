@@ -167,7 +167,8 @@ apartment-booking-cli/
 ├── .gitlab-ci.yml              # GitLab pipeline
 ├── Dockerfile
 ├── compose.yaml
-└── main.py                     # Small compatibility launcher
+├── main.py                     # Small compatibility launcher
+└── pyproject.toml              # Coverage, pytest and Ruff configuration
 ```
 
 The layout keeps runtime code, automated checks, performance scenarios and
@@ -215,6 +216,16 @@ the web dependency, run all 46 unit and integration tests with:
 ```bash
 python -m pip install -r requirements/web.txt
 python -m unittest discover -s tests -v
+```
+
+Coverage, pytest and Ruff read their settings from `pyproject.toml`, so local runs
+match CI. To reproduce the coverage gate and the lint check:
+
+```bash
+python -m pip install -r requirements/web.txt -r requirements/ci.txt
+python -m coverage run -m unittest discover -s tests
+python -m coverage report
+python -m ruff check .
 ```
 
 Docker smoke tests then verify properties that unit tests cannot: non-root execution,

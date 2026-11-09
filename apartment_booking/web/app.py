@@ -1,7 +1,4 @@
-"""Local HTTP presentation layer for the existing booking database.
-
-Start with: python -m flask --app apartment_booking.web:create_app run --no-debugger --no-reload --port 8000
-"""
+"""Flask application factory: the local HTTP presentation layer over BookingDatabase."""
 
 from __future__ import annotations
 
@@ -13,7 +10,7 @@ from time import perf_counter
 from flask import Flask, current_app, g, jsonify, render_template, request
 from werkzeug.exceptions import HTTPException
 
-from apartment_booking.api_docs import openapi_document
+from apartment_booking.web.api_docs import openapi_document
 from apartment_booking.database import (
     BookingDatabase, BookingConflictError, DEFAULT_DB_PATH, RecordNotFoundError,
     format_address, parse_price_input,

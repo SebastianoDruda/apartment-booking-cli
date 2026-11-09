@@ -126,9 +126,10 @@ Terminal ----> ApartmentBookingCLI -+
 The application follows a simple layered design. `apartment_booking.database` is the
 domain and persistence boundary: it owns validation, SQLite access and transactional
 mutations. `apartment_booking.cli` handles terminal input and presentation, while
-`apartment_booking.web` translates HTTP requests and responses without containing
-SQL or reimplementing booking rules. `apartment_booking.api_docs` generates the
-contract consumed by the browser explorer.
+the `apartment_booking.web` package translates HTTP requests and responses without
+containing SQL or reimplementing booking rules. It also holds the OpenAPI contract
+(`apartment_booking.web.api_docs`) and the templates and static assets of the
+browser explorer.
 
 Flask creates a database wrapper for each request, and SQLite connections are never
 shared between HTTP threads. Write operations use `BEGIN IMMEDIATE`, ensuring that
@@ -147,10 +148,11 @@ apartment-booking-cli/
 │   ├── __main__.py             # `python -m apartment_booking`
 │   ├── cli.py                  # Terminal interface
 │   ├── database.py             # Domain rules and SQLite persistence
-│   ├── web.py                  # Flask application factory and routes
-│   ├── api_docs.py             # OpenAPI contract
-│   ├── templates/              # API explorer markup
-│   └── static/                 # API explorer CSS and JavaScript
+│   └── web/                    # HTTP interface
+│       ├── app.py              # Flask application factory and routes
+│       ├── api_docs.py         # OpenAPI contract
+│       ├── templates/          # API explorer markup
+│       └── static/             # API explorer CSS and JavaScript
 ├── tests/
 │   ├── test_*.py               # Unit and integration tests
 │   ├── smoke/                  # Disposable Docker checks

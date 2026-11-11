@@ -1,0 +1,13 @@
+{
+  "name": "dimora-website-studio",
+  "private": true,
+  "description": "Dimora: web client for the Apartment Booking engine.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "python3 serve.py",
+    "test": "node --test \"tests/**/*.test.js\" && python3 -m unittest discover -s tests -v"
+  }
+}

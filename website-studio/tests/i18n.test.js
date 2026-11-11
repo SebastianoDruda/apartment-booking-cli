@@ -60,7 +60,7 @@ test('dynamic keys used by views exist for every variant', () => {
     ]),
     ...['upcoming', 'ongoing', 'past'].map((status) => `status.${status}`),
     ...['priceAsc', 'priceDesc', 'capacity', 'name'].map((sort) => `explore.sorts.${sort}`),
-    ...['listings', 'upcoming', 'guests', 'revenue'].map((kpi) => `host.overview.kpi.${kpi}`),
+    ...['revenue', 'upcoming', 'guests', 'occupancy'].map((kpi) => `host.overview.kpi.${kpi}`),
     ...['live', 'overlap', 'price', 'flex'].flatMap((key) => [`landing.features.${key}.title`, `landing.features.${key}.body`]),
     ...['how', 'features', 'stays'].map((id) => `nav.${id}`),
   ];

@@ -1,4 +1,4 @@
-/** Public landing page: one promise, two roles, four guarantees, the live catalogue. */
+/** Public landing page: one promise, two roles, four guarantees, the most popular stays. */
 import { html, render } from '../core/html.js';
 import { t, tRich } from '../core/i18n.js';
 import { observeReveals } from '../core/motion.js';
@@ -15,12 +15,10 @@ function hero(ctx) {
     <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
     <div class="grain" aria-hidden="true"></div>
     <div class="container hero__inner">
-      <p class="hero__live" data-live-count><span class="pulse" aria-hidden="true"></span><span data-live-text>&nbsp;</span></p>
       <h1 class="display hero__title" id="hero-title">${tRich('landing.title')}</h1>
       <p class="hero__lead">${t('landing.lead')}</p>
       <div class="hero__ctas">
-        <a class="btn btn--primary btn--lg" href="${entry(ctx, 'guest')}">${t('landing.ctaGuest')} ${icon('arrowRight', 18)}</a>
-        <a class="btn btn--ghost btn--lg" href="${entry(ctx, 'host')}">${icon('key', 18)} ${t('landing.ctaHost')}</a>
+        <a class="btn btn--primary btn--lg" href="#/login">${t('landing.cta')} ${icon('arrowRight', 18)}</a>
       </div>
     </div>
   </section>`;
@@ -113,10 +111,6 @@ export const landingView = {
 
     bookingService.listApartments({ signal: controller.signal }).then((apartments) => {
       if (!apartments.length) return;
-      const live = root.querySelector('[data-live-count]');
-      live.querySelector('[data-live-text]').textContent = t('landing.live', { count: apartments.length });
-      live.classList.add('is-ready');
-
       const section = root.querySelector('[data-stays]');
       const featured = [...apartments].sort((a, b) => b.pricePerNight - a.pricePerNight).slice(0, 3);
       render(root.querySelector('[data-stays-grid]'), featured.map((apartment) => stayCard(apartment, {

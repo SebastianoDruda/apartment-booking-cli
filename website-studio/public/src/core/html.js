@@ -55,4 +55,8 @@ export function render(target, content) {
 export function applyStyleHooks(root) {
   root.querySelectorAll('[data-hue]').forEach((node) => node.style.setProperty('--hue', node.dataset.hue));
   root.querySelectorAll('[data-meter]').forEach((node) => node.style.setProperty('--target', node.dataset.meter));
+  // Chart geometry in percent: position, width and height of a mark.
+  root.querySelectorAll('[data-x], [data-w], [data-h]').forEach((node) => {
+    ['x', 'w', 'h'].forEach((key) => { if (node.dataset[key] !== undefined) node.style.setProperty(`--${key}`, node.dataset[key]); });
+  });
 }

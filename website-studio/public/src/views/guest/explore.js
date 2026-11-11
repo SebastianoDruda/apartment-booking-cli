@@ -43,34 +43,36 @@ export const exploreView = {
     const today = todayIso();
     return html`
       ${pageHead({ title: tRich('explore.title', { name: firstName(ctx.session.name) }) })}
-      <form class="searchbar reveal" role="search" novalidate data-search aria-label="${t('explore.searchLabel')}">
-        <label class="searchbar__field">
-          <span class="searchbar__label">${icon('calendar', 14)} ${t('explore.checkIn')}</span>
+      <form class="filterbar reveal" role="search" novalidate data-search aria-label="${t('explore.searchLabel')}">
+        <label class="filterbar__field filterbar__field--where">
+          <span class="filterbar__label">${t('explore.where')}</span>
+          <span class="filterbar__control">${icon('search', 16)}
+            <input type="search" name="q" data-filter placeholder="${t('explore.filter')}" value="${criteria.q}" autocomplete="off">
+          </span>
+        </label>
+        <label class="filterbar__field">
+          <span class="filterbar__label">${t('explore.checkIn')}</span>
           <input type="date" name="start" min="${today}" value="${criteria.start}">
         </label>
-        <label class="searchbar__field">
-          <span class="searchbar__label">${icon('calendar', 14)} ${t('explore.checkOut')}</span>
+        <label class="filterbar__field">
+          <span class="filterbar__label">${t('explore.checkOut')}</span>
           <input type="date" name="end" min="${addDays(criteria.start || today, 1)}" value="${criteria.end}">
         </label>
-        <div class="searchbar__field searchbar__field--guests">
-          <span class="searchbar__label" id="search-guests">${icon('users', 14)} ${t('explore.guests')}</span>
+        <div class="filterbar__field filterbar__field--guests">
+          <span class="filterbar__label" id="search-guests">${t('explore.guests')}</span>
           ${stepper({ name: 'guests', value: criteria.guests, min: 1, max: MAX_GUESTS, labelledby: 'search-guests' })}
         </div>
-        <button class="btn btn--primary searchbar__submit" type="submit">${icon('search', 18)}<span>${t('explore.find')}</span></button>
       </form>
       <p class="form-alert" role="alert" data-search-error hidden></p>
 
       <div class="toolbar">
         <div class="toolbar__summary" data-summary aria-live="polite"></div>
         <div class="toolbar__controls">
-          <label class="input-icon">${icon('search', 16)}
-            <span class="visually-hidden">${t('explore.filter')}</span>
-            <input class="input input--pill" type="search" data-filter placeholder="${t('explore.filter')}" value="${criteria.q}">
+          <button type="button" class="btn btn--quiet btn--sm" data-reset hidden>${icon('x', 16)} ${t('explore.reset')}</button>
+          <label class="sort">
+            <span class="sort__label">${t('explore.sort')}</span>
+            <select class="sort__select" data-sort>${SORTS.map((sort) => html`<option value="${sort}" ${sort === criteria.sort ? 'selected' : ''}>${t(`explore.sorts.${sort}`)}</option>`)}</select>
           </label>
-          <label><span class="visually-hidden">${t('explore.sort')}</span>
-            <select class="select input--pill" data-sort>${SORTS.map((sort) => html`<option value="${sort}" ${sort === criteria.sort ? 'selected' : ''}>${t(`explore.sorts.${sort}`)}</option>`)}</select>
-          </label>
-          <button type="button" class="btn btn--ghost btn--sm" data-reset hidden>${icon('x', 16)} ${t('explore.reset')}</button>
         </div>
       </div>
       <div class="grid grid--stays" data-results aria-busy="true">${skeletonCards(6)}</div>`;
@@ -154,30 +156,40 @@ export const exploreView = {
       paint();
     };
 
-    form.addEventListener('change', (event) => {
-      if (event.target.name === 'start') {
-        const start = field('start').value;
-        field('end').min = addDays(start || todayIso(), 1);
-        if (field('end').value && start && field('end').value <= start) field('end').value = '';
-        if (start && !field('end').value) field('end').focus();
-      }
-    });
-
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
+    // Filters apply as they change: dates once both are set, guests and text at once.
+    const applySearch = () => {
       const start = field('start').value;
       const end = field('end').value;
       const guests = Number(field('guests').value);
       let message = '';
-      if (Boolean(start) !== Boolean(end)) message = t('explore.errors.bothDates');
+      if (start && !end) return; // waiting for check-out
+      if (!start && end) message = t('explore.errors.bothDates');
       else if (start && start < todayIso()) message = t('booking.errors.pastDate');
       else if (start && end <= start) message = t('booking.errors.endAfterStart');
       else if (!Number.isInteger(guests) || guests < 1) message = t('booking.errors.min');
       showAlert(searchError, message);
       if (message) return;
+      const datesChanged = start !== state.criteria.start || end !== state.criteria.end;
       state.criteria = { ...state.criteria, start, end, guests };
       syncUrl();
-      load();
+      if (datesChanged || hasDates()) load();
+      else paint();
+    };
+
+    form.addEventListener('change', (event) => {
+      const { name } = event.target;
+      if (name === 'start') {
+        const start = field('start').value;
+        field('end').min = addDays(start || todayIso(), 1);
+        if (field('end').value && start && field('end').value <= start) field('end').value = '';
+        if (start && !field('end').value) field('end').focus();
+      }
+      if (name === 'start' || name === 'end' || name === 'guests') applySearch();
+    });
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      applySearch();
     });
 
     let filterTimer;

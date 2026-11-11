@@ -34,6 +34,8 @@
   --on-brand: #fff8f2;
   --sage: #47705a;
   --sage-soft: #e1ece4;
+  --chart: #2b7a52;          /* Host charts: validated vs surface (chroma, lightness, 3:1); white labels 5.2:1 */
+  --chart-ink: #ffffff;
   --gold: #c08a22;
   --gold-soft: #f6ebd0;
   --info: #2d5b8a;
@@ -81,6 +83,10 @@
     --on-brand: #1a0d07;
     --sage: #86b897;
     --sage-soft: #1c2b21;
+  --chart: #55a97c;
+  --chart-ink: #100e0c;
+    --chart: #55a97c;
+    --chart-ink: #100e0c;
     --gold: #e2b65a;
     --gold-soft: #2f2615;
     --info: #94bde6;

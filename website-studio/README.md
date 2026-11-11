@@ -32,10 +32,11 @@ the Flask service and a strict Content Security Policy for the client.
 
 ## The experience
 
-- **Landing.** A centred promise over a slow aurora, a live count of available stays,
-  how each role works, four guarantees and the most popular apartments, all from the
-  live API. The header is open at the top and draws in to a glass pill as the page
-  scrolls. At the end, the page lifts like a curtain to uncover the footer.
+- **Landing.** A centred promise over a slow aurora with a single *Try our system*
+  call to action, how each role works, four guarantees and the most popular
+  apartments from the live API. The header is open at the top and draws in to a glass
+  pill as the page scrolls. At the end, the page lifts like a curtain to uncover the
+  footer, which repeats the same single call to action.
 - **Entry.** Two doors: *Enter as a guest* or *Enter as a host*. The left panel shows
   the role's mark and line, and changes as you point at either door.
 - **Workspaces.** A side panel holds the role's sections, the light/dark switch and
@@ -58,8 +59,11 @@ Every CLI command has a web equivalent.
 | `apartment update` | host | Listings → Price |
 | `apartment remove` | host | Listings → Remove |
 
-Hosts also get an overview with key figures, next arrivals and 30-day occupancy,
-all derived from the same API data.
+Hosts also get an overview, all derived from the same API data: a strip of key
+figures, a 30-day timeline with one row per listing and a bar per stay (with its
+occupancy), the next arrivals, and booked revenue by check-in month. Every chart mark
+has a hover/focus tooltip and an accessible name; the Reservations table is the data
+view behind them.
 
 ## Architecture
 

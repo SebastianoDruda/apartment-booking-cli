@@ -31,20 +31,12 @@ export function publicHeader(ctx, { sections = false } = {}) {
  * lifts like a curtain and uncovers it, pinned below (see layout.css).
  */
 export function siteFooter(ctx) {
-  const guestHref = ctx.session?.role === 'guest' ? `#${HOME.guest}` : '#/login?role=guest';
-  const hostHref = ctx.session?.role === 'host' ? `#${HOME.host}` : '#/login?role=host';
   return html`<footer class="curtain">
     <div class="curtain__band">
       <div class="container curtain__inner">
         <a class="brand brand--light" href="#/" data-action="top" aria-label="${t('footer.top')}">${logoMark()}<span class="brand__word">Dimora</span></a>
         <p class="display curtain__line">${tRich('footer.line')}</p>
-        <div class="curtain__actions">
-          <a class="btn btn--primary" href="${guestHref}">${t('landing.ctaGuest')} ${icon('arrowRight', 16)}</a>
-          <a class="btn btn--on-dark" href="${hostHref}">${t('landing.ctaHost')}</a>
-        </div>
-        <nav class="curtain__nav" aria-label="${t('nav.sections')}">${SECTIONS.map((id) => html`
-          <button type="button" class="curtain__pill" data-action="scroll" data-target="${id}">${t(`nav.${id}`)}</button>`)}
-        </nav>
+        <a class="btn btn--primary btn--lg curtain__cta" href="#/login">${t('landing.cta')} ${icon('arrowRight', 18)}</a>
         <div class="curtain__wordmark" aria-hidden="true"><p>dimora</p></div>
         <div class="curtain__bottom">
           <span>© ${new Date().getFullYear()} Dimora</span>

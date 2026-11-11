@@ -7,10 +7,19 @@ test.describe('host', () => {
   test('the overview summarises the portfolio', async ({ page }) => {
     await enterAs(page, 'host');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Good to see you, Sebastiano.');
-    const figures = page.getByRole('region', { name: 'Key figures' });
-    await expect(figures.getByText('Listings')).toBeVisible();
+    await expect(page.getByLabel('Key figures')).toContainText('Booked revenue');
+    await expect(page.getByLabel('Key figures')).toContainText('Occupancy · 30 days');
+
+    // Timeline: one row per listing, a bar per stay inside the next 30 days.
+    await expect(page.getByRole('heading', { name: 'Next 30 days' })).toBeVisible();
+    const aurora = page.getByRole('list', { name: 'Casa Aurora' });
+    await expect(aurora.getByRole('listitem', { name: /^Anna Huber, / })).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Chalet Dolomiti' }).getByRole('listitem', { name: /, / })).toHaveCount(0);
+
     await expect(page.getByRole('heading', { name: 'Next arrivals' })).toBeVisible();
-    await expect(page.getByText('Anna Huber')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Revenue by check-in month' })).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Revenue by check-in month' }).getByRole('listitem')).toHaveCount(6);
+    await expect(page.getByRole('button', { name: 'New listing' })).toHaveCount(0); // lives in Listings only
   });
 
   test('publishes, reprices and removes a listing', async ({ page }, testInfo) => {
@@ -71,16 +80,32 @@ test.describe('host', () => {
     await expect(listing(page, name)).toHaveCount(0);
   });
 
-  test('reservations can be filtered by status, listing and guest', async ({ page }) => {
+  test('reservations are filtered from a single menu', async ({ page }) => {
     await enterAs(page, 'host');
     await openSection(page, 'Reservations');
     await expect(page.getByText(/\d+ reservations?/).first()).toBeVisible();
-    await page.getByRole('button', { name: 'Completed' }).click();
+    const toggle = page.getByRole('button', { name: 'Filters' });
+    const panel = page.getByRole('group', { name: 'Filters' });
+
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await panel.getByRole('button', { name: 'Completed' }).click();
     await expect(page.getByRole('cell', { name: 'Tom Springer' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Anna Huber' })).toHaveCount(0);
-    await page.getByRole('button', { name: 'All', exact: true }).click();
-    await page.getByLabel('Search guest').fill('anna');
+    await page.keyboard.press('Escape');
+    await expect(panel).toBeHidden();
+    await expect(toggle).toContainText('1');
+
+    await page.getByRole('button', { name: 'Remove filter: Completed' }).click();
+    await toggle.click();
+    await panel.getByLabel('Search guest').fill('anna');
+    await panel.getByRole('button', { name: 'Done' }).click();
     await expect(page.getByRole('cell', { name: 'Anna Huber' })).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Tom Springer' })).toHaveCount(0);
+
+    await toggle.click();
+    await panel.getByRole('button', { name: 'Clear all' }).click();
+    await expect(page.getByRole('cell', { name: 'Tom Springer' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Remove filter/ })).toHaveCount(0);
   });
 });

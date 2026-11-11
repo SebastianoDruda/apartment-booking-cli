@@ -90,5 +90,15 @@ test('host portfolio statistics', () => {
   assert.equal(stats.guests, 5);
   assert.equal(stats.revenue, 1000);
   assert.deepEqual(stats.arrivals.map((b) => b.start), ['2026-12-20']);
-  assert.deepEqual(stats.occupancy, [{ name: 'A', percent: 10 }, { name: 'B', percent: 0 }]);
+  assert.equal(stats.occupancy, 5, 'A has 3 of 30 nights booked, B none: 3 / 60');
+  const [first, second] = stats.timeline.rows;
+  assert.deepEqual([first.name, first.percent, second.name, second.percent], ['A', 10, 'B', 0]);
+  assert.equal(first.stays.length, 1, 'the December stay is beyond the 30-day window');
+  assert.deepEqual(
+    [first.stays[0].offset, first.stays[0].length, first.stays[0].cutStart, first.stays[0].cutEnd],
+    [0, 3, true, false], 'an ongoing stay is clipped at today',
+  );
+  assert.deepEqual(stats.timeline.ticks.map((tick) => tick.iso), ['2026-11-11', '2026-11-18', '2026-11-25', '2026-12-02', '2026-12-09']);
+  assert.deepEqual(stats.months.map((m) => [m.key, m.revenue]),
+    [['2026-11', 500], ['2026-12', 200], ['2027-01', 0], ['2027-02', 0], ['2027-03', 0], ['2027-04', 0]]);
 });

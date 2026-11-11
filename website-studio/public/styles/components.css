@@ -282,6 +282,8 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.55; cursor: p
 .dialog__desc { margin-top: 6px; color: var(--muted); font-size: 0.92rem; }
 .dialog__text { color: var(--ink-2); margin-bottom: 18px; }
 .dialog__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.stack > .dialog__actions { margin-top: 4px; } /* the stack gap already spaces it */
+.dialog--sm .dialog__head { align-items: center; margin-bottom: 12px; }
 .confirm .field { margin-bottom: 4px; }
 @media (max-width: 560px) {
   .dialog, .dialog--sm, .dialog--lg { width: 100vw; margin: auto 0 0; }
@@ -344,5 +346,5 @@ input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0.55; cursor: p
   .table tbody tr:last-child { border-bottom: 0; }
   .table td { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 5px 0; border: 0; text-align: right; }
   .table td::before { content: attr(data-label); font-size: 0.78rem; font-weight: 600; color: var(--muted); text-align: left; }
-  .cell-sub { display: inline; margin-left: 6px; }
+  .cell-sub { display: block; margin-top: 1px; }
 }

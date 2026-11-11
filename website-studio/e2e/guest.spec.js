@@ -15,9 +15,8 @@ test.describe('guest', () => {
 
   async function search(page, start, end) {
     await page.getByLabel('Check-in').fill(start);
-    await page.getByLabel('Check-out').fill(end);
-    await page.getByRole('button', { name: 'Search' }).click();
-    await page.getByLabel('City or name').fill(apartment);
+    await page.getByLabel('Check-out').fill(end); // applies on its own once both dates are set
+    await page.getByLabel('Where').fill(apartment);
   }
 
   const card = (page) => page.getByRole('article').filter({ has: page.getByRole('heading', { name: apartment }) });
@@ -53,11 +52,12 @@ test.describe('guest', () => {
 
   test('prevents invalid dates and over-capacity bookings before calling the API', async ({ page }) => {
     await enterAs(page, 'guest');
-    await page.getByLabel('Check-in').fill(isoDays(30));
-    await page.getByRole('button', { name: 'Search' }).click();
+    await page.getByLabel('Check-out').fill(isoDays(30));
     await expect(page.getByText('Add both check-in and check-out.')).toBeVisible();
+    await page.getByLabel('Check-out').fill('');
+    await expect(page.getByText('Add both check-in and check-out.')).toBeHidden();
 
-    await page.getByLabel('City or name').fill(apartment);
+    await page.getByLabel('Where').fill(apartment);
     await card(page).getByRole('button', { name: 'Book' }).click();
     const booking = page.getByRole('dialog', { name: `Book ${apartment}` });
     await booking.getByLabel('Check-in').fill(isoDays(40));
@@ -77,7 +77,7 @@ test.describe('guest', () => {
 
   test('explains that dates were just taken', async ({ page, request }) => {
     await enterAs(page, 'guest');
-    await page.getByLabel('City or name').fill(apartment);
+    await page.getByLabel('Where').fill(apartment);
     await card(page).getByRole('button', { name: 'Book' }).click();
     const booking = page.getByRole('dialog', { name: `Book ${apartment}` });
     await booking.getByLabel('Check-in').fill(isoDays(80));
@@ -85,6 +85,21 @@ test.describe('guest', () => {
     await api.book(request, { apartment, start: isoDays(81), end: isoDays(84), guest: 'Someone Else' });
     await booking.getByRole('button', { name: 'Confirm booking' }).click();
     await expect(booking.getByRole('alert')).toHaveText('Those dates were just taken. Try different ones.');
+  });
+
+  test('filters apply live and clear in one click', async ({ page }) => {
+    await enterAs(page, 'guest');
+    const clear = page.getByRole('button', { name: 'Clear filters' });
+    await expect(clear).toBeHidden();
+    await page.getByLabel('Where').fill(apartment);
+    await expect(page.getByRole('article')).toHaveCount(1);
+    await page.getByRole('spinbutton', { name: 'Guests' }).fill('4');
+    await page.getByRole('spinbutton', { name: 'Guests' }).press('Tab');
+    await expect(page.getByRole('heading', { name: 'No match' })).toBeVisible(); // capacity 3 < 4 guests
+    await clear.click();
+    await expect(page.getByLabel('Where')).toHaveValue('');
+    await expect(page.getByRole('spinbutton', { name: 'Guests' })).toHaveValue('1');
+    await expect(clear).toBeHidden();
   });
 
   test('past stays are listed apart, without actions', async ({ page }) => {

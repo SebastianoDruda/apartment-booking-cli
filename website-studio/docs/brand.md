@@ -39,6 +39,7 @@ guests and a key on sage for hosts. They identify the entry page and the workspa
 | `--paper` | `#FBF7F1` cream | `#100E0C` | Page background |
 | `--ink` | `#1A1612` | `#F4EEE6` | Text |
 | `--sage` | `#47705A` | `#86B897` | Success, hosts, live status |
+| `--chart` | `#2B7A52` | `#55A97C` | Host charts (checked for chroma, lightness band and 3:1 against the surface) |
 | `--gold` | `#C08A22` | `#E2B65A` | Highlights, data |
 | `--info` | `#2D5B8A` | `#94BDE6` | Upcoming status |
 | `--danger` | `#B42318` | `#F2877A` | Destructive actions, errors |

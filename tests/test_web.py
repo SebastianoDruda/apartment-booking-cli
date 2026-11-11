@@ -273,7 +273,7 @@ class TestWebAPI(unittest.TestCase):
             html_res = self.client.get(path, headers={"Accept": "text/html"})
             self.assertEqual(html_res.status_code, 200)
             self.assertEqual(html_res.mimetype, "text/html")
-            self.assertIn("Apartment Booking Console", html_res.text)
+            self.assertIn("Apartment Booking", html_res.text)
             self.assertIn("script-src 'self'", html_res.headers["Content-Security-Policy"])
         for asset in ("api_docs.css", "api_docs.js", "ui.css", "ui.js"):
             with self.client.get("/static/" + asset) as asset_response:

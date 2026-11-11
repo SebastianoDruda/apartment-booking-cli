@@ -55,7 +55,7 @@ pre {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
@@ -63,10 +63,10 @@ pre {
 .sidebar {
   background: var(--surface-low);
   border-right: 1px solid var(--border-subtle);
-  padding: 20px 16px;
+  padding: 22px 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -100,13 +100,12 @@ pre {
 
 .brand-title {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--primary);
 }
 
 .brand-subtitle {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
@@ -118,43 +117,7 @@ pre {
   letter-spacing: 0.06em;
   color: var(--text-subtle);
   margin-bottom: 6px;
-}
-
-.role-switcher-box {
-  background: var(--surface-container);
-  padding: 10px;
-  border-radius: var(--radius-md);
-}
-
-.role-pill-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.role-pill {
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  font-size: 12.5px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.role-pill:hover {
-  background: rgba(255, 255, 255, 0.6);
-  color: var(--primary);
-}
-
-.role-pill.active {
-  background: var(--surface-lowest);
-  color: var(--primary);
-  box-shadow: var(--shadow-sm);
-  border-color: var(--border-subtle);
+  padding: 0 6px;
 }
 
 .sidebar-nav {
@@ -167,7 +130,7 @@ pre {
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .nav-item {
@@ -178,9 +141,9 @@ pre {
   border: none;
   background: transparent;
   color: var(--text-muted);
-  padding: 10px 12px;
+  padding: 11px 14px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
@@ -198,49 +161,9 @@ pre {
   box-shadow: var(--shadow-sm);
 }
 
-.nav-badge {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: rgba(15, 23, 42, 0.08);
-  color: inherit;
-}
-
-.nav-item.active .nav-badge {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-}
-
 .sidebar-footer {
   border-top: 1px solid var(--border-subtle);
-  padding-top: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-}
-
-.footer-link {
-  color: var(--secondary);
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.footer-link:hover {
-  text-decoration: underline;
-}
-
-.footer-meta {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-subtle);
+  padding-top: 14px;
 }
 
 /* MAIN AREA & TOPBAR */
@@ -251,7 +174,7 @@ pre {
 }
 
 .topbar {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-subtle);
   padding: 14px 28px;
@@ -270,19 +193,9 @@ pre {
   gap: 12px;
 }
 
-.role-badge {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--secondary-soft);
-  color: var(--secondary);
-}
-
 .topbar-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   color: var(--primary);
 }
@@ -290,53 +203,146 @@ pre {
 .topbar-right {
   display: flex;
   align-items: center;
+  gap: 12px;
+}
+
+/* PROFILE AVATAR & ROLE DROPDOWN (Top Right) */
+.profile-menu-container {
+  position: relative;
+}
+
+.profile-trigger {
+  display: inline-flex;
+  align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
-}
-
-.telemetry-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface-low);
-  border: 1px solid var(--border-subtle);
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-}
-
-.telemetry-method {
-  font-weight: 700;
-  color: var(--secondary);
-}
-
-.telemetry-status {
-  color: var(--text-muted);
-}
-
-.health-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  padding: 5px 12px 5px 6px;
   border-radius: 999px;
   border: 1px solid var(--border-subtle);
   background: var(--surface-lowest);
-  font-size: 12px;
-  font-weight: 600;
+  box-shadow: var(--shadow-sm);
   cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
 }
 
-.health-dot {
-  width: 8px;
-  height: 8px;
+.profile-trigger:hover {
+  background: var(--surface-low);
+  border-color: rgba(15, 23, 42, 0.18);
+}
+
+.profile-avatar {
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-avatar.manager-mode {
   background: var(--secondary);
 }
 
-.health-badge.unhealthy .health-dot {
-  background: var(--danger);
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.profile-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.profile-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.profile-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 290px;
+  background: var(--surface-lowest);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-lg);
+  padding: 10px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.profile-dropdown-header {
+  padding: 4px 6px 2px;
+}
+
+.profile-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.profile-option:hover {
+  background: var(--surface-low);
+}
+
+.profile-option.active {
+  background: var(--surface-low);
+  border-color: rgba(0, 108, 73, 0.3);
+}
+
+.profile-option-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.profile-option-avatar.booker {
+  background: var(--primary);
+}
+
+.profile-option-avatar.manager {
+  background: var(--secondary);
+}
+
+.profile-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-option-text strong {
+  font-size: 13.5px;
+  color: var(--primary);
+}
+
+.profile-option-text small {
+  font-size: 11.5px;
+  color: var(--text-muted);
 }
 
 /* STATUS BANNER */
@@ -413,23 +419,6 @@ pre {
   margin-bottom: 18px;
 }
 
-.endpoint-tag {
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--secondary);
-  background: var(--secondary-soft);
-  padding: 2px 8px;
-  border-radius: 4px;
-  margin-bottom: 6px;
-}
-
-.endpoint-tag.danger {
-  color: var(--danger);
-  background: var(--danger-soft);
-}
-
 .card-title {
   margin: 0;
   font-size: 18px;
@@ -448,7 +437,11 @@ pre {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  align-items: end;
+  align-items: start;
+}
+
+.search-bar-grid .form-field-action {
+  padding-top: 24px;
 }
 
 .booking-creator-grid {
@@ -512,6 +505,29 @@ pre {
   border-color: var(--secondary);
   background: var(--surface-lowest);
   box-shadow: 0 0 0 3px rgba(0, 108, 73, 0.15);
+}
+
+.form-field input.input-error,
+.form-field select.input-error {
+  border-color: var(--danger);
+  background: #fff1f2;
+  box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.12);
+}
+
+.form-field input.input-error:focus,
+.form-field select.input-error:focus {
+  border-color: var(--danger);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.22);
+}
+
+.field-error {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--danger);
+  line-height: 1.35;
+  margin-top: 2px;
 }
 
 .field-hint {
@@ -623,7 +639,7 @@ pre {
 }
 
 .btn-sm {
-  height: 32px;
+  height: 34px;
   padding: 0 12px;
   font-size: 12px;
 }

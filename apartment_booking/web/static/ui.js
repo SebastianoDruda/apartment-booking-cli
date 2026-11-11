@@ -24,8 +24,8 @@
     "search-view": "Search Availability & Instant Book",
     "bookings-view": "Create & Manage Bookings",
     "directory-view": "Apartments Directory",
-    "inventory-view": "Apartments Inventory & Pricing",
-    "overview-view": "Global Bookings Overview",
+    "inventory-view": "Apartments & Pricing",
+    "overview-view": "Bookings Overview",
   };
 
   function byId(id) {
@@ -71,13 +71,7 @@
     return Math.max(1, Math.round((endUtc - startUtc) / (1000 * 60 * 60 * 24)));
   }
 
-  function updateTelemetry(method, endpoint, status, durationMs) {
-    byId("telemetry-method").textContent = method;
-    byId("telemetry-endpoint").textContent = endpoint;
-    byId("telemetry-status").textContent = `${status} • ${Math.round(durationMs)}ms`;
-  }
-
-  function showBanner(kind, statusCode, title, message) {
+  function showBanner(kind, badgeLabel, title, message) {
     const banner = byId("status-banner");
     banner.className = "status-banner";
     if (kind === "error") {
@@ -85,7 +79,7 @@
     } else if (kind === "warning") {
       banner.classList.add("warning");
     }
-    byId("status-banner-code").textContent = statusCode;
+    byId("status-banner-code").textContent = badgeLabel;
     byId("status-banner-title").textContent = title;
     byId("status-banner-message").textContent = message;
     banner.hidden = false;
@@ -103,57 +97,266 @@
       headers["Content-Type"] = "application/json";
       body = JSON.stringify(options.json);
     }
-    const started = performance.now();
     const response = await fetch(path, { method, headers, body });
-    const elapsed = performance.now() - started;
     let payload = null;
     try {
       payload = await response.json();
     } catch {
       payload = null;
     }
-    updateTelemetry(method, path, response.status, elapsed);
     return { ok: response.ok, status: response.status, payload };
   }
 
-  function showApiError(status, payload, fallbackTitle = "Request Failed") {
+  function showApiError(status, payload, fallbackTitle = "Action Failed", formId = null) {
     const errMsg =
       payload && payload.error && payload.error.message
         ? payload.error.message
-        : `HTTP ${status} error occurred.`;
-    const errCode =
-      payload && payload.error && payload.error.code
-        ? payload.error.code
-        : "error";
+        : "An unexpected error occurred.";
     const kind = status === 409 || status === 404 || status === 503 ? "warning" : "error";
-    showBanner(kind, `${status} ${errCode.toUpperCase()}`, fallbackTitle, errMsg);
+    const badge = status === 409 ? "Conflict" : status === 404 ? "Not Found" : "Invalid Input";
+    showBanner(kind, badge, fallbackTitle, errMsg);
+    if (formId) {
+      highlightFormErrors(formId, errMsg);
+    }
   }
 
-  async function checkHealth(showToast = false) {
-    const badge = byId("health-badge");
-    const text = byId("health-text");
-    try {
-      const res = await apiRequest("/api/health");
-      if (res.ok && res.payload && res.payload.data && res.payload.data.status === "ok") {
-        badge.classList.remove("unhealthy");
-        badge.classList.add("healthy");
-        text.textContent = "System Healthy • SQLite OK";
-        if (showToast) {
-          showBanner("success", "200 OK", "Health Check Passed", "SQLite database and HTTP server are healthy.");
-        }
-      } else {
-        badge.classList.remove("healthy");
-        badge.classList.add("unhealthy");
-        text.textContent = `Degraded (${res.status})`;
-        if (showToast) {
-          showApiError(res.status, res.payload, "Health Check Failed");
-        }
-      }
-    } catch {
-      badge.classList.remove("healthy");
-      badge.classList.add("unhealthy");
-      text.textContent = "Server Unreachable";
+  function setFieldError(inputId, message) {
+    const input = byId(inputId);
+    if (!input) {
+      return;
     }
+    input.classList.add("input-error");
+    input.setAttribute("aria-invalid", "true");
+    const field = input.closest(".form-field");
+    if (!field) {
+      return;
+    }
+    let errEl = field.querySelector(`.field-error[data-error-for="${inputId}"]`);
+    if (!errEl) {
+      errEl = document.createElement("small");
+      errEl.className = "field-error";
+      errEl.dataset.errorFor = inputId;
+      field.appendChild(errEl);
+    }
+    errEl.textContent = message;
+    errEl.hidden = false;
+  }
+
+  function clearFieldError(inputId) {
+    const input = byId(inputId);
+    if (!input) {
+      return;
+    }
+    input.classList.remove("input-error");
+    input.removeAttribute("aria-invalid");
+    const field = input.closest(".form-field");
+    if (!field) {
+      return;
+    }
+    const errEl = field.querySelector(`.field-error[data-error-for="${inputId}"]`);
+    if (errEl) {
+      errEl.remove();
+    }
+  }
+
+  function clearFormErrors(formId) {
+    const form = byId(formId);
+    if (!form) {
+      return;
+    }
+    form.querySelectorAll(".input-error").forEach((el) => {
+      el.classList.remove("input-error");
+      el.removeAttribute("aria-invalid");
+    });
+    form.querySelectorAll(".field-error").forEach((el) => {
+      el.remove();
+    });
+  }
+
+  function applyDateFieldError(errMsg, startId, endId) {
+    const msg = errMsg.toLowerCase();
+    const startVal = (byId(startId)?.value || "").trim();
+    const endVal = (byId(endId)?.value || "").trim();
+
+    if (msg.includes("invalid date range") || msg.includes("end date must be after start date")) {
+      setFieldError(startId, errMsg);
+      setFieldError(endId, errMsg);
+      return;
+    }
+
+    let matched = false;
+    if (startVal && errMsg.includes(`'${startVal}'`)) {
+      setFieldError(startId, errMsg);
+      matched = true;
+    }
+    if (endVal && errMsg.includes(`'${endVal}'`)) {
+      setFieldError(endId, errMsg);
+      matched = true;
+    }
+    if (matched) {
+      return;
+    }
+
+    if (!startVal) {
+      setFieldError(startId, errMsg);
+      matched = true;
+    }
+    if (!endVal) {
+      setFieldError(endId, errMsg);
+      matched = true;
+    }
+    if (!matched) {
+      setFieldError(startId, errMsg);
+      setFieldError(endId, errMsg);
+    }
+  }
+
+  function highlightFormErrors(formId, errMsg) {
+    const msg = (errMsg || "").toLowerCase();
+
+    if (formId === "availability-form") {
+      if (!byId("avail-start-date").value.trim()) {
+        setFieldError("avail-start-date", "Date cannot be empty. Use YYYY-MM-DD or DD.MM.YYYY.");
+      }
+      if (!byId("avail-end-date").value.trim()) {
+        setFieldError("avail-end-date", "Date cannot be empty. Use YYYY-MM-DD or DD.MM.YYYY.");
+      }
+      if (!byId("avail-num-people").value.trim()) {
+        setFieldError("avail-num-people", "Number of people must be a whole number.");
+      }
+      if (msg.includes("people") || msg.includes("num_people")) {
+        setFieldError("avail-num-people", errMsg);
+      } else if (msg.includes("date") || msg.includes("month") || msg.includes("day")) {
+        applyDateFieldError(errMsg, "avail-start-date", "avail-end-date");
+      }
+      return;
+    }
+
+    if (formId === "create-booking-form") {
+      if (!byId("booking-apartment-select").value.trim()) {
+        setFieldError("booking-apartment-select", "Apartment name cannot be empty.");
+      }
+      if (!byId("booking-booker-name").value.trim()) {
+        setFieldError("booking-booker-name", "Booker name cannot be empty.");
+      }
+      if (!byId("booking-start-date").value.trim()) {
+        setFieldError("booking-start-date", "Date cannot be empty. Use YYYY-MM-DD or DD.MM.YYYY.");
+      }
+      if (!byId("booking-end-date").value.trim()) {
+        setFieldError("booking-end-date", "Date cannot be empty. Use YYYY-MM-DD or DD.MM.YYYY.");
+      }
+      if (!byId("booking-num-people").value.trim()) {
+        setFieldError("booking-num-people", "Number of people must be a whole number.");
+      }
+
+      if (msg.includes("booker")) {
+        setFieldError("booking-booker-name", errMsg);
+      } else if (
+        msg.includes("not big enough") ||
+        msg.includes("maximum capacity") ||
+        msg.includes("people") ||
+        msg.includes("num_people")
+      ) {
+        setFieldError("booking-num-people", errMsg);
+      } else if (msg.includes("not available") || msg.includes("overlap")) {
+        setFieldError("booking-start-date", errMsg);
+        setFieldError("booking-end-date", errMsg);
+      } else if (msg.includes("date") || msg.includes("month") || msg.includes("day")) {
+        applyDateFieldError(errMsg, "booking-start-date", "booking-end-date");
+      } else if (msg.includes("apartment")) {
+        setFieldError("booking-apartment-select", errMsg);
+      }
+      return;
+    }
+
+    if (formId === "add-apartment-form") {
+      if (!byId("apt-name").value.trim()) {
+        setFieldError("apt-name", "Apartment name cannot be empty.");
+      }
+      if (!byId("apt-country").value.trim()) {
+        setFieldError("apt-country", "Country cannot be empty.");
+      }
+      if (!byId("apt-city").value.trim()) {
+        setFieldError("apt-city", "City cannot be empty.");
+      }
+      if (!byId("apt-street").value.trim()) {
+        setFieldError("apt-street", "Street and house number cannot be empty.");
+      }
+      if (!byId("apt-max-people").value.trim()) {
+        setFieldError("apt-max-people", "max_people must be a whole number.");
+      }
+      if (!byId("apt-price").value.trim()) {
+        setFieldError("apt-price", "Price per night cannot be empty.");
+      }
+
+      if (msg.includes("apartment") && (msg.includes("name") || msg.includes("already exists"))) {
+        setFieldError("apt-name", errMsg);
+      } else if (msg.includes("country")) {
+        setFieldError("apt-country", errMsg);
+      } else if (msg.includes("city")) {
+        setFieldError("apt-city", errMsg);
+      } else if (msg.includes("street") || msg.includes("address")) {
+        setFieldError("apt-street", errMsg);
+      } else if (msg.includes("maximum number of people") || msg.includes("max_people")) {
+        setFieldError("apt-max-people", errMsg);
+      } else if (msg.includes("price")) {
+        setFieldError("apt-price", errMsg);
+      }
+      return;
+    }
+
+    if (formId === "instant-book-form") {
+      setFieldError("instant-booker-name", errMsg);
+      return;
+    }
+
+    if (formId === "change-booking-form") {
+      if (!byId("change-start-date").value.trim()) {
+        setFieldError("change-start-date", "Date cannot be empty. Use YYYY-MM-DD or DD.MM.YYYY.");
+      }
+      if (!byId("change-end-date").value.trim()) {
+        setFieldError("change-end-date", "Date cannot be empty. Use YYYY-MM-DD or DD.MM.YYYY.");
+      }
+      if (!byId("change-num-people").value.trim()) {
+        setFieldError("change-num-people", "Number of people must be a whole number.");
+      }
+
+      if (
+        msg.includes("not big enough") ||
+        msg.includes("maximum capacity") ||
+        msg.includes("people") ||
+        msg.includes("num_people")
+      ) {
+        setFieldError("change-num-people", errMsg);
+      } else if (msg.includes("not available") || msg.includes("overlap")) {
+        setFieldError("change-start-date", errMsg);
+        setFieldError("change-end-date", errMsg);
+      } else if (msg.includes("date") || msg.includes("month") || msg.includes("day")) {
+        applyDateFieldError(errMsg, "change-start-date", "change-end-date");
+      }
+      return;
+    }
+
+    if (formId === "price-modal-form") {
+      setFieldError("new-price-input", errMsg);
+    }
+  }
+
+  function closeProfileDropdown() {
+    const dropdown = byId("profile-dropdown");
+    const btn = byId("profile-menu-btn");
+    if (dropdown && btn) {
+      dropdown.hidden = true;
+      btn.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  function toggleProfileDropdown() {
+    const dropdown = byId("profile-dropdown");
+    const btn = byId("profile-menu-btn");
+    const willOpen = dropdown.hidden;
+    dropdown.hidden = !willOpen;
+    btn.setAttribute("aria-expanded", String(willOpen));
   }
 
   function switchView(viewId) {
@@ -166,19 +369,29 @@
     document.querySelectorAll(".nav-item").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.view === viewId);
     });
-    byId("active-view-title").textContent = VIEW_TITLES[viewId] || "Console";
+    byId("active-view-title").textContent = VIEW_TITLES[viewId] || "Apartment Booking";
   }
 
   function switchRole(role, switchDefaultTab = true) {
     state.role = role;
     const isBooker = role === "booker";
+
     byId("role-booker-btn").classList.toggle("active", isBooker);
-    byId("role-booker-btn").setAttribute("aria-selected", String(isBooker));
     byId("role-manager-btn").classList.toggle("active", !isBooker);
-    byId("role-manager-btn").setAttribute("aria-selected", String(!isBooker));
+
+    byId("nav-group-booker").hidden = !isBooker;
+    byId("nav-group-manager").hidden = isBooker;
+
     byId("active-role-badge").textContent = isBooker
-      ? "Role 1: Apartment Booker"
-      : "Role 2: System Manager";
+      ? "Apartment Booker"
+      : "System Manager";
+    byId("sidebar-role-subtitle").textContent = isBooker
+      ? "Booker Workspace"
+      : "Manager Workspace";
+    byId("profile-avatar-initials").classList.toggle("manager-mode", !isBooker);
+
+    closeProfileDropdown();
+
     if (switchDefaultTab) {
       switchView(isBooker ? "search-view" : "inventory-view");
     }
@@ -257,7 +470,7 @@
     const total = nights * rate;
     byId("calc-rate").textContent = `${formatMoney(rate)} / night`;
     byId("calc-total").textContent = `${formatMoney(total)} EUR`;
-    byId("calc-formula").textContent = `Calculated: ${nights} night${nights === 1 ? "" : "s"} × ${formatMoney(rate)} = ${formatMoney(total)} EUR total`;
+    byId("calc-formula").textContent = `${nights} night${nights === 1 ? "" : "s"} × ${formatMoney(rate)} = ${formatMoney(total)} EUR total`;
 
     const hint = byId("booking-capacity-hint");
     if (guestsVal > apt.max_people) {
@@ -273,13 +486,13 @@
     const list = state.availabilityResults;
     byId("avail-count-badge").textContent = `${list.length} Available`;
     byId("avail-summary-text").textContent =
-      `Showing available units for ${state.lastSearch.start_date} → ${state.lastSearch.end_date} (${state.lastSearch.num_people} guest${state.lastSearch.num_people === 1 ? "" : "s"}).`;
+      `Showing available apartments for ${state.lastSearch.start_date} → ${state.lastSearch.end_date} (${state.lastSearch.num_people} guest${state.lastSearch.num_people === 1 ? "" : "s"}).`;
 
     if (list.length === 0) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
       empty.textContent =
-        "No available apartments match the selected dates and guest count. Try adjusting your dates or adding an apartment in System Manager.";
+        "No available apartments match the selected dates and guest count.";
       container.appendChild(empty);
       return;
     }
@@ -342,7 +555,7 @@
       const td = document.createElement("td");
       td.colSpan = 9;
       td.className = "empty-state";
-      td.textContent = "No active bookings found in SQLite.";
+      td.textContent = "No active bookings found.";
       tr.appendChild(td);
       tbody.appendChild(tr);
       return;
@@ -451,7 +664,6 @@
     }
 
     filtered.forEach((apt) => {
-      // Table row
       const tr = document.createElement("tr");
       const tdName = document.createElement("td");
       const strong = document.createElement("strong");
@@ -483,18 +695,11 @@
         byId("avail-num-people").value = String(Math.min(2, apt.max_people));
       });
 
-      const inspectBtn = document.createElement("button");
-      inspectBtn.type = "button";
-      inspectBtn.className = "btn btn-outline btn-sm";
-      inspectBtn.textContent = "Details";
-      inspectBtn.addEventListener("click", () => openInspectorModal(apt));
-
-      actions.append(checkBtn, inspectBtn);
+      actions.append(checkBtn);
       tdActions.appendChild(actions);
       tr.append(tdName, tdAddr, tdCap, tdPrice, tdActions);
       tbody.appendChild(tr);
 
-      // Card item
       const card = document.createElement("article");
       card.className = "apt-card";
       const header = document.createElement("div");
@@ -539,7 +744,7 @@
       const td = document.createElement("td");
       td.colSpan = 6;
       td.className = "empty-state";
-      td.textContent = "No apartments registered in inventory.";
+      td.textContent = "No apartments registered yet.";
       tr.appendChild(td);
       tbody.appendChild(tr);
       return;
@@ -636,7 +841,7 @@
     if (filtered.length === 0) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 9;
+      td.colSpan = 8;
       td.className = "empty-state";
       td.textContent = "No reservations match the current overview filters.";
       tr.appendChild(td);
@@ -681,17 +886,7 @@
       strongTotal.textContent = `${formatMoney(b.total_price)} EUR`;
       tdTotal.appendChild(strongTotal);
 
-      const tdAudit = document.createElement("td");
-      tdAudit.className = "text-right";
-      const inspectBtn = document.createElement("button");
-      inspectBtn.type = "button";
-      inspectBtn.className = "btn btn-outline btn-sm";
-      inspectBtn.dataset.action = "inspect-booking";
-      inspectBtn.textContent = "Inspect JSON";
-      inspectBtn.addEventListener("click", () => openInspectorModal(b));
-      tdAudit.appendChild(inspectBtn);
-
-      tr.append(tdApt, tdAddr, tdBooker, tdPeople, tdDates, tdNights, tdRate, tdTotal, tdAudit);
+      tr.append(tdApt, tdAddr, tdBooker, tdPeople, tdDates, tdNights, tdRate, tdTotal);
       tbody.appendChild(tr);
     });
   }
@@ -720,20 +915,22 @@
   }
 
   async function runAvailabilitySearch(silent = false) {
+    clearFormErrors("availability-form");
     const start_date = byId("avail-start-date").value.trim();
     const end_date = byId("avail-end-date").value.trim();
-    const num_people = Number(byId("avail-num-people").value);
+    const num_people_raw = byId("avail-num-people").value.trim();
+    const num_people = Number(num_people_raw);
 
     state.lastSearch = { start_date, end_date, num_people };
     const params = new URLSearchParams({
       start_date,
       end_date,
-      num_people: String(num_people),
+      num_people: num_people_raw,
     });
 
     const res = await apiRequest(`/api/availability?${params.toString()}`);
     if (!res.ok) {
-      showApiError(res.status, res.payload, "Availability Search Error");
+      showApiError(res.status, res.payload, "Availability Search Error", "availability-form");
       return;
     }
 
@@ -742,8 +939,8 @@
     if (!silent) {
       showBanner(
         "success",
-        "200 OK",
-        "Availability Search Complete",
+        "Available",
+        "Availability Updated",
         `Found ${state.availabilityResults.length} available apartment(s) for ${start_date} to ${end_date}.`
       );
     }
@@ -752,6 +949,7 @@
   // MODAL HANDLERS
   function openInstantBookModal(apt) {
     state.instantBookTarget = apt;
+    clearFormErrors("instant-book-form");
     byId("instant-apt-name").textContent = apt.name;
     byId("instant-apt-meta").textContent = `${apt.address} • Max ${apt.max_people} guests`;
     byId("instant-stay-summary").textContent =
@@ -762,12 +960,14 @@
   }
 
   function closeInstantBookModal() {
+    clearFormErrors("instant-book-form");
     byId("instant-book-modal").hidden = true;
     state.instantBookTarget = null;
   }
 
   function openChangeBookingModal(booking) {
     state.changeBookingTarget = booking;
+    clearFormErrors("change-booking-form");
     const aptMaxPeople = booking.apartment_max_people ?? booking.max_people;
     byId("change-apt-title").textContent = booking.apartment_name;
     byId("change-ref-meta").textContent =
@@ -794,6 +994,7 @@
   }
 
   function closeChangeBookingModal() {
+    clearFormErrors("change-booking-form");
     byId("change-booking-modal").hidden = true;
     state.changeBookingTarget = null;
   }
@@ -813,6 +1014,7 @@
 
   function openPriceModal(apt) {
     state.priceUpdateTarget = apt;
+    clearFormErrors("price-modal-form");
     byId("price-modal-apt-name").textContent = apt.name;
     byId("price-modal-current").textContent = `${formatMoney(apt.price_per_night)} EUR`;
     byId("new-price-input").value = Number(apt.price_per_night).toFixed(2);
@@ -821,6 +1023,7 @@
   }
 
   function closePriceModal() {
+    clearFormErrors("price-modal-form");
     byId("price-modal").hidden = true;
     state.priceUpdateTarget = null;
   }
@@ -836,40 +1039,36 @@
     state.deleteApartmentTarget = null;
   }
 
-  function openInspectorModal(record) {
-    byId("inspector-json-pre").textContent = JSON.stringify(record, null, 2);
-    byId("inspector-modal").hidden = false;
-  }
-
-  function closeInspectorModal() {
-    byId("inspector-modal").hidden = true;
-  }
-
   // EVENT WIRING
   function initEventListeners() {
-    // Role switching
+    // Top-right profile avatar dropdown & role switching
+    byId("profile-menu-btn").addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleProfileDropdown();
+    });
     byId("role-booker-btn").addEventListener("click", () => switchRole("booker", true));
     byId("role-manager-btn").addEventListener("click", () => switchRole("manager", true));
+
+    document.addEventListener("click", (event) => {
+      const container = document.querySelector(".profile-menu-container");
+      if (container && !container.contains(event.target)) {
+        closeProfileDropdown();
+      }
+    });
 
     // Sidebar navigation
     document.querySelectorAll(".nav-item").forEach((btn) => {
       btn.addEventListener("click", () => {
         const viewId = btn.dataset.view;
-        if (viewId === "inventory-view" || viewId === "overview-view") {
-          switchRole("manager", false);
-        } else {
-          switchRole("booker", false);
-        }
         switchView(viewId);
       });
     });
 
-    // Topbar buttons
-    byId("health-badge").addEventListener("click", () => checkHealth(true));
+    // Topbar & Sidebar buttons
     byId("refresh-all-btn").addEventListener("click", async () => {
       await loadAllData();
       await runAvailabilitySearch(true);
-      showBanner("success", "200 OK", "Data Refreshed", "Synchronized apartments and bookings with SQLite.");
+      showBanner("success", "Updated", "Data Refreshed", "Apartments and bookings have been refreshed.");
     });
     byId("help-btn").addEventListener("click", () => {
       byId("help-modal").hidden = false;
@@ -882,14 +1081,27 @@
     });
     byId("status-banner-close").addEventListener("click", hideBanner);
 
+    // Automatically clear field-level validation error when user edits an input
+    document.querySelectorAll("form input, form select").forEach((el) => {
+      const clearSelf = () => {
+        if (el.id) {
+          clearFieldError(el.id);
+        }
+      };
+      el.addEventListener("input", clearSelf);
+      el.addEventListener("change", clearSelf);
+    });
+
     // Availability search form & steppers
     byId("avail-people-dec").addEventListener("click", () => {
       const input = byId("avail-num-people");
       input.value = String(Math.max(1, (Number(input.value) || 1) - 1));
+      clearFieldError("avail-num-people");
     });
     byId("avail-people-inc").addEventListener("click", () => {
       const input = byId("avail-num-people");
       input.value = String((Number(input.value) || 1) + 1);
+      clearFieldError("avail-num-people");
     });
     byId("availability-form").addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -904,6 +1116,7 @@
       if (!state.instantBookTarget) {
         return;
       }
+      clearFormErrors("instant-book-form");
       const bookerName = byId("instant-booker-name").value.trim();
       const payload = {
         apartment_name: state.instantBookTarget.name,
@@ -914,7 +1127,7 @@
       };
       const res = await apiRequest("/api/bookings", { method: "POST", json: payload });
       if (!res.ok) {
-        showApiError(res.status, res.payload, "Instant Booking Failed");
+        showApiError(res.status, res.payload, "Instant Booking Failed", "instant-book-form");
         return;
       }
       const created = res.payload.data;
@@ -923,7 +1136,7 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "201 CREATED",
+        "Booked",
         "Booking Confirmed",
         `Booked "${created.apartment_name}" for ${created.booker_name} (${created.start_date} → ${created.end_date}) • Total: ${formatMoney(created.total_price)} EUR.`
       );
@@ -937,16 +1150,17 @@
 
     byId("create-booking-form").addEventListener("submit", async (event) => {
       event.preventDefault();
+      clearFormErrors("create-booking-form");
       const payload = {
         apartment_name: byId("booking-apartment-select").value,
         start_date: byId("booking-start-date").value.trim(),
         end_date: byId("booking-end-date").value.trim(),
         booker_name: byId("booking-booker-name").value.trim(),
-        num_people: Number(byId("booking-num-people").value),
+        num_people: byId("booking-num-people").value.trim(),
       };
       const res = await apiRequest("/api/bookings", { method: "POST", json: payload });
       if (!res.ok) {
-        showApiError(res.status, res.payload, "Booking Creation Failed");
+        showApiError(res.status, res.payload, "Booking Creation Failed", "create-booking-form");
         return;
       }
       const created = res.payload.data;
@@ -955,7 +1169,7 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "201 CREATED",
+        "Booked",
         "Reservation Created",
         `Created booking for ${created.booker_name} at "${created.apartment_name}" (${created.nights} nights • ${formatMoney(created.total_price)} EUR).`
       );
@@ -971,17 +1185,18 @@
       if (!state.changeBookingTarget) {
         return;
       }
+      clearFormErrors("change-booking-form");
       const payload = {
         apartment_name: state.changeBookingTarget.apartment_name,
         start_date: state.changeBookingTarget.start_date,
         end_date: state.changeBookingTarget.end_date,
         new_start_date: byId("change-start-date").value.trim(),
         new_end_date: byId("change-end-date").value.trim(),
-        num_people: Number(byId("change-num-people").value),
+        num_people: byId("change-num-people").value.trim(),
       };
       const res = await apiRequest("/api/bookings", { method: "PATCH", json: payload });
       if (!res.ok) {
-        showApiError(res.status, res.payload, "Booking Change Failed");
+        showApiError(res.status, res.payload, "Booking Change Failed", "change-booking-form");
         return;
       }
       const updated = res.payload.data;
@@ -990,7 +1205,7 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "200 OK",
+        "Updated",
         "Booking Updated",
         `Updated booking for ${updated.booker_name} at "${updated.apartment_name}" to ${updated.start_date} → ${updated.end_date} (${formatMoney(updated.total_price)} EUR).`
       );
@@ -1019,7 +1234,7 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "200 OK",
+        "Cancelled",
         "Booking Cancelled",
         `Cancelled and removed booking for ${cancelled.booker_name} at "${cancelled.apartment_name}".`
       );
@@ -1055,17 +1270,18 @@
 
     byId("add-apartment-form").addEventListener("submit", async (event) => {
       event.preventDefault();
+      clearFormErrors("add-apartment-form");
       const payload = {
         name: byId("apt-name").value.trim(),
         country: byId("apt-country").value.trim(),
         city: byId("apt-city").value.trim(),
         street_and_number: byId("apt-street").value.trim(),
-        max_people: Number(byId("apt-max-people").value),
+        max_people: byId("apt-max-people").value.trim(),
         price_per_night: byId("apt-price").value.trim(),
       };
       const res = await apiRequest("/api/apartments", { method: "POST", json: payload });
       if (!res.ok) {
-        showApiError(res.status, res.payload, "Add Apartment Failed");
+        showApiError(res.status, res.payload, "Add Apartment Failed", "add-apartment-form");
         return;
       }
       const created = res.payload.data;
@@ -1078,7 +1294,7 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "201 CREATED",
+        "Added",
         "Apartment Added",
         `Registered "${created.name}" (${created.address}) at ${formatMoney(created.price_per_night)} EUR / night.`
       );
@@ -1094,6 +1310,7 @@
       if (!state.priceUpdateTarget) {
         return;
       }
+      clearFormErrors("price-modal-form");
       const encodedName = encodeURIComponent(state.priceUpdateTarget.name);
       const newPrice = byId("new-price-input").value.trim();
       const res = await apiRequest(`/api/apartments/${encodedName}/price`, {
@@ -1101,7 +1318,7 @@
         json: { price_per_night: newPrice },
       });
       if (!res.ok) {
-        showApiError(res.status, res.payload, "Price Update Failed");
+        showApiError(res.status, res.payload, "Price Update Failed", "price-modal-form");
         return;
       }
       const updated = res.payload.data;
@@ -1110,7 +1327,7 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "200 OK",
+        "Updated",
         "Nightly Price Updated",
         `Updated "${updated.name}" nightly price to ${formatMoney(updated.price_per_night)} EUR.`
       );
@@ -1137,13 +1354,13 @@
       await runAvailabilitySearch(true);
       showBanner(
         "success",
-        "200 OK",
+        "Removed",
         "Apartment Removed",
-        `Removed "${removed.name}" and any associated bookings from SQLite.`
+        `Removed "${removed.name}" and any associated bookings.`
       );
     });
 
-    // Overview filters & JSON Inspector
+    // Overview filters
     byId("overview-apartment-filter").addEventListener("change", renderOverviewView);
     byId("overview-search-input").addEventListener("input", renderOverviewView);
     byId("overview-clear-btn").addEventListener("click", () => {
@@ -1151,13 +1368,10 @@
       byId("overview-search-input").value = "";
       renderOverviewView();
     });
-    byId("inspector-modal-close").addEventListener("click", closeInspectorModal);
-    byId("inspector-modal-done").addEventListener("click", closeInspectorModal);
   }
 
   document.addEventListener("DOMContentLoaded", async () => {
     initEventListeners();
-    await checkHealth(false);
     await loadAllData();
     await runAvailabilitySearch(true);
   });

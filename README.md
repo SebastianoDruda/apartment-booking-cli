@@ -3,6 +3,7 @@
 [![Tests](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/tests.yml)
 [![Coverage](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml)
 [![Load test](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml)
+[![Website](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/website.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/website.yml)
 
 Apartment Booking is a compact, fully tested Python application developed to
 demonstrate how one domain model can support different delivery interfaces without
@@ -22,6 +23,7 @@ offers a reproducible runtime with shared storage.
 - Calendar, capacity and overlap validation shared by the CLI and REST API.
 - Persistent SQLite storage with transactional writes and Docker volumes.
 - Interactive terminal completion and browser-based API exploration.
+- Dimora, a multilingual web client for guests and hosts built on the same API.
 - Automated unit, integration, Docker, coverage and Locust load tests.
 - Continuous integration on GitHub Actions and on a self-managed GitLab runner.
 
@@ -115,6 +117,16 @@ Successful responses use a `{"data": ...}` envelope. Validation, missing records
 and conflicts return structured errors as
 `{"error": {"code": "...", "message": "..."}}` with the appropriate HTTP status.
 
+### Web client (Dimora)
+
+`website-studio/` contains Dimora, a multilingual (Italian, English, German) web
+client built on the REST API. Visitors enter as a guest or as a host: guests search,
+book, change and cancel stays; hosts publish, reprice and remove listings and follow
+reservations from an overview, each in a workspace with a side panel. With the API
+running, start it with `python3 website-studio/serve.py` and open
+http://127.0.0.1:8080. Architecture, interaction design and tests are documented in
+[website-studio/README.md](website-studio/README.md).
+
 ## Design and architecture
 
 ```text
@@ -161,9 +173,10 @@ apartment-booking-cli/
 │   ├── web.txt                 # Flask, for the HTTP interface
 │   ├── ci.txt                  # Test, coverage and lint tooling
 │   └── load.txt                # Locust, for load testing
+├── website-studio/             # Dimora web client (static app + dev server)
 ├── docs/                       # Architecture assets
 ├── ci/gitlab/                  # GitLab runner scripts and pipeline summary
-├── .github/workflows/          # Test, coverage and load-test pipelines
+├── .github/workflows/          # Test, coverage, load-test and website pipelines
 ├── .gitlab-ci.yml              # GitLab pipeline
 ├── Dockerfile
 ├── compose.yaml
@@ -248,7 +261,9 @@ workflows. The primary test pipeline executes the full suite on Python 3.10 and 
 across Linux, macOS and Windows, then validates both Docker interfaces, persistence
 and service restarts. A separate coverage workflow enforces an 85% branch-coverage
 minimum, while the performance workflow runs the booking journey under load and
-publishes downloadable HTML and CSV reports.
+publishes downloadable HTML and CSV reports. A fourth workflow, triggered only when
+`website-studio/` changes, checks the web client's modules, runs its JavaScript tests
+and tests its development server.
 
 ### Performance testing
 
@@ -355,6 +370,7 @@ component. The API should therefore remain bound to localhost.
 
 | Release | Focus |
 | --- | --- |
+| [Checkpoint 06](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-06) | Dimora web client for guests and hosts in Italian, English and German |
 | [Checkpoint 05](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-05) | GitLab CI with a self-managed Docker executor runner |
 | [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04) | GitHub Actions pipeline with coverage and Locust load testing |
 | [Checkpoint 03](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-03) | Flask REST API, OpenAPI contract and interactive API documentation |

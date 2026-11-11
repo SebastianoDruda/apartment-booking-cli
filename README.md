@@ -121,9 +121,11 @@ and conflicts return structured errors as
 ### Web client (Dimora)
 
 `website-studio/` contains Dimora, a multilingual (Italian, English, German) web
-client built on the REST API. Visitors enter as a guest or as a host: guests search,
-book, change and cancel stays; hosts publish, reprice and remove listings and follow
-reservations from an overview, each in a workspace with a side panel. With the API
+client built on the REST API. Visitors enter as a guest or as a host: guests filter
+the catalogue live by place, dates and party size, then book, change and cancel stays;
+hosts publish, reprice and remove listings, filter reservations from a single menu and
+follow an overview with key figures, a 30-day stay timeline per listing and revenue by
+month, each role in a workspace with a side panel. With the API
 running, start it with `python3 website-studio/serve.py` and open
 http://127.0.0.1:8080. Architecture, interaction design and tests are documented in
 [website-studio/README.md](website-studio/README.md).
@@ -176,7 +178,7 @@ apartment-booking-cli/
 │   └── load.txt                # Locust, for load testing
 ├── website-studio/             # Dimora web client (static app + dev server)
 ├── docs/                       # Architecture assets
-├── ci/gitlab/                  # GitLab runner scripts and pipeline summary
+├── ci/gitlab/                  # GitLab pipeline summary (runner scripts stay local)
 ├── .github/workflows/          # Test, coverage, load-test, website and Playwright pipelines
 ├── .gitlab-ci.yml              # GitLab pipeline
 ├── Dockerfile
@@ -315,7 +317,8 @@ by digest.
 Because job containers are unprivileged, GitLab does not build Docker images; the
 Docker build and Compose smoke checks run in the GitHub workflow.
 
-The scripts in `ci/gitlab/` manage the runner. They require Docker Desktop and
+The runner is managed with local scripts in `ci/gitlab/`, which are git-ignored and
+not part of the repository. They require Docker Desktop and
 `glab` authenticated against `gitlab.inf.unibz.it` with the `api` scope. Credentials
 stay in the macOS Keychain and in `~/.gitlab-runner/config.toml`, never in the
 repository.

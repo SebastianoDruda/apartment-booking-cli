@@ -315,7 +315,7 @@ Playwright E2E tests are integrated into `.github/workflows/tests.yml` under the
 
 - **Automatic execution:** Triggered automatically on every `push` and `pull_request` on any branch.
 - **Manual execution:** Open the **Actions** tab on GitHub, select the **Tests** workflow, and click **Run workflow** (`workflow_dispatch`).
-- The CI job sets up Python 3.14 on `ubuntu-latest`, installs `requirements/web.txt` and `requirements/e2e.txt`, installs Chromium with OS dependencies (`python -m playwright install --with-deps chromium`), and runs `python -m unittest discover -s tests/e2e -p "test_*.py" -v`.
+- The CI job sets up Python 3.14 on `ubuntu-24.04`, installs `requirements/web.txt` and `requirements/e2e.txt`, installs Chromium with OS dependencies (`python -m playwright install --with-deps chromium`), and runs `python -m unittest discover -s tests/e2e -p "test_*.py" -v`.
 
 ### GitLab CI and the self-managed runner
 

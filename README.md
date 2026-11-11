@@ -4,6 +4,7 @@
 [![Coverage](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/coverage.yml)
 [![Load test](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml)
 [![Website](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/website.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/website.yml)
+[![Playwright](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/playwright.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/playwright.yml)
 
 Apartment Booking is a compact, fully tested Python application developed to
 demonstrate how one domain model can support different delivery interfaces without
@@ -24,7 +25,7 @@ offers a reproducible runtime with shared storage.
 - Persistent SQLite storage with transactional writes and Docker volumes.
 - Interactive terminal completion and browser-based API exploration.
 - Dimora, a multilingual web client for guests and hosts built on the same API.
-- Automated unit, integration, Docker, coverage and Locust load tests.
+- Automated unit, integration, Docker, coverage, Locust load and Playwright end-to-end tests.
 - Continuous integration on GitHub Actions and on a self-managed GitLab runner.
 
 ## Getting started
@@ -176,7 +177,7 @@ apartment-booking-cli/
 ├── website-studio/             # Dimora web client (static app + dev server)
 ├── docs/                       # Architecture assets
 ├── ci/gitlab/                  # GitLab runner scripts and pipeline summary
-├── .github/workflows/          # Test, coverage, load-test and website pipelines
+├── .github/workflows/          # Test, coverage, load-test, website and Playwright pipelines
 ├── .gitlab-ci.yml              # GitLab pipeline
 ├── Dockerfile
 ├── compose.yaml
@@ -261,9 +262,11 @@ workflows. The primary test pipeline executes the full suite on Python 3.10 and 
 across Linux, macOS and Windows, then validates both Docker interfaces, persistence
 and service restarts. A separate coverage workflow enforces an 85% branch-coverage
 minimum, while the performance workflow runs the booking journey under load and
-publishes downloadable HTML and CSV reports. A fourth workflow, triggered only when
-`website-studio/` changes, checks the web client's modules, runs its JavaScript tests
-and tests its development server.
+publishes downloadable HTML and CSV reports. Two more workflows cover the web client:
+`Website`, triggered when `website-studio/` changes, checks its modules and runs its
+JavaScript and development-server tests; `Playwright` runs the end-to-end guest and
+host journeys in Chromium on desktop and mobile viewports against the real API, and
+publishes the HTML report as an artifact.
 
 ### Performance testing
 

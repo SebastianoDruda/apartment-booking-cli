@@ -51,8 +51,8 @@ def main() -> None:
         assert http("/api/health")["data"]["status"] == "ok"
         assert "routes" in http("/")["data"]
         assert http("/api/openapi.json")["openapi"] == "3.1.0"
-        # Verify documentation assets were included by the restricted build context.
-        for path in ("/docs", "/static/api_docs.js", "/static/api_docs.css"):
+        # Verify documentation and Web UI assets were included by the restricted build context.
+        for path in ("/docs", "/static/api_docs.js", "/static/api_docs.css", "/ui", "/static/ui.js", "/static/ui.css"):
             with urlopen(base + path, timeout=10) as response:
                 assert response.status == 200, path
         run("exec", "-T", "web", "python", "-c", "import os; assert os.getuid() != 0")

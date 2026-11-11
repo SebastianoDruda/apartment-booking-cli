@@ -269,7 +269,13 @@ class TestWebAPI(unittest.TestCase):
         self.assertEqual(response.mimetype, "text/html")
         self.assertIn("API Explorer", response.text)
         self.assertIn("script-src 'self'", response.headers["Content-Security-Policy"])
-        for asset in ("api_docs.css", "api_docs.js"):
+        for path in ("/ui", "/"):
+            html_res = self.client.get(path, headers={"Accept": "text/html"})
+            self.assertEqual(html_res.status_code, 200)
+            self.assertEqual(html_res.mimetype, "text/html")
+            self.assertIn("Apartment Booking Console", html_res.text)
+            self.assertIn("script-src 'self'", html_res.headers["Content-Security-Policy"])
+        for asset in ("api_docs.css", "api_docs.js", "ui.css", "ui.js"):
             with self.client.get("/static/" + asset) as asset_response:
                 self.assertEqual(asset_response.status_code, 200)
         self.assertFalse(self.db_path.exists())
@@ -283,7 +289,7 @@ class TestWebAPI(unittest.TestCase):
                       for method in operations}
         actual = {(method, rule.rule.replace("<path:name>", "{name}"))
                   for rule in self.app.url_map.iter_rules()
-                  if rule.endpoint not in {"static", "documentation", "openapi"}
+                  if rule.endpoint not in {"static", "documentation", "openapi", "ui"}
                   for method in rule.methods - {"HEAD", "OPTIONS"}}
         self.assertEqual(documented, actual)
         self.assertFalse(self.db_path.exists())

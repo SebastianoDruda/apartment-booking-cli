@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apartment Booking Console — Hospitality Operations Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='ui.css') }}" />
+    <script src="{{ url_for('static', filename='ui.js') }}" defer></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <!-- SIDEBAR NAVIGATION (Stitch Hospitality Operations Console) -->
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="sidebar-brand">
+          <div class="brand-icon" aria-hidden="true">AB</div>
+          <div class="brand-text">
+            <span class="brand-title">Apartment Booking Console</span>
+            <span class="brand-subtitle">SQLite Engine • Port :8000</span>
+          </div>
+        </div>
+
+        <!-- Role Switcher -->
+        <div class="role-switcher-box" aria-label="Active workspace role">
+          <span class="section-overline">Workspace Role</span>
+          <div class="role-pill-group" role="tablist">
+            <button
+              id="role-booker-btn"
+              class="role-pill active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-role="booker"
+            >
+              1 • Apartment Booker
+            </button>
+            <button
+              id="role-manager-btn"
+              class="role-pill"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-role="manager"
+            >
+              2 • System Manager
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Menu -->
+        <nav class="sidebar-nav">
+          <div class="nav-group" id="nav-group-booker">
+            <span class="section-overline">Booker Operations</span>
+            <button
+              id="nav-search"
+              class="nav-item active"
+              type="button"
+              data-view="search-view"
+            >
+              <span class="nav-badge">GET</span>
+              <span class="nav-label">Search &amp; Instant Book</span>
+            </button>
+            <button
+              id="nav-bookings"
+              class="nav-item"
+              type="button"
+              data-view="bookings-view"
+            >
+              <span class="nav-badge">CRUD</span>
+              <span class="nav-label">Create &amp; Manage Bookings</span>
+            </button>
+            <button
+              id="nav-directory"
+              class="nav-item"
+              type="button"
+              data-view="directory-view"
+            >
+              <span class="nav-badge">DIR</span>
+              <span class="nav-label">Apartments Directory</span>
+            </button>
+          </div>
+
+          <div class="nav-group" id="nav-group-manager">
+            <span class="section-overline">Manager Console</span>
+            <button
+              id="nav-inventory"
+              class="nav-item"
+              type="button"
+              data-view="inventory-view"
+            >
+              <span class="nav-badge">INV</span>
+              <span class="nav-label">Apartments Inventory &amp; Pricing</span>
+            </button>
+            <button
+              id="nav-overview"
+              class="nav-item"
+              type="button"
+              data-view="overview-view"
+            >
+              <span class="nav-badge">KPI</span>
+              <span class="nav-label">Global Bookings Overview</span>
+            </button>
+          </div>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer">
+          <div class="footer-links">
+            <a href="/docs" class="footer-link">API Explorer (/docs)</a>
+            <a href="/api/openapi.json" target="_blank" rel="noopener" class="footer-link">OpenAPI 3.1</a>
+          </div>
+          <div class="footer-meta">
+            <span>Local Development Only • No Auth</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN WORKSPACE -->
+      <div class="main-area">
+        <!-- TOP HEADER BAR -->
+        <header class="topbar">
+          <div class="topbar-left">
+            <span id="active-role-badge" class="role-badge">Role 1: Apartment Booker</span>
+            <h1 id="active-view-title" class="topbar-title">Search Availability &amp; Instant Book</h1>
+          </div>
+          <div class="topbar-right">
+            <div id="telemetry-pill" class="telemetry-pill" aria-live="polite">
+              <span id="telemetry-method" class="telemetry-method">GET</span>
+              <code id="telemetry-endpoint">/api/health</code>
+              <span id="telemetry-status" class="telemetry-status">Ready</span>
+            </div>
+            <button
+              id="health-badge"
+              class="health-badge healthy"
+              type="button"
+              title="Click to run GET /api/health"
+            >
+              <span class="health-dot"></span>
+              <span id="health-text">Checking Health…</span>
+            </button>
+            <button id="refresh-all-btn" class="btn btn-secondary btn-sm" type="button">
+              Refresh Data
+            </button>
+            <button id="help-btn" class="btn btn-outline btn-sm" type="button">
+              Quick Help &amp; Rules
+            </button>
+          </div>
+        </header>
+
+        <!-- GLOBAL STATUS & ERROR FEEDBACK BANNER -->
+        <div id="status-banner" class="status-banner" role="alert" hidden>
+          <div class="status-banner-content">
+            <span id="status-banner-code" class="status-code-badge">200 OK</span>
+            <div class="status-banner-text">
+              <strong id="status-banner-title">Success</strong>
+              <p id="status-banner-message"></p>
+            </div>
+          </div>
+          <button id="status-banner-close" class="btn-icon" type="button" aria-label="Dismiss notification">
+            ✕
+          </button>
+        </div>
+
+        <!-- VIEW 1: SEARCH AVAILABILITY & INSTANT BOOK (Stitch Screen 2) -->
+        <main class="workspace-content">
+          <section id="search-view" class="view-section active" aria-labelledby="search-heading">
+            <div class="card search-hero-card">
+              <div class="card-header">
+                <div>
+                  <span class="endpoint-tag">GET /api/availability</span>
+                  <h2 id="search-heading" class="card-title">Search Available Apartments</h2>
+                  <p class="card-subtitle">
+                    Enter your check-in and check-out dates (`YYYY-MM-DD` or `DD.MM.YYYY`) and guest count to query conflict-free apartments and book immediately.
+                  </p>
+                </div>
+              </div>
+
+              <form id="availability-form" class="search-bar-grid">
+                <div class="form-field">
+                  <label for="avail-start-date">From Date (Check-In)</label>
+                  <input
+                    id="avail-start-date"
+                    name="start_date"
+                    type="text"
+                    placeholder="YYYY-MM-DD or DD.MM.YYYY"
+                    value="2026-11-10"
+                    required
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="avail-end-date">To Date (Check-Out)</label>
+                  <input
+                    id="avail-end-date"
+                    name="end_date"
+                    type="text"
+                    placeholder="YYYY-MM-DD or DD.MM.YYYY"
+                    value="2026-11-15"
+                    required
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="avail-num-people">Number of People</label>
+                  <div class="stepper-input">
+                    <button id="avail-people-dec" class="stepper-btn" type="button" aria-label="Decrease guests">−</button>
+                    <input
+                      id="avail-num-people"
+                      name="num_people"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value="2"
+                      required
+                    />
+                    <button id="avail-people-inc" class="stepper-btn" type="button" aria-label="Increase guests">+</button>
+                  </div>
+                </div>
+                <div class="form-field form-field-action">
+                  <button id="avail-search-btn" class="btn btn-primary btn-block" type="submit">
+                    Search Available Apartments
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="results-header">
+              <div>
+                <h3 class="section-title">Available Units for Selected Window</h3>
+                <p id="avail-summary-text" class="section-subtitle">
+                  Run a search or browse available apartments below.
+                </p>
+              </div>
+              <span id="avail-count-badge" class="count-pill">0 Available</span>
+            </div>
+
+            <div id="availability-results" class="cards-grid" data-testid="availability-results">
+              <!-- Populated dynamically by ui.js -->
+            </div>
+          </section>
+
+          <!-- VIEW 2: CREATE & MANAGE BOOKINGS (Stitch Screen 0) -->
+          <section id="bookings-view" class="view-section" aria-labelledby="bookings-create-heading" hidden>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <span class="endpoint-tag">POST /api/bookings</span>
+                  <h2 id="bookings-create-heading" class="card-title">Create New Booking</h2>
+                  <p class="card-subtitle">
+                    Select an apartment, enter guest details and stay dates. Overlapping bookings are automatically blocked with `409 Conflict`.
+                  </p>
+                </div>
+              </div>
+
+              <form id="create-booking-form" class="booking-creator-grid">
+                <div class="booking-inputs-col">
+                  <div class="form-row-2">
+                    <div class="form-field">
+                      <label for="booking-apartment-select">Apartment Name</label>
+                      <select id="booking-apartment-select" name="apartment_name" required>
+                        <option value="">Select an apartment…</option>
+                      </select>
+                      <small id="booking-capacity-hint" class="field-hint">
+                        Select an apartment to view guest capacity and nightly rate.
+                      </small>
+                    </div>
+                    <div class="form-field">
+                      <label for="booking-booker-name">Booker Name</label>
+                      <input
+                        id="booking-booker-name"
+                        name="booker_name"
+                        type="text"
+                        placeholder="e.g. Elena Rostova"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-row-3">
+                    <div class="form-field">
+                      <label for="booking-start-date">Check-in Date</label>
+                      <input
+                        id="booking-start-date"
+                        name="start_date"
+                        type="text"
+                        placeholder="YYYY-MM-DD or DD.MM.YYYY"
+                        value="2026-11-10"
+                        required
+                      />
+                    </div>
+                    <div class="form-field">
+                      <label for="booking-end-date">Check-out Date</label>
+                      <input
+                        id="booking-end-date"
+                        name="end_date"
+                        type="text"
+                        placeholder="YYYY-MM-DD or DD.MM.YYYY"
+                        value="2026-11-15"
+                        required
+                      />
+                    </div>
+                    <div class="form-field">
+                      <label for="booking-num-people">Number of People</label>
+                      <input
+                        id="booking-num-people"
+                        name="num_people"
+                        type="number"
+                        min="1"
+                        value="2"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Pricing Ledger Box -->
+                <div class="pricing-ledger-box">
+                  <div>
+                    <div class="ledger-header">
+                      <span class="section-overline">Pricing Ledger</span>
+                      <span class="code-badge">EUR Native</span>
+                    </div>
+                    <div class="ledger-rows">
+                      <div class="ledger-row">
+                        <span>Selected Nights</span>
+                        <strong id="calc-nights">5 nights</strong>
+                      </div>
+                      <div class="ledger-row">
+                        <span>Nightly Rate</span>
+                        <strong id="calc-rate">€0.00 / night</strong>
+                      </div>
+                    </div>
+                    <div class="ledger-total-box">
+                      <span class="section-overline">Estimated Total</span>
+                      <div class="ledger-total-value" id="calc-total">€0.00 EUR</div>
+                      <p id="calc-formula" class="ledger-formula">Select an apartment to calculate total.</p>
+                    </div>
+                  </div>
+                  <button id="create-booking-submit" class="btn btn-primary btn-block" type="submit">
+                    Submit Reservation (POST /api/bookings)
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- All Existing Bookings Table -->
+            <div class="card mt-lg">
+              <div class="card-header">
+                <div>
+                  <span class="endpoint-tag">GET /api/bookings</span>
+                  <h2 class="card-title">All Existing Bookings</h2>
+                  <p class="card-subtitle">
+                    Modify stay dates and guest count (`PATCH /api/bookings`) or cancel a reservation completely (`DELETE /api/bookings`).
+                  </p>
+                </div>
+                <div class="card-header-actions">
+                  <span id="bookings-count-badge" class="count-pill">0 Active Bookings</span>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="data-table" id="bookings-table">
+                  <thead>
+                    <tr>
+                      <th>Apartment</th>
+                      <th>Address</th>
+                      <th class="text-center">Max Cap</th>
+                      <th class="text-right">Price / Night</th>
+                      <th>Booker Name</th>
+                      <th class="text-center">People</th>
+                      <th>From → To</th>
+                      <th class="text-right">Total Price</th>
+                      <th class="text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="bookings-table-body">
+                    <!-- Populated dynamically by ui.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 3: APARTMENTS DIRECTORY (Stitch Screen 1) -->
+          <section id="directory-view" class="view-section" aria-labelledby="directory-heading" hidden>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <span class="endpoint-tag">GET /api/apartments</span>
+                  <h2 id="directory-heading" class="card-title">Apartments Directory</h2>
+                  <p class="card-subtitle">
+                    Browse all registered apartments, filter by location, guest capacity, or nightly rate, and jump straight into availability checking.
+                  </p>
+                </div>
+                <div class="view-toggle-group">
+                  <button id="dir-view-table-btn" class="btn btn-secondary btn-sm active" type="button">
+                    Ledger Table
+                  </button>
+                  <button id="dir-view-cards-btn" class="btn btn-outline btn-sm" type="button">
+                    Cards View
+                  </button>
+                </div>
+              </div>
+
+              <div class="filter-bar">
+                <div class="form-field">
+                  <label for="dir-search-input">Search Name or Location</label>
+                  <input
+                    id="dir-search-input"
+                    type="text"
+                    placeholder="Filter by apartment, city, country, street…"
+                  />
+                </div>
+                <div class="form-field">
+                  <label for="dir-capacity-filter">Minimum Capacity</label>
+                  <select id="dir-capacity-filter">
+                    <option value="0">All Capacities</option>
+                    <option value="2">2+ Guests</option>
+                    <option value="4">4+ Guests</option>
+                    <option value="6">6+ Guests</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label for="dir-price-filter">Max Nightly Rate</label>
+                  <select id="dir-price-filter">
+                    <option value="0">Any Price</option>
+                    <option value="100">Up to €100 / night</option>
+                    <option value="150">Up to €150 / night</option>
+                    <option value="250">Up to €250 / night</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="dir-table-wrapper" class="table-container">
+                <table class="data-table" id="directory-table">
+                  <thead>
+                    <tr>
+                      <th>Apartment Name</th>
+                      <th>Full Address</th>
+                      <th class="text-center">Max People</th>
+                      <th class="text-right">Price / Night</th>
+                      <th class="text-right">Quick Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="directory-table-body">
+                    <!-- Populated dynamically by ui.js -->
+                  </tbody>
+                </table>
+              </div>
+
+              <div id="dir-cards-wrapper" class="cards-grid" hidden>
+                <!-- Populated dynamically by ui.js -->
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 4: APARTMENTS INVENTORY & PRICING — SYSTEM MANAGER (Stitch Screen 3) -->
+          <section id="inventory-view" class="view-section" aria-labelledby="inventory-heading" hidden>
+            <div class="manager-split-grid">
+              <!-- Left Column: Add Apartment Form (POST /api/apartments) -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <span class="endpoint-tag">POST /api/apartments</span>
+                    <h2 id="inventory-heading" class="card-title">Register New Apartment</h2>
+                    <p class="card-subtitle">
+                      Add a new unit to the SQLite inventory. Apartment names are enforced unique (case-insensitive).
+                    </p>
+                  </div>
+                </div>
+
+                <form id="add-apartment-form" class="stack-form">
+                  <div class="form-field">
+                    <label for="apt-name">Apartment Name</label>
+                    <input
+                      id="apt-name"
+                      name="name"
+                      type="text"
+                      placeholder="e.g. Alpine Sun Penthouse"
+                      required
+                    />
+                  </div>
+                  <div class="form-row-2">
+                    <div class="form-field">
+                      <label for="apt-country">Country</label>
+                      <input
+                        id="apt-country"
+                        name="country"
+                        type="text"
+                        placeholder="e.g. Austria"
+                        required
+                      />
+                    </div>
+                    <div class="form-field">
+                      <label for="apt-city">City</label>
+                      <input
+                        id="apt-city"
+                        name="city"
+                        type="text"
+                        placeholder="e.g. Innsbruck"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div class="form-field">
+                    <label for="apt-street">Street and Number</label>
+                    <input
+                      id="apt-street"
+                      name="street_and_number"
+                      type="text"
+                      placeholder="e.g. Maria-Theresien-Straße 45"
+                      required
+                    />
+                  </div>
+
+                  <div class="address-preview-pill">
+                    <span class="section-overline">Formatted SQLite Address Preview</span>
+                    <code id="address-preview-display">Country, City, Street</code>
+                  </div>
+
+                  <div class="form-row-2">
+                    <div class="form-field">
+                      <label for="apt-max-people">Max People (Capacity)</label>
+                      <input
+                        id="apt-max-people"
+                        name="max_people"
+                        type="number"
+                        min="1"
+                        value="4"
+                        required
+                      />
+                    </div>
+                    <div class="form-field">
+                      <label for="apt-price">Price per Night (EUR)</label>
+                      <input
+                        id="apt-price"
+                        name="price_per_night"
+                        type="text"
+                        placeholder="e.g. 140.00 or 95,50 €"
+                        value="140.00"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <button id="add-apartment-submit" class="btn btn-primary btn-block" type="submit">
+                    Publish Apartment (POST /api/apartments)
+                  </button>
+                </form>
+              </div>
+
+              <!-- Right Column: Inventory Fleet Ledger -->
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <span class="endpoint-tag">GET / PATCH / DELETE /api/apartments</span>
+                    <h2 class="card-title">Inventory Fleet Ledger</h2>
+                    <p class="card-subtitle">
+                      Update nightly rates (`PATCH /api/apartments/{name}/price`) or remove properties (`DELETE /api/apartments/{name}`).
+                    </p>
+                  </div>
+                  <div class="card-header-actions">
+                    <span id="inventory-count-badge" class="count-pill">0 Units Managed</span>
+                  </div>
+                </div>
+
+                <div class="filter-bar compact">
+                  <div class="form-field">
+                    <label for="inventory-search-input">Filter Fleet</label>
+                    <input
+                      id="inventory-search-input"
+                      type="text"
+                      placeholder="Filter by apartment name or address…"
+                    />
+                  </div>
+                </div>
+
+                <div class="table-container">
+                  <table class="data-table" id="inventory-table">
+                    <thead>
+                      <tr>
+                        <th>Apartment Name</th>
+                        <th>Full Address</th>
+                        <th class="text-center">Capacity</th>
+                        <th class="text-right">Nightly Rate</th>
+                        <th class="text-center">Active Bookings</th>
+                        <th class="text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="inventory-table-body">
+                      <!-- Populated dynamically by ui.js -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- VIEW 5: GLOBAL BOOKINGS OVERVIEW — SYSTEM MANAGER (Stitch Screen 4) -->
+          <section id="overview-view" class="view-section" aria-labelledby="overview-heading" hidden>
+            <div class="kpi-bento-grid">
+              <div class="card kpi-card">
+                <span class="section-overline">Active Reservations</span>
+                <div id="kpi-active-bookings" class="kpi-value">0</div>
+                <span class="kpi-caption">Confirmed stays in SQLite</span>
+              </div>
+              <div class="card kpi-card">
+                <span class="section-overline">Total Gross Revenue</span>
+                <div id="kpi-total-revenue" class="kpi-value">€0.00</div>
+                <span class="kpi-caption">Dynamic rate calculation</span>
+              </div>
+              <div class="card kpi-card">
+                <span class="section-overline">Avg Stay Duration</span>
+                <div id="kpi-avg-stay" class="kpi-value">0.0 Nights</div>
+                <span class="kpi-caption">Across active reservations</span>
+              </div>
+              <div class="card kpi-card">
+                <span class="section-overline">Portfolio Units</span>
+                <div id="kpi-total-apartments" class="kpi-value">0 Units</div>
+                <span class="kpi-caption">Registered apartments</span>
+              </div>
+            </div>
+
+            <div class="card mt-lg">
+              <div class="card-header">
+                <div>
+                  <span class="endpoint-tag">GET /api/bookings</span>
+                  <h2 id="overview-heading" class="card-title">Master Reservations Ledger</h2>
+                  <p class="card-subtitle">
+                    Global audit view of all bookings across the apartment fleet with live search and JSON record inspection.
+                  </p>
+                </div>
+              </div>
+
+              <div class="filter-bar">
+                <div class="form-field">
+                  <label for="overview-apartment-filter">Filter by Apartment</label>
+                  <select id="overview-apartment-filter">
+                    <option value="">All Apartments</option>
+                  </select>
+                </div>
+                <div class="form-field">
+                  <label for="overview-search-input">Search Booker or Address</label>
+                  <input
+                    id="overview-search-input"
+                    type="text"
+                    placeholder="Search guest name, apartment, city…"
+                  />
+                </div>
+                <div class="form-field form-field-action">
+                  <button id="overview-clear-btn" class="btn btn-outline" type="button">
+                    Clear Filters
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="data-table" id="overview-table">
+                  <thead>
+                    <tr>
+                      <th>Apartment</th>
+                      <th>Address</th>
+                      <th>Booker Name</th>
+                      <th class="text-center">Party Size</th>
+                      <th>Check-In → Check-Out</th>
+                      <th class="text-center">Nights</th>
+                      <th class="text-right">Nightly Rate</th>
+                      <th class="text-right">Total Price</th>
+                      <th class="text-right">Audit</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overview-table-body">
+                    <!-- Populated dynamically by ui.js -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- MODAL 1: INSTANT BOOK MODAL (from Search & Instant Book View) -->
+    <div id="instant-book-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="instant-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <span class="endpoint-tag">POST /api/bookings</span>
+            <h3 id="instant-modal-title" class="modal-title">Instant Book Available Apartment</h3>
+          </div>
+          <button id="instant-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <form id="instant-book-form" class="modal-body">
+          <div class="summary-box">
+            <strong id="instant-apt-name">Apartment Name</strong>
+            <p id="instant-apt-meta" class="muted"></p>
+            <p id="instant-stay-summary" class="code-highlight"></p>
+          </div>
+          <div class="form-field">
+            <label for="instant-booker-name">Your Name (Booker Name)</label>
+            <input
+              id="instant-booker-name"
+              name="booker_name"
+              type="text"
+              placeholder="Enter full guest name"
+              required
+            />
+          </div>
+          <div class="modal-actions">
+            <button id="instant-modal-cancel" class="btn btn-outline" type="button">Cancel</button>
+            <button id="instant-book-confirm" class="btn btn-primary" type="submit">
+              Confirm Instant Booking
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL 2: CHANGE BOOKING MODAL (PATCH /api/bookings) -->
+    <div id="change-booking-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="change-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <span class="endpoint-tag">PATCH /api/bookings</span>
+            <h3 id="change-modal-title" class="modal-title">Change Existing Booking</h3>
+          </div>
+          <button id="change-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <form id="change-booking-form" class="modal-body">
+          <div class="summary-box">
+            <strong id="change-apt-title">Apartment</strong>
+            <p id="change-ref-meta" class="muted"></p>
+          </div>
+          <div class="form-row-2">
+            <div class="form-field">
+              <label for="change-start-date">New From Date</label>
+              <input id="change-start-date" type="text" required />
+            </div>
+            <div class="form-field">
+              <label for="change-end-date">New To Date</label>
+              <input id="change-end-date" type="text" required />
+            </div>
+          </div>
+          <div class="form-field">
+            <label for="change-num-people">New Number of People</label>
+            <input id="change-num-people" type="number" min="1" required />
+          </div>
+          <div class="summary-box subtle">
+            <span>Recalculated Total:</span>
+            <strong id="change-recalc-total">€0.00 EUR</strong>
+          </div>
+          <div class="modal-actions">
+            <button id="change-modal-cancel" class="btn btn-outline" type="button">Keep As Is</button>
+            <button id="confirm-change-booking-btn" class="btn btn-primary" type="submit">
+              Confirm Changes (PATCH)
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL 3: CANCEL BOOKING MODAL (DELETE /api/bookings) -->
+    <div id="cancel-booking-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="cancel-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header modal-header-danger">
+          <div>
+            <span class="endpoint-tag danger">DELETE /api/bookings</span>
+            <h3 id="cancel-modal-title" class="modal-title">Cancel Booking</h3>
+          </div>
+          <button id="cancel-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Are you sure you want to cancel the booking for
+            <strong id="cancel-modal-booker">Guest</strong> at
+            <strong id="cancel-modal-apt">Apartment</strong>?
+          </p>
+          <div class="summary-box danger-box">
+            <span>Dates to release:</span>
+            <strong id="cancel-modal-dates"></strong>
+            <p class="muted">This booking will be permanently removed from the booking overview and SQLite database.</p>
+          </div>
+          <div class="modal-actions">
+            <button id="cancel-modal-keep" class="btn btn-outline" type="button">Keep Booking</button>
+            <button id="confirm-cancel-booking-btn" class="btn btn-danger" type="button">
+              Confirm Cancellation (DELETE)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 4: UPDATE APARTMENT PRICE MODAL (PATCH /api/apartments/<name>/price) -->
+    <div id="price-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="price-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <span class="endpoint-tag">PATCH /api/apartments/{name}/price</span>
+            <h3 id="price-modal-title" class="modal-title">Update Nightly Price</h3>
+          </div>
+          <button id="price-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <form id="price-modal-form" class="modal-body">
+          <div class="summary-box">
+            <strong id="price-modal-apt-name">Apartment</strong>
+            <p class="muted">Current Nightly Rate: <strong id="price-modal-current">€0.00 EUR</strong></p>
+          </div>
+          <div class="form-field">
+            <label for="new-price-input">New Price per Night (EUR)</label>
+            <input
+              id="new-price-input"
+              type="text"
+              placeholder="e.g. 125.00"
+              required
+            />
+          </div>
+          <p class="field-hint">
+            Changing the nightly price dynamically recalculates total prices for existing and future bookings.
+          </p>
+          <div class="modal-actions">
+            <button id="price-modal-cancel" class="btn btn-outline" type="button">Cancel</button>
+            <button id="confirm-price-btn" class="btn btn-primary" type="submit">
+              Confirm New Price (PATCH)
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL 5: REMOVE APARTMENT MODAL (DELETE /api/apartments/<name>) -->
+    <div id="delete-apartment-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="delete-apt-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header modal-header-danger">
+          <div>
+            <span class="endpoint-tag danger">DELETE /api/apartments/{name}</span>
+            <h3 id="delete-apt-modal-title" class="modal-title">Remove Apartment</h3>
+          </div>
+          <button id="delete-apt-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Are you sure you want to permanently remove
+            <strong id="delete-apt-name-target">Apartment</strong>?
+          </p>
+          <div class="summary-box danger-box">
+            <strong>Cascading Deletion Warning</strong>
+            <p class="muted">
+              Removing this apartment will also delete all bookings associated with it in SQLite.
+            </p>
+          </div>
+          <div class="modal-actions">
+            <button id="delete-apt-modal-cancel" class="btn btn-outline" type="button">Cancel</button>
+            <button id="confirm-delete-apartment-btn" class="btn btn-danger" type="button">
+              Permanently Delete Property
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 6: JSON PAYLOAD INSPECTOR / UNIT DRAWER -->
+    <div id="inspector-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="inspector-modal-title" hidden>
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <span class="endpoint-tag">JSON Record Inspector</span>
+            <h3 id="inspector-modal-title" class="modal-title">Record Payload</h3>
+          </div>
+          <button id="inspector-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <pre id="inspector-json-pre" class="json-pre"></pre>
+          <div class="modal-actions">
+            <button id="inspector-modal-done" class="btn btn-primary" type="button">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 7: QUICK HELP & BUSINESS RULES -->
+    <div id="help-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" hidden>
+      <div class="modal-card modal-lg">
+        <div class="modal-header">
+          <div>
+            <span class="endpoint-tag">CLI &amp; HTTP Reference</span>
+            <h3 id="help-modal-title" class="modal-title">Quick Help &amp; Business Rules</h3>
+          </div>
+          <button id="help-modal-close" class="btn-icon" type="button" aria-label="Close modal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="help-grid">
+            <div class="summary-box">
+              <strong>Role 1: Apartment Booker Commands</strong>
+              <ul class="help-list">
+                <li><code>search availability</code> → <code>GET /api/availability</code> + Instant Book</li>
+                <li><code>booking create</code> → <code>POST /api/bookings</code></li>
+                <li><code>booking change</code> → <code>PATCH /api/bookings</code></li>
+                <li><code>booking cancel</code> → <code>DELETE /api/bookings</code></li>
+                <li><code>booking view</code> → <code>GET /api/bookings</code></li>
+                <li><code>apartment view</code> → <code>GET /api/apartments</code></li>
+              </ul>
+            </div>
+            <div class="summary-box">
+              <strong>Role 2: System Manager Commands</strong>
+              <ul class="help-list">
+                <li><code>apartment add</code> → <code>POST /api/apartments</code></li>
+                <li><code>apartment price</code> → <code>PATCH /api/apartments/{name}/price</code></li>
+                <li><code>apartment remove</code> → <code>DELETE /api/apartments/{name}</code></li>
+                <li><code>apartment view</code> → <code>GET /api/apartments</code></li>
+                <li><code>booking view</code> → <code>GET /api/bookings</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="summary-box subtle">
+            <strong>Core Business Rules (Shared CLI &amp; Web SQLite Engine)</strong>
+            <ul class="help-list">
+              <li>Dates accept both ISO <code>YYYY-MM-DD</code> and European <code>DD.MM.YYYY</code>; check-out must be strictly after check-in.</li>
+              <li>Back-to-back stays are allowed (check-in on an existing booking's check-out day). Overlapping stays return <code>409 Conflict</code>.</li>
+              <li>Cancelled bookings are completely removed from the booking overview and immediately release their date range.</li>
+              <li>Updating an apartment's nightly rate dynamically recalculates booking totals.</li>
+            </ul>
+          </div>
+          <div class="modal-actions">
+            <button id="help-modal-done" class="btn btn-primary" type="button">Got It</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

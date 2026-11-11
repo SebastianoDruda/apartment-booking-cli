@@ -1,0 +1,2 @@
+# Browser End-to-End (E2E) testing dependencies for the Flask Web UI.
+playwright==1.58.0

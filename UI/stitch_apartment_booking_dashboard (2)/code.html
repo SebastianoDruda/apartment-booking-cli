@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      "colors": {
+        "on-secondary-container": "#fffbff",
+        "secondary-container": "#645efb",
+        "surface-container-high": "#dce9ff",
+        "on-tertiary-fixed": "#002114",
+        "inverse-on-surface": "#eaf1ff",
+        "surface-tint": "#545f73",
+        "on-secondary": "#ffffff",
+        "on-primary": "#ffffff",
+        "surface-container-highest": "#d3e4fe",
+        "tertiary-fixed-dim": "#68dba9",
+        "on-primary-fixed": "#111c2d",
+        "surface-container-lowest": "#ffffff",
+        "on-error-container": "#93000a",
+        "inverse-surface": "#213145",
+        "surface-container": "#e5eeff",
+        "primary-fixed": "#d8e3fb",
+        "surface-container-low": "#eff4ff",
+        "surface-bright": "#f8f9ff",
+        "primary-container": "#1e293b",
+        "on-tertiary-fixed-variant": "#005137",
+        "on-secondary-fixed-variant": "#3323cc",
+        "on-primary-fixed-variant": "#3c475a",
+        "background": "#f8f9ff",
+        "secondary": "#4b41e1",
+        "on-primary-container": "#8590a6",
+        "primary-fixed-dim": "#bcc7de",
+        "tertiary": "#00190e",
+        "surface-variant": "#d3e4fe",
+        "secondary-fixed-dim": "#c3c0ff",
+        "on-secondary-fixed": "#0f0069",
+        "inverse-primary": "#bcc7de",
+        "primary": "#091426",
+        "on-tertiary": "#ffffff",
+        "on-error": "#ffffff",
+        "surface-dim": "#cbdbf5",
+        "on-background": "#0b1c30",
+        "tertiary-container": "#00301f",
+        "error": "#ba1a1a",
+        "on-surface-variant": "#45474c",
+        "on-surface": "#0b1c30",
+        "error-container": "#ffdad6",
+        "outline": "#75777d",
+        "outline-variant": "#c5c6cd",
+        "secondary-fixed": "#e2dfff",
+        "tertiary-fixed": "#85f8c4",
+        "surface": "#f8f9ff",
+        "on-tertiary-container": "#24a375"
+      },
+      "borderRadius": {
+        "DEFAULT": "0.25rem",
+        "lg": "0.5rem",
+        "xl": "0.75rem",
+        "full": "9999px"
+      },
+      "spacing": {
+        "gutter": "1rem",
+        "margin-lg": "2rem",
+        "margin-md": "1.5rem",
+        "margin": "1rem",
+        "space-lg": "1.5rem",
+        "space-xs": "0.25rem",
+        "space-md": "1rem",
+        "space-sm": "0.5rem",
+        "space-xl": "2rem",
+        "gutter-lg": "1.5rem"
+      },
+      "fontFamily": {
+        "headline-xl-mobile": ["Plus Jakarta Sans"],
+        "body-lg": ["Inter"],
+        "headline-md": ["Plus Jakarta Sans"],
+        "headline-sm": ["Plus Jakarta Sans"],
+        "tabular-md": ["Inter"],
+        "body-md": ["Inter"],
+        "code-sm": ["JetBrains Mono"],
+        "label-md": ["Inter"],
+        "headline-lg-mobile": ["Plus Jakarta Sans"],
+        "headline-xl": ["Plus Jakarta Sans"],
+        "tabular-sm": ["Inter"],
+        "headline-lg": ["Plus Jakarta Sans"],
+        "body-sm": ["Inter"],
+        "label-sm": ["Inter"]
+      },
+      "fontSize": {
+        "headline-xl-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "700"}],
+        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+        "headline-md": ["18px", {"lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+        "headline-sm": ["15px", {"lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "600"}],
+        "tabular-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+        "code-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+        "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+        "headline-lg-mobile": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+        "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+        "tabular-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+        "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.015em", "fontWeight": "600"}],
+        "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+        "label-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.03em", "fontWeight": "600"}]
+      }
+    }
+  }
+}</script></head><body class="bg-background font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between"><div class="flex flex-col"><div class="h-16 px-margin flex items-center gap-space-sm bg-surface-container-lowest"><img alt="Apartment Booking System Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrDrefXltlN_7_Ec5UtwItaBf3cvkNQcHnpuiO3UiOKnEBwdMgMjh2UoPac21LS8wPXZJm2ymMTI8wczKkuCNDZ3sUdwcuskPEJYR505EI--_VFcr2dUsg1f-ftRVZ3M1GQDxVCgRgC3qdyNinHM9zBppDH4RqByORMfkEkOhg3vZG6BSfpiFBs6NPOIOZz4CmtQ15xsYHBMcif3lIhrmfbbFq8_gz-z46aC3sb5kIk"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">Apartment Core</span><span class="font-code-sm text-code-sm text-on-surface-variant">v1.4.0 (Flask / SQLite)</span></div></div><div class="px-margin py-space-sm"><div class="p-space-sm rounded-lg bg-surface-container-low flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="h-2 w-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span><span class="font-code-sm text-code-sm text-on-tertiary-fixed-variant font-medium">SQLite Sync</span></div><span class="font-code-sm text-code-sm text-on-surface-variant uppercase">WAL-OK</span></div></div><div class="px-margin py-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold px-space-xs">Operations View</span></div><nav class="flex flex-col gap-space-xs px-margin" data-active-classes="bg-primary-container text-on-primary-container font-semibold rounded-lg"><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="search-instant-book" href="#"><span class="material-symbols-outlined mr-space-sm text-lg">search</span><span>Search &amp; Instant Book</span></a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="create-manage-bookings" href="#"><span class="material-symbols-outlined mr-space-sm text-lg">book_online</span><span>Create &amp; Manage</span></a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="apartments-directory" href="#"><span class="material-symbols-outlined mr-space-sm text-lg">apartment</span><span>Apartments Directory</span></a><div class="my-space-xs py-space-xs"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold px-space-xs">Inventory Admin</span></div><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="apartments-inventory-pricing" href="#"><span class="material-symbols-outlined mr-space-sm text-lg">tune</span><span>Inventory &amp; Pricing</span></a><a class="flex items-center px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="global-bookings-overview" href="#"><span class="material-symbols-outlined mr-space-sm text-lg">analytics</span><span>Global Overview</span></a></nav></div><div class="p-margin bg-surface-container-lowest"><div class="p-space-sm rounded-lg bg-surface-container flex flex-col gap-space-xs"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-on-surface-variant">API Endpoint</span><span class="font-code-sm text-code-sm text-secondary font-medium">200 OK</span></div><span class="font-code-sm text-code-sm text-on-surface truncate">GET /api/v1/bookings</span><span class="font-code-sm text-code-sm text-on-surface-variant">Ping: 12ms (Local)</span></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 z-40 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter-lg flex items-center justify-between"><div class="flex items-center gap-space-md"><img alt="Apartment Booking System Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ALJJyrDrefXltlN_7_Ec5UtwItaBf3cvkNQcHnpuiO3UiOKnEBwdMgMjh2UoPac21LS8wPXZJm2ymMTI8wczKkuCNDZ3sUdwcuskPEJYR505EI--_VFcr2dUsg1f-ftRVZ3M1GQDxVCgRgC3qdyNinHM9zBppDH4RqByORMfkEkOhg3vZG6BSfpiFBs6NPOIOZz4CmtQ15xsYHBMcif3lIhrmfbbFq8_gz-z46aC3sb5kIk"/><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Apartment Booking System</span><span class="font-code-sm text-code-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-primary-fixed-variant">v1.4.0 (Flask / SQLite)</span></div><div class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-tertiary-fixed-variant"><span class="h-2 w-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span><span class="font-code-sm text-code-sm font-medium">GET /api/health • API &amp; SQLite Connected</span></div></div><div class="flex items-center bg-surface-container-low p-1 rounded-lg"><button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-lowest text-primary shadow-[0_1px_3px_0_rgba(15,23,42,0.04)] font-headline-sm text-headline-sm" type="button"><span class="material-symbols-outlined text-sm">calendar_month</span><span>Apartment Booker</span></button><button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors font-headline-sm text-headline-sm" type="button"><span class="material-symbols-outlined text-sm">tune</span><span>System Manager</span></button></div><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-base">help_outline</span><span class="font-label-md text-label-md">Quick Help &amp; Rules</span></button><div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-surface-variant"><span class="font-code-sm text-code-sm font-semibold text-secondary">200 OK</span><span class="material-symbols-outlined text-sm text-on-surface-variant">sensors</span></div><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZwwrgoNz4dRwQGiDBDUxkNbu0qv6yD6Vjl9T4Dyw4zoHMFPubZF58S28K13nYB4BnaaB1c11Scknx_pD8mC0CIKEIZotErzIc3ZuRXMPQ4b6TNUGVhSIm1yH2f-GD_v61sayQ4ZfUD3Pz6Klj5-SOw6l3PCktVb6DieWWJt4OY1NmfDiY-QXgNbJYxkxM7zVq-Gn3U-BybrBwPZRjtLhC3BgMlg8TPP8S-NUniA"/><div class="flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface font-semibold">Admin Desk</span><span class="font-label-sm text-label-sm text-secondary font-medium">Active: Booker / Manager</span></div></div></div></div><div class="h-12 px-gutter-lg flex items-center justify-between bg-surface-container-low/50"><nav class="flex items-center gap-space-lg" data-active-classes="text-secondary font-semibold"><a class="font-headline-sm text-headline-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="search-instant-book" href="#">Search &amp; Instant Book</a><a class="font-headline-sm text-headline-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="create-manage-bookings" href="#">Create &amp; Manage Bookings</a><a class="font-headline-sm text-headline-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="apartments-directory" href="#">Apartments Directory</a><a class="font-headline-sm text-headline-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="apartments-inventory-pricing" href="#">Apartments Inventory &amp; Pricing</a><a class="font-headline-sm text-headline-sm text-on-surface-variant hover:text-on-surface transition-colors" data-path="global-bookings-overview" href="#">Global Bookings Overview</a></nav><div class="flex items-center gap-space-sm"><span class="font-code-sm text-code-sm text-on-surface-variant">ISO Dates (YYYY-MM-DD) • Check-in Incl. / Check-out Excl. • EUR Currency</span></div></div><div class="px-gutter-lg py-space-xs bg-surface-container flex items-center justify-between text-on-surface-variant"><div class="flex items-center gap-space-sm"><span class="font-code-sm text-code-sm font-semibold px-space-xs py-0.5 rounded bg-surface-container-high text-primary">RESPONSE HUD</span><span class="font-code-sm text-code-sm text-on-surface">Latest API Transaction:</span><span class="font-code-sm text-code-sm text-secondary font-medium">200 OK • GET /api/v1/apartments (Latency: 14ms)</span></div><div class="flex items-center gap-space-md"><span class="font-code-sm text-code-sm hover:underline cursor-pointer text-on-surface-variant">Simulate: 201 Created</span><span class="font-code-sm text-code-sm hover:underline cursor-pointer text-on-surface-variant">400 Validation</span><span class="font-code-sm text-code-sm hover:underline cursor-pointer text-on-surface-variant">409 Conflict</span><span class="font-code-sm text-code-sm hover:underline cursor-pointer text-on-surface-variant">503 DB Lock</span></div></div></header><main class="relative pt-36 bg-background min-h-screen px-gutter-lg py-margin-lg"><div class="flex flex-col w-full">
+<!-- Interactive & HUD Control Scripts -->
+<script>
+    function toggleDebugInspector() {
+      const el = document.getElementById('debug-inspector-pane');
+      el.classList.toggle('hidden');
+    }
+    function closeToastBanner() {
+      const banner = document.getElementById('api-toast-banner');
+      banner.style.display = 'none';
+    }
+    function openBookingModal(name, address, nightlyRate, nights, total, maxGuests) {
+      document.getElementById('modal-apt-name').innerText = name;
+      document.getElementById('modal-apt-address').innerText = address;
+      document.getElementById('modal-breakdown').innerText = `€${nightlyRate.toFixed(2)} × ${nights} nights = €${total.toFixed(2)} EUR`;
+      updatePayloadPreview(name);
+      document.getElementById('instant-book-modal').classList.remove('hidden');
+    }
+    function closeBookingModal() {
+      document.getElementById('instant-book-modal').classList.add('hidden');
+    }
+    function toggleQuickHelp() {
+      const popover = document.getElementById('quick-help-popover');
+      popover.classList.toggle('hidden');
+    }
+    function updateGuestCount(delta) {
+      const el = document.getElementById('guest-counter');
+      let val = parseInt(el.innerText, 10) + delta;
+      if (val >= 1 && val <= 6) {
+        el.innerText = val;
+        document.getElementById('payload-guests').innerText = val;
+        document.getElementById('filter-guest-chip').innerText = `Guests: ${val}+`;
+      }
+    }
+    function updatePayloadPreview(aptName) {
+      const guestVal = document.getElementById('guest-counter') ? document.getElementById('guest-counter').innerText : '2';
+      const nameInput = document.getElementById('booker-name-input');
+      const booker = nameInput ? nameInput.value : 'Elena Rostova';
+      const codeBlock = document.getElementById('live-json-payload');
+      if (codeBlock) {
+        codeBlock.innerHTML = `{<br>&nbsp;&nbsp;<span class="text-tertiary-fixed-dim">"apartment_name"</span>: <span class="text-on-secondary-container">"${aptName || 'Riverside Vista Loft'}"</span>,<br>&nbsp;&nbsp;<span class="text-tertiary-fixed-dim">"start_date"</span>: <span class="text-on-secondary-container">"2025-06-10"</span>,<br>&nbsp;&nbsp;<span class="text-tertiary-fixed-dim">"end_date"</span>: <span class="text-on-secondary-container">"2025-06-15"</span>,<br>&nbsp;&nbsp;<span class="text-tertiary-fixed-dim">"booker_name"</span>: <span class="text-on-secondary-container">"${booker}"</span>,<br>&nbsp;&nbsp;<span class="text-tertiary-fixed-dim">"num_people"</span>: <span class="text-secondary-fixed-dim">${guestVal}</span><br>}`;
+      }
+    }
+    function triggerSimulateSearch(btn) {
+      const spinner = btn.querySelector('.search-spinner');
+      const icon = btn.querySelector('.search-icon');
+      const label = btn.querySelector('.search-label');
+      icon.classList.add('hidden');
+      spinner.classList.remove('hidden');
+      label.innerText = 'Querying SQLite...';
+      setTimeout(() => {
+        spinner.classList.add('hidden');
+        icon.classList.remove('hidden');
+        label.innerText = 'Search Available Apartments';
+        const banner = document.getElementById('api-toast-banner');
+        banner.style.display = 'flex';
+      }, 550);
+    }
+  </script>
+<!-- Ambient background glow elements contained within page bounds -->
+<div class="relative w-full overflow-hidden">
+<div class="absolute -top-16 -right-20 w-96 h-96 bg-secondary/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute top-80 -left-20 w-80 h-80 bg-tertiary-fixed/10 rounded-full blur-3xl pointer-events-none"></div>
+<!-- 1. Top API Response Toast Banner -->
+<div class="mb-space-lg w-full flex flex-col rounded-xl bg-surface-container-lowest shadow-md overflow-hidden transition-all duration-300" id="api-toast-banner">
+<div class="px-gutter-lg py-space-sm bg-surface-container-low flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md min-w-0">
+<div class="flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container text-on-tertiary-fixed-variant">
+<span class="h-2 w-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+<span class="font-code-sm text-code-sm font-semibold text-on-tertiary-fixed-variant">200 OK</span>
+</div>
+<div class="flex items-baseline gap-space-xs truncate">
+<span class="font-headline-sm text-headline-sm text-primary font-semibold">Availability Verified</span>
+<span class="font-body-md text-body-md text-on-surface-variant hidden md:inline">— 4 apartments available for <strong>2025-06-10</strong> to <strong>2025-06-15</strong> (5 nights)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-high text-primary hover:bg-surface-container hover:text-on-surface transition-all" onclick="toggleDebugInspector()" type="button">
+<span class="material-symbols-outlined text-sm">terminal</span>
+<span class="font-code-sm text-code-sm">Debug Inspector</span>
+</button>
+<button aria-label="Dismiss API Toast" class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" onclick="closeToastBanner()" type="button">
+<span class="material-symbols-outlined text-base">close</span>
+</button>
+</div>
+</div>
+<!-- Collapsible Live Endpoint Inspector Pane -->
+<div class="p-gutter-lg bg-primary-container text-on-primary-container font-code-sm text-code-sm flex flex-col gap-space-sm" id="debug-inspector-pane">
+<div class="flex flex-wrap items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-xs py-0.5 rounded bg-secondary-container text-on-secondary-container font-semibold">GET</span>
+<span class="text-surface-bright font-medium">/api/availability?start_date=2025-06-10&amp;end_date=2025-06-15&amp;num_people=2</span>
+</div>
+<div class="flex items-center gap-space-md text-on-surface-variant">
+<span>Thread: Flask/WSGI-Worker-03</span>
+<span>Latency: 11.4ms</span>
+<span>DB Cache: MISS</span>
+</div>
+</div>
+<div class="p-space-sm rounded bg-primary text-surface-bright overflow-x-auto">
+<code>
+            SELECT a.id, a.name, a.address, a.price_per_night, a.capacity FROM apartments a WHERE a.capacity &gt;= 2 AND a.id NOT IN (SELECT b.apartment_id FROM bookings b WHERE b.start_date &lt; '2025-06-15' AND b.end_date &gt; '2025-06-10') ORDER BY a.price_per_night ASC;
+          </code>
+</div>
+</div>
+</div>
+<!-- 2. Search & Filter Card (Top Command Station) -->
+<div class="w-full rounded-xl bg-surface-container-lowest shadow-md p-space-xl mb-space-xl relative">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg">
+<div>
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-semibold">Availability Query Engine</span>
+<span class="h-1.5 w-1.5 rounded-full bg-secondary"></span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Check-in Inclusive • Check-out Exclusive</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary font-bold">Search &amp; Instant Book</h1>
+</div>
+<!-- Quick Date Preset Pills -->
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant mr-space-xs uppercase tracking-wider">Presets:</span>
+<button class="px-space-sm py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" type="button">
+            Upcoming Weekend (3n)
+          </button>
+<button class="px-space-sm py-1 rounded-full bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md transition-colors" type="button">
+            Next Week (7n)
+          </button>
+<button class="px-space-sm py-1 rounded-full bg-primary text-on-primary font-label-md text-label-md transition-all shadow-sm" type="button">
+            Summer Getaway (5n)
+          </button>
+</div>
+</div>
+<!-- Search Controls Bar -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md items-end">
+<!-- From Date -->
+<div class="md:col-span-4 flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between">
+<span>From Date (Check-in)</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">ISO YYYY-MM-DD</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-lg pointer-events-none">calendar_today</span>
+<input class="w-full h-10 pl-10 pr-3 rounded-lg bg-surface-container-low text-primary font-code-sm text-code-sm focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" type="text" value="2025-06-10"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Check-in day included in stay nights</span>
+</div>
+<!-- To Date -->
+<div class="md:col-span-4 flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold flex items-center justify-between">
+<span>To Date (Check-out)</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">ISO YYYY-MM-DD</span>
+</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-lg pointer-events-none">event_available</span>
+<input class="w-full h-10 pl-10 pr-3 rounded-lg bg-surface-container-low text-primary font-code-sm text-code-sm focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" type="text" value="2025-06-15"/>
+</div>
+<span class="font-label-sm text-label-sm text-on-tertiary-fixed-variant">Check-out exclusive: guest leaves by 11:00 AM</span>
+</div>
+<!-- Guests Stepper -->
+<div class="md:col-span-2 flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Guests (num_people)</label>
+<div class="h-10 flex items-center justify-between px-space-sm rounded-lg bg-surface-container-low">
+<button aria-label="Decrease Guests" class="w-7 h-7 rounded flex items-center justify-center bg-surface-container-lowest text-primary hover:bg-surface-container shadow-sm transition-all" onclick="updateGuestCount(-1)" type="button">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm text-primary font-bold" id="guest-counter">2</span>
+<button aria-label="Increase Guests" class="w-7 h-7 rounded flex items-center justify-center bg-surface-container-lowest text-primary hover:bg-surface-container shadow-sm transition-all" onclick="updateGuestCount(1)" type="button">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Capacity filter applied</span>
+</div>
+<!-- Primary Action Button -->
+<div class="md:col-span-2 flex flex-col justify-end">
+<button class="h-10 w-full px-space-md rounded-lg bg-primary hover:bg-inverse-surface active:bg-surface-container-highest text-on-primary font-headline-sm text-headline-sm flex items-center justify-center gap-space-xs shadow-md transition-all" onclick="triggerSimulateSearch(this)" type="button">
+<span class="material-symbols-outlined text-base search-icon">search</span>
+<svg class="search-spinner hidden animate-spin h-4 w-4 text-on-primary" fill="none" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8v8H4z" fill="currentColor"></path>
+</svg>
+<span class="search-label truncate">Search</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 3. Search Results Section -->
+<div class="flex flex-col w-full gap-space-lg mb-space-xl">
+<!-- Section Header with Meta & Sorting -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md bg-surface-container-low p-space-md rounded-xl">
+<div class="flex flex-wrap items-center gap-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">4 Available Apartments</span>
+<span class="px-space-xs py-0.5 rounded-full bg-surface-container-high text-on-primary-fixed-variant font-code-sm text-code-sm">5 Nights</span>
+</div>
+<!-- Filter Summary Chips -->
+<div class="flex flex-wrap items-center gap-space-xs ml-0 sm:ml-space-md">
+<span class="px-space-sm py-1 rounded-full bg-surface-container-lowest text-on-surface font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-secondary">date_range</span>
+              Dates: Jun 10 - Jun 15, 2025
+            </span>
+<span class="px-space-sm py-1 rounded-full bg-surface-container-lowest text-on-surface font-label-sm text-label-sm shadow-sm flex items-center gap-1" id="filter-guest-chip">
+<span class="material-symbols-outlined text-xs text-secondary">group</span>
+              Guests: 2+
+            </span>
+<span class="px-space-sm py-1 rounded-full bg-surface-container-lowest text-on-surface font-label-sm text-label-sm shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-secondary">euro</span>
+              Currency: EUR
+            </span>
+</div>
+</div>
+<!-- Sort Control -->
+<div class="flex items-center gap-space-xs self-end sm:self-auto shrink-0">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Sort by:</span>
+<div class="relative">
+<select class="appearance-none h-9 pl-space-md pr-8 rounded-lg bg-surface-container-lowest text-primary font-headline-sm text-headline-sm shadow-sm focus:outline-none cursor-pointer">
+<option>Price: Low to High</option>
+<option>Price: High to Low</option>
+<option>Capacity: Highest</option>
+<option>Alphabetical</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-on-surface-variant pointer-events-none text-base">expand_more</span>
+</div>
+</div>
+</div>
+<!-- 4 Rich Apartment Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-lg">
+<!-- Card 1 (Riverside Vista Loft) -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A modern sunlit architectural loft apartment interior overlooking the Spree River in Berlin with floor-to-ceiling windows, warm oak flooring, designer Scandinavian furniture, ambient twilight lighting, and subtle indigo textile accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdlGohbADhUls2fwdOZSK2sMFEBiNBJfhmzdOt6NGhjm7vHJNXMcr3HU9KGMM4lXDtPv8FrBt35YuIV5H5L1GzLF0xEBR52eRz7CKnsMO0kqLlxrGpGVOtcBsEB4VPqbeg5GZT3TlXDBDQ-GCRJdEAe6dVR_I03iLudlInxX_tPGX8rdNmmsFGIINjyVCOIXH9-KPiCbdAtSTweDPrnRQY_GYgOzmt-3Icte9EGg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<span class="absolute top-3 left-3 px-space-sm py-0.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md text-primary font-label-sm text-label-sm font-semibold flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-xs text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">star</span>
+              Best Match
+            </span>
+<span class="absolute top-3 right-3 px-space-sm py-0.5 rounded-full bg-primary/80 backdrop-blur-md text-surface-bright font-code-sm text-code-sm">
+              ID #BER-102
+            </span>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-primary">
+<span class="font-headline-sm text-headline-sm font-bold truncate">Riverside Vista Loft</span>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-lowest/30 backdrop-blur-sm shrink-0">Up to 3 guests</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col flex-1 justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs text-on-surface-variant mb-space-xs">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span class="font-body-sm text-body-sm truncate">Germany, Berlin, Friedrichstraße 102</span>
+</div>
+<div class="flex flex-wrap gap-1 mb-space-md">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Fast WiFi (250 Mbps)</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Balcony</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Workspace</span>
+</div>
+</div>
+<div class="pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">€95.00 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">/ night</span></span>
+<span class="font-code-sm text-code-sm text-secondary font-medium">5 nights</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-tabular-sm text-tabular-sm text-on-surface-variant">€475.00 total (tax incl.)</span>
+<button class="px-space-md py-1.5 rounded-lg bg-secondary hover:bg-on-secondary-fixed-variant text-on-secondary font-headline-sm text-headline-sm font-semibold shadow-sm transition-all flex items-center gap-1" onclick="openBookingModal('Riverside Vista Loft', 'Germany, Berlin, Friedrichstraße 102', 95.0, 5, 475.0, 3)" type="button">
+<span>Book Now</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 2 (Alpine Sun Penthouse) -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Luxurious alpine penthouse in Innsbruck Austria with panoramic timber ceilings, majestic snow-dusted Nordkette mountain views through vast glass walls, a cedar sauna door visible, and warm slate textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZhqm5_gijd_nJJK4RWoOivdOs1gLMTLpNq6qVL-8_Ws6v8QJv_6s5z__PkkDI2e7d7qlI6dVv3XvfVnqGaxHq_lkiX5Wh_xXPZuSZJMA5DG90_nU-JXQJnl1N1LkgvUbaj3OnucPtFD31K9Nx39K_4wGFu946e0tjfy--Bk-bJeH856OH0_97ETmGyBH7kePbZwnjCnvZtpu8uBuuEDdWu0jhU0sn0g7Y4fTk_A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<span class="absolute top-3 right-3 px-space-sm py-0.5 rounded-full bg-primary/80 backdrop-blur-md text-surface-bright font-code-sm text-code-sm">
+              ID #INN-045
+            </span>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-primary">
+<span class="font-headline-sm text-headline-sm font-bold truncate">Alpine Sun Penthouse</span>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-lowest/30 backdrop-blur-sm shrink-0">Up to 4 guests</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col flex-1 justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs text-on-surface-variant mb-space-xs">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span class="font-body-sm text-body-sm truncate">Austria, Innsbruck, Maria-Theresien-Straße 45</span>
+</div>
+<div class="flex flex-wrap gap-1 mb-space-md">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Mountain View</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Sauna</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Kitchenette</span>
+</div>
+</div>
+<div class="pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">€140.00 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">/ night</span></span>
+<span class="font-code-sm text-code-sm text-secondary font-medium">5 nights</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-tabular-sm text-tabular-sm text-on-surface-variant">€700.00 total (tax incl.)</span>
+<button class="px-space-md py-1.5 rounded-lg bg-secondary hover:bg-on-secondary-fixed-variant text-on-secondary font-headline-sm text-headline-sm font-semibold shadow-sm transition-all flex items-center gap-1" onclick="openBookingModal('Alpine Sun Penthouse', 'Austria, Innsbruck, Maria-Theresien-Straße 45', 140.0, 5, 700.0, 4)" type="button">
+<span>Book Now</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3 (Old Town Heritage Suite) -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Charming French boutique heritage suite in Old Lyon with authentic Renaissance exposed wooden ceiling beams, honey stone walls, a plush velvet king bed, romantic ambient lighting, and bespoke brass fixtures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC21B40fQmFVHf-f_dfxhm3tabDpns6dGULbB3nFfhs1LTBoNwRz6ahpiDZrniXZ1BB-78vopfSbS7Ois-zKSe-h9Lwm0-qaYfZCuvQwtOr-wDqoZ9BB_v9CvmK3s3KZivIC4RsWcXcr9nUyD5m964bMmoJCbkffg2zMuD8gvCk4hIrgtbIw6dJbtv_8zbrQ9ZMjtDugZDER1TsfA6ho6q3CgwdWXNxX7k0ENTfAA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<span class="absolute top-3 right-3 px-space-sm py-0.5 rounded-full bg-primary/80 backdrop-blur-md text-surface-bright font-code-sm text-code-sm">
+              ID #LYN-018
+            </span>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-primary">
+<span class="font-headline-sm text-headline-sm font-bold truncate">Old Town Heritage Suite</span>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-lowest/30 backdrop-blur-sm shrink-0">Up to 2 guests</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col flex-1 justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs text-on-surface-variant mb-space-xs">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span class="font-body-sm text-body-sm truncate">France, Lyon, Rue Saint-Jean 18</span>
+</div>
+<div class="flex flex-wrap gap-1 mb-space-md">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Historic Beam</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">King Bed</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Quiet Courtyard</span>
+</div>
+</div>
+<div class="pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">€115.00 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">/ night</span></span>
+<span class="font-code-sm text-code-sm text-secondary font-medium">5 nights</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-tabular-sm text-tabular-sm text-on-surface-variant">€575.00 total (tax incl.)</span>
+<button class="px-space-md py-1.5 rounded-lg bg-secondary hover:bg-on-secondary-fixed-variant text-on-secondary font-headline-sm text-headline-sm font-semibold shadow-sm transition-all flex items-center gap-1" onclick="openBookingModal('Old Town Heritage Suite', 'France, Lyon, Rue Saint-Jean 18', 115.0, 5, 575.0, 2)" type="button">
+<span>Book Now</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4 (Canal Modern Studio) -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-md overflow-hidden group hover:shadow-xl transition-all duration-300">
+<div class="relative h-48 w-full overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Sophisticated canal-front studio in Amsterdam overlooking Prinsengracht waterway, with reflective canal water ripples casting light on minimalist white walls, custom Italian espresso machine, and large double-hung windows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc00q3FJZuGLGROzZr5a-RDtvfbIEfgYUAoY6tWvPeTKCPHHMXPu4zvkQTj8gzhNyTAkgeFQ8HCrQggmyfCrUlFUMtdl5hSZQJvsD-0Jn-SrSfZ2_rCSAZcwkAEckz0DlS1WeKWBIq0ryxARGmny-TPxQIVTmSXZgLnGm9QwhJeZayti5EJ6ODG1_OPqnzlHVBE3MxQV-ejY7fsrMClbhIY7SfpksrfbZFA2LcRg"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent"></div>
+<span class="absolute top-3 right-3 px-space-sm py-0.5 rounded-full bg-primary/80 backdrop-blur-md text-surface-bright font-code-sm text-code-sm">
+              ID #AMS-220
+            </span>
+<div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-on-primary">
+<span class="font-headline-sm text-headline-sm font-bold truncate">Canal Modern Studio</span>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-lowest/30 backdrop-blur-sm shrink-0">Up to 2 guests</span>
+</div>
+</div>
+<div class="p-space-md flex flex-col flex-1 justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-space-xs text-on-surface-variant mb-space-xs">
+<span class="material-symbols-outlined text-xs">location_on</span>
+<span class="font-body-sm text-body-sm truncate">Netherlands, Amsterdam, Prinsengracht 220</span>
+</div>
+<div class="flex flex-wrap gap-1 mb-space-md">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Canal View</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Espresso Bar</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Elevator</span>
+</div>
+</div>
+<div class="pt-space-sm bg-surface-container-low p-space-sm rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-baseline justify-between">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">€165.00 <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">/ night</span></span>
+<span class="font-code-sm text-code-sm text-secondary font-medium">5 nights</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-tabular-sm text-tabular-sm text-on-surface-variant">€825.00 total (tax incl.)</span>
+<button class="px-space-md py-1.5 rounded-lg bg-secondary hover:bg-on-secondary-fixed-variant text-on-secondary font-headline-sm text-headline-sm font-semibold shadow-sm transition-all flex items-center gap-1" onclick="openBookingModal('Canal Modern Studio', 'Netherlands, Amsterdam, Prinsengracht 220', 165.0, 5, 825.0, 2)" type="button">
+<span>Book Now</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Instant Book Modal / Slide-Over Overlay (Visible by default for Card 1 interaction showcase) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-gutter-lg bg-primary/60 backdrop-blur-sm" id="instant-book-modal">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-xl overflow-hidden flex flex-col max-h-[942px]">
+<!-- Modal Top Bar -->
+<div class="px-space-xl py-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-xs py-1 rounded bg-secondary-container text-on-secondary-container font-code-sm text-code-sm font-semibold">POST /api/bookings</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">Instant Booking Confirmation</span>
+</div>
+<button aria-label="Close modal" class="p-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all" onclick="closeBookingModal()" type="button">
+<span class="material-symbols-outlined text-lg">close</span>
+</button>
+</div>
+<div class="p-space-xl overflow-y-auto flex flex-col gap-space-lg">
+<!-- Reservation Parameters Summary Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Selected Apartment</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold truncate" id="modal-apt-name">Riverside Vista Loft</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate" id="modal-apt-address">Friedrichstraße 102, Berlin</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Stay Dates</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">2025-06-10 → 2025-06-15</span>
+<span class="font-code-sm text-code-sm text-secondary font-medium">5 Nights (Checkout Excl.)</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Party Size</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold"><span id="payload-guests">2</span> Guests</span>
+<span class="font-body-sm text-body-sm text-on-tertiary-fixed-variant font-medium">Capacity Safe (Max 3)</span>
+</div>
+</div>
+<!-- Cost Breakdown Card -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Cost Breakdown</span>
+<span class="font-tabular-md text-tabular-md text-primary font-bold" id="modal-breakdown">€95.00 × 5 nights = €475.00 EUR</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Taxes, cleaning &amp; administrative fees included</span>
+</div>
+<span class="font-label-sm text-label-sm px-space-sm py-1 rounded-full bg-surface-container-highest text-on-primary-fixed-variant font-semibold">Standard Rate</span>
+</div>
+<!-- Input Field: Booker Name -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface font-semibold" for="booker-name-input">Your Name (booker_name)</label>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container text-on-tertiary-fixed-variant font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-tertiary-fixed-dim" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                Valid RFC string
+              </span>
+</div>
+<input class="w-full h-10 px-space-md rounded-lg bg-surface-container-low text-primary font-headline-sm text-headline-sm focus:outline-none focus:bg-surface-container-lowest focus:shadow-md transition-all" id="booker-name-input" oninput="updatePayloadPreview(document.getElementById('modal-apt-name').innerText)" type="text" value="Elena Rostova"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Reservation will be bound to this contact person in the database ledger.</span>
+</div>
+<!-- Live POST Payload HUD Inspector -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-code-sm text-code-sm text-on-surface-variant font-semibold uppercase tracking-wider">Live POST Payload JSON Preview</span>
+<span class="font-code-sm text-code-sm text-secondary">Content-Type: application/json</span>
+</div>
+<div class="p-space-md rounded-lg bg-primary-container text-surface-bright font-code-sm text-code-sm shadow-inner">
+<div class="text-on-primary-container mb-1">POST /api/bookings</div>
+<code id="live-json-payload">
+                {<br/>
+                  <span class="text-tertiary-fixed-dim">"apartment_name"</span>: <span class="text-on-secondary-container">"Riverside Vista Loft"</span>,<br/>
+                  <span class="text-tertiary-fixed-dim">"start_date"</span>: <span class="text-on-secondary-container">"2025-06-10"</span>,<br/>
+                  <span class="text-tertiary-fixed-dim">"end_date"</span>: <span class="text-on-secondary-container">"2025-06-15"</span>,<br/>
+                  <span class="text-tertiary-fixed-dim">"booker_name"</span>: <span class="text-on-secondary-container">"Elena Rostova"</span>,<br/>
+                  <span class="text-tertiary-fixed-dim">"num_people"</span>: <span class="text-secondary-fixed-dim">2</span><br/>
+                }
+              </code>
+</div>
+</div>
+</div>
+<!-- Modal Actions Footer -->
+<div class="px-space-xl py-space-md bg-surface-container-low flex items-center justify-end gap-space-md">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-headline-sm text-headline-sm transition-colors" onclick="closeBookingModal()" type="button">
+            Cancel
+          </button>
+<button class="px-space-lg py-2 rounded-lg bg-tertiary-container hover:bg-primary text-tertiary-fixed font-headline-sm text-headline-sm font-semibold shadow-md transition-all flex items-center gap-space-xs" onclick="alert('Booking Confirmed: Elena Rostova for Riverside Vista Loft (2025-06-10 to 2025-06-15). Transaction committed to SQLite.'); closeBookingModal();" type="button">
+<span class="material-symbols-outlined text-base">verified</span>
+<span>Confirm &amp; Reserve</span>
+</button>
+</div>
+</div>
+</div>
+<!-- 5. Side Quick Help Popover in Bottom-Right Corner -->
+<div class="fixed bottom-6 right-6 z-40 flex flex-col items-end">
+<!-- Expanded Popover Card -->
+<div class="mb-3 w-80 sm:w-96 rounded-xl bg-surface-container-lowest shadow-xl p-space-md flex flex-col gap-space-sm transition-all duration-200" id="quick-help-popover">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-base">verified_user</span>
+<span class="font-headline-sm text-headline-sm text-primary font-bold">Booking System Rules</span>
+</div>
+<button class="p-1 text-on-surface-variant hover:text-on-surface" onclick="toggleQuickHelp()" type="button">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-xs font-body-sm text-body-sm text-on-surface">
+<div class="p-space-xs rounded bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-primary">1. ISO 8601 Date Standard</span>
+<span class="text-on-surface-variant">All dates must strictly match <code>YYYY-MM-DD</code>. No timestamps allowed.</span>
+</div>
+<div class="p-space-xs rounded bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-primary">2. Check-in / Check-out Model</span>
+<span class="text-on-surface-variant">Check-in day is inclusive; checkout day is exclusive. Overlaps are permitted on turnover days.</span>
+</div>
+<div class="p-space-xs rounded bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-primary">3. Capacity Bounds</span>
+<span class="text-on-surface-variant"><code>num_people</code> cannot exceed the apartment's configured max capacity limit.</span>
+</div>
+<div class="p-space-xs rounded bg-surface-container-low flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-primary">4. SQLite ACID Guarantees</span>
+<span class="text-on-surface-variant">Reservations are executed in atomic transactions with immediate WAL journal serialization.</span>
+</div>
+</div>
+<div class="pt-space-xs flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm">
+<span>Engine: SQLite 3.42</span>
+<span class="text-secondary font-medium">Tx Isolation: SERIALIZABLE</span>
+</div>
+</div>
+<!-- Trigger Badge / Floating Fab -->
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-full bg-primary text-on-primary shadow-xl hover:bg-inverse-surface transition-all" onclick="toggleQuickHelp()" type="button">
+<span class="material-symbols-outlined text-sm">help</span>
+<span class="font-headline-sm text-headline-sm">Quick Help &amp; Rules</span>
+</button>
+</div>
+</div>
+</div></main></div></body></html>

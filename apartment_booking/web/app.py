@@ -148,8 +148,19 @@ def create_app(config: dict | None = None) -> Flask:
         app.logger.exception("Unexpected request failure")
         return error_response("internal_error", "An unexpected server error occurred.", 500)
 
+    def html_response(template_name: str):
+        response = app.make_response(render_template(template_name))
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self'; "
+            "connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'"
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
     @app.get("/")
     def overview():
+        if request.accept_mimetypes.best_match(["application/json", "text/html"]) == "text/html":
+            return html_response("ui.html")
         routes = [
             {"path": rule.rule, "methods": sorted(rule.methods - {"HEAD", "OPTIONS"})}
             for rule in app.url_map.iter_rules() if rule.endpoint != "static"
@@ -158,20 +169,19 @@ def create_app(config: dict | None = None) -> Flask:
             "name": "Apartment Booking HTTP API",
             "usage": "GET reads data. Send JSON with POST, PATCH or DELETE to make changes.",
             "authentication": "None. Local development only; do not expose publicly.",
+            "ui": "/ui",
             "documentation": "/docs",
             "openapi": "/api/openapi.json",
             "routes": routes,
         })
 
+    @app.get("/ui")
+    def ui():
+        return html_response("ui.html")
+
     @app.get("/docs")
     def documentation():
-        response = app.make_response(render_template("api_docs.html"))
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self'; style-src 'self'; "
-            "connect-src 'self'; img-src 'self'; frame-ancestors 'none'; base-uri 'none'"
-        )
-        response.headers["X-Content-Type-Options"] = "nosniff"
-        return response
+        return html_response("api_docs.html")
 
     @app.get("/api/openapi.json")
     def openapi():

@@ -37,6 +37,7 @@ docker compose up --build --detach --wait web
 
 When the health check is ready, the following local endpoints are available:
 
+- http://localhost:8000/ui — interactive Web UI dashboard (also served at `/` in browsers);
 - http://localhost:8000/docs — API explorer;
 - http://localhost:8000/api/health — readiness check;
 - http://localhost:8000/api/openapi.json — OpenAPI 3.1 contract.
@@ -155,11 +156,13 @@ apartment-booking-cli/
 │       └── static/             # API explorer CSS and JavaScript
 ├── tests/
 │   ├── test_*.py               # Unit and integration tests
+│   ├── e2e/                    # Playwright browser End-to-End tests
 │   ├── smoke/                  # Disposable Docker checks
 │   └── performance/            # Locust user journey
 ├── requirements/
 │   ├── web.txt                 # Flask, for the HTTP interface
 │   ├── ci.txt                  # Test, coverage and lint tooling
+│   ├── e2e.txt                 # Playwright, for browser E2E testing
 │   └── load.txt                # Locust, for load testing
 ├── docs/                       # Architecture assets
 ├── ci/gitlab/                  # GitLab runner scripts and pipeline summary
@@ -266,6 +269,53 @@ python -m locust --locustfile tests/performance/locustfile.py \
 
 Open http://localhost:8089 for the Locust UI. CI uses 10 users for 30 seconds and
 fails above 1% errors, 500 ms average response time or 1,000 ms p95.
+
+### Browser End-to-End testing (Playwright)
+
+The Playwright suite in `tests/e2e/test_ui_playwright.py` exercises the interactive
+Web UI (`/` and `/ui`) across both `Apartment Booker` and `System Manager` workflows
+(searching availability, instant booking, manual booking creation, overlap prevention,
+booking modification, booking cancellation, apartment registration, nightly price
+updates, directory filtering, global KPI overview, and cascading apartment deletion).
+Each test automatically starts its own isolated local Flask WSGI server on a free
+localhost port (`127.0.0.1:0`) backed by a temporary SQLite database, so no manual
+server startup is required and existing user data is never touched.
+
+#### Running Playwright locally (macOS / Linux / Windows)
+
+1. Install Flask, Playwright, and the Chromium browser binary once:
+
+```bash
+python -m pip install -r requirements/web.txt -r requirements/e2e.txt
+python -m playwright install chromium
+```
+
+2. Run the End-to-End test suite in headless mode (with `unittest` or `pytest`):
+
+```bash
+python -m unittest discover -s tests/e2e -p "test_*.py" -v
+# or with pytest (if requirements/ci.txt is installed):
+python -m pytest tests/e2e -v
+```
+
+3. Optional — watch the browser execute the tests visually (`PLAYWRIGHT_HEADLESS=0`):
+
+```bash
+# macOS / Linux:
+PLAYWRIGHT_HEADLESS=0 python -m unittest discover -s tests/e2e -p "test_*.py" -v
+
+# Windows PowerShell:
+$env:PLAYWRIGHT_HEADLESS="0"; python -m unittest discover -s tests/e2e -p "test_*.py" -v
+```
+
+#### Running Playwright in GitHub Actions
+
+Playwright E2E tests are integrated into `.github/workflows/tests.yml` under the
+`playwright` job (**Playwright Web UI E2E tests**):
+
+- **Automatic execution:** Triggered automatically on every `push` and `pull_request` to `main`.
+- **Manual execution:** Open the **Actions** tab on GitHub, select the **Tests** workflow, and click **Run workflow** (`workflow_dispatch`).
+- The CI job sets up Python 3.14 on `ubuntu-latest`, installs `requirements/web.txt` and `requirements/e2e.txt`, installs Chromium with OS dependencies (`python -m playwright install --with-deps chromium`), and runs `python -m unittest discover -s tests/e2e -p "test_*.py" -v`.
 
 ### GitLab CI and the self-managed runner
 

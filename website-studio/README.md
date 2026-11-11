@@ -81,6 +81,7 @@ website-studio/
 │       ├── i18n/        it.js · en.js · de.js
 │       └── views/       landing, entry, guest/*, host/*
 ├── tests/               node:test suites and Python unittest for serve.py
+├── e2e/                 Playwright end-to-end journeys (playwright.config.js)
 └── docs/brand.md        Name, voice, palette, typography, motion
 ```
 
@@ -130,9 +131,23 @@ fonts.
 
 ```bash
 cd website-studio
-npm test        # node --test (i18n parity, rendering, formatting, services) + unittest (serve.py)
+npm test                                      # unit: i18n parity, rendering, formatting, services + serve.py
+npm ci && npx playwright install chromium     # once, for the end-to-end suite
+PYTHON=../.venv/bin/python npm run test:e2e   # end-to-end with Playwright (any Python with Flask)
+npm run test:e2e:report                       # open the HTML report after a CI-style run
 ```
 
-The same checks run on GitHub Actions in the `Website` workflow whenever
-`website-studio/` changes. Node 20 or newer is required for the JavaScript tests
-only; the app itself needs just a modern browser.
+The **unit suites** run in milliseconds with no browser. The **end-to-end suite**
+(`e2e/`, Playwright) starts its own Flask API on a fresh temporary database and its
+own studio server on ports 8765/8766, seeds a small catalogue, and drives Chromium on
+a desktop viewport and an emulated Pixel 7. It covers the landing page (scroll pill,
+curtain footer, language), entry and route guards, theme persistence, the guest
+journey (search, book, change, cancel, validation, conflicts) and the host journey
+(publish, duplicate names, reprice, guarded removal, reservation filters). Locators
+use roles and accessible names only, so a control that loses its label fails a test.
+
+On GitHub Actions, the `Website` workflow runs the unit suites when
+`website-studio/` changes, and the `Playwright` workflow runs the end-to-end suite on
+every push and pull request to `main`, uploading the HTML report and failure traces as
+an artifact. Node 20 or newer is needed for the tests only; the app itself needs just
+a modern browser.

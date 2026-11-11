@@ -28,3 +28,7 @@ Thumbs.db
 .aws/
 *.pem
 *.key
+# Web client tooling and end-to-end reports.
+node_modules/
+playwright-report/
+test-results/

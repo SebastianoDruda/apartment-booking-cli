@@ -207,7 +207,13 @@ class TestBookingWebUIPlaywright(unittest.TestCase):
         self.page.locator("#create-booking-submit").click()
         expect(self.page.locator("#status-banner-code")).to_have_text("201 CREATED")
         expect(self.page.locator("#bookings-table-body")).to_contain_text("Marcus Vance")
+        expect(self.page.locator("#bookings-table-body")).to_contain_text(
+            "Netherlands, Amsterdam, Prinsengracht 20"
+        )
+        expect(self.page.locator("#bookings-table-body")).to_contain_text("Max 3")
+        expect(self.page.locator("#bookings-table-body")).to_contain_text("2 / 3")
         expect(self.page.locator("#bookings-table-body")).to_contain_text("€600.00 EUR")
+        expect(self.page.locator("#bookings-table-body")).not_to_contain_text("undefined")
 
         # Attempting an overlapping booking must fail with 409 Conflict
         self.page.locator("#booking-booker-name").fill("Overlap Guest")
@@ -270,12 +276,17 @@ class TestBookingWebUIPlaywright(unittest.TestCase):
         self.page.locator("#dir-view-cards-btn").click()
         expect(self.page.locator("#dir-cards-wrapper")).to_be_visible()
 
-        # Check Global Bookings Overview KPIs & JSON Inspector
+        # Check Global Bookings Overview KPIs, address/capacity columns & JSON Inspector
         self.page.locator("#nav-overview").click()
         expect(self.page.locator("#kpi-active-bookings")).to_have_text("1")
         expect(self.page.locator("#kpi-total-revenue")).to_have_text("€300.00 EUR")
         expect(self.page.locator("#kpi-avg-stay")).to_have_text("3.0 Nights")
         expect(self.page.locator("#kpi-total-apartments")).to_have_text("1 Units")
+        expect(self.page.locator("#overview-table-body")).to_contain_text(
+            "Hungary, Budapest, Vaci utca 34"
+        )
+        expect(self.page.locator("#overview-table-body")).to_contain_text("2 / Max 3")
+        expect(self.page.locator("#overview-table-body")).not_to_contain_text("undefined")
 
         self.page.locator("#overview-table-body button[data-action='inspect-booking']").first.click()
         expect(self.page.locator("#inspector-modal")).to_be_visible()

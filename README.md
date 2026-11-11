@@ -246,7 +246,7 @@ python tests/smoke/docker_web.py
 These scripts create random Compose projects with disposable volumes, so they never
 read or modify the normal `booking-data` volume.
 
-Every push and pull request to `main` runs three independent GitHub Actions
+Every push and pull request runs three independent GitHub Actions
 workflows. The primary test pipeline executes the full suite on Python 3.10 and 3.14
 across Linux, macOS and Windows, then validates both Docker interfaces, persistence
 and service restarts. A separate coverage workflow enforces an 85% branch-coverage
@@ -313,7 +313,7 @@ $env:PLAYWRIGHT_HEADLESS="0"; python -m unittest discover -s tests/e2e -p "test_
 Playwright E2E tests are integrated into `.github/workflows/tests.yml` under the
 `playwright` job (**Playwright Web UI E2E tests**):
 
-- **Automatic execution:** Triggered automatically on every `push` and `pull_request` to `main`.
+- **Automatic execution:** Triggered automatically on every `push` and `pull_request` on any branch.
 - **Manual execution:** Open the **Actions** tab on GitHub, select the **Tests** workflow, and click **Run workflow** (`workflow_dispatch`).
 - The CI job sets up Python 3.14 on `ubuntu-latest`, installs `requirements/web.txt` and `requirements/e2e.txt`, installs Chromium with OS dependencies (`python -m playwright install --with-deps chromium`), and runs `python -m unittest discover -s tests/e2e -p "test_*.py" -v`.
 

@@ -349,6 +349,9 @@
     }
 
     state.bookings.forEach((booking) => {
+      const aptAddress = booking.apartment_address || booking.address || "";
+      const aptMaxPeople = booking.apartment_max_people ?? booking.max_people;
+
       const tr = document.createElement("tr");
       tr.dataset.bookingRow = `${booking.apartment_name}|${booking.start_date}|${booking.end_date}`;
 
@@ -358,11 +361,11 @@
       tdApt.appendChild(strongApt);
 
       const tdAddr = document.createElement("td");
-      tdAddr.textContent = booking.address;
+      tdAddr.textContent = aptAddress;
 
       const tdCap = document.createElement("td");
       tdCap.className = "text-center";
-      tdCap.textContent = `Max ${booking.max_people}`;
+      tdCap.textContent = `Max ${aptMaxPeople}`;
 
       const tdRate = document.createElement("td");
       tdRate.className = "text-right";
@@ -373,7 +376,7 @@
 
       const tdPeople = document.createElement("td");
       tdPeople.className = "text-center";
-      tdPeople.textContent = `${booking.num_people}`;
+      tdPeople.textContent = `${booking.num_people} / ${aptMaxPeople}`;
 
       const tdDates = document.createElement("td");
       tdDates.textContent = `${booking.start_date} → ${booking.end_date} (${booking.nights}n)`;
@@ -617,12 +620,13 @@
     const searchQuery = (byId("overview-search-input").value || "").trim().toLowerCase();
 
     const filtered = state.bookings.filter((b) => {
+      const aptAddress = b.apartment_address || b.address || "";
       const matchesApt = !aptFilter || b.apartment_name === aptFilter;
       const matchesQuery =
         !searchQuery ||
         b.booker_name.toLowerCase().includes(searchQuery) ||
         b.apartment_name.toLowerCase().includes(searchQuery) ||
-        b.address.toLowerCase().includes(searchQuery);
+        aptAddress.toLowerCase().includes(searchQuery);
       return matchesApt && matchesQuery;
     });
 
@@ -641,6 +645,9 @@
     }
 
     filtered.forEach((b) => {
+      const aptAddress = b.apartment_address || b.address || "";
+      const aptMaxPeople = b.apartment_max_people ?? b.max_people;
+
       const tr = document.createElement("tr");
       const tdApt = document.createElement("td");
       const strongApt = document.createElement("strong");
@@ -648,14 +655,14 @@
       tdApt.appendChild(strongApt);
 
       const tdAddr = document.createElement("td");
-      tdAddr.textContent = b.address;
+      tdAddr.textContent = aptAddress;
 
       const tdBooker = document.createElement("td");
       tdBooker.textContent = b.booker_name;
 
       const tdPeople = document.createElement("td");
       tdPeople.className = "text-center";
-      tdPeople.textContent = `${b.num_people} / ${b.max_people}`;
+      tdPeople.textContent = `${b.num_people} / Max ${aptMaxPeople}`;
 
       const tdDates = document.createElement("td");
       tdDates.textContent = `${b.start_date} → ${b.end_date}`;
@@ -761,13 +768,14 @@
 
   function openChangeBookingModal(booking) {
     state.changeBookingTarget = booking;
+    const aptMaxPeople = booking.apartment_max_people ?? booking.max_people;
     byId("change-apt-title").textContent = booking.apartment_name;
     byId("change-ref-meta").textContent =
-      `Current: ${booking.start_date} → ${booking.end_date} • Booker: ${booking.booker_name}`;
+      `Current: ${booking.start_date} → ${booking.end_date} • Booker: ${booking.booker_name} • Max ${aptMaxPeople}`;
     byId("change-start-date").value = booking.start_date;
     byId("change-end-date").value = booking.end_date;
     byId("change-num-people").value = String(booking.num_people);
-    byId("change-num-people").max = String(booking.max_people);
+    byId("change-num-people").max = String(aptMaxPeople);
     updateChangeModalPreview();
     byId("change-booking-modal").hidden = false;
   }

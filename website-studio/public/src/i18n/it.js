@@ -15,7 +15,7 @@ export default {
   footer: { line: 'Il prossimo soggiorno inizia *qui*.', engine: 'Basato sul motore Apartment Booking', top: 'Dimora, torna su' },
   shell: {
     mainNav: 'Navigazione principale',
-    nav: { explore: 'Esplora', trips: 'I miei viaggi', overview: 'Panoramica', listings: 'Annunci', reservations: 'Prenotazioni' },
+    nav: { explore: 'Esplora', trips: 'I miei viaggi', overview: 'Panoramica', listings: 'Annunci', reservations: 'Prenotazioni', bookings: 'Tutte le prenotazioni' },
   },
 
   landing: {
@@ -42,10 +42,15 @@ export default {
     metaTitle: 'Entra — Dimora',
     back: 'Home',
     title: 'Come vuoi entrare?',
-    guest: { enter: 'Entra come ospite', body: 'Trova e prenota soggiorni.', visualTitle: 'Le tue date. *Il tuo* posto.' },
+    guest: { enter: 'Entra come ospite', body: 'Trova e prenota soggiorni.', visualTitle: 'Le tue date. *Il tuo* posto.',
+      nameTitle: 'Come ti chiami?', nameLabel: 'Il tuo nome',
+      nameHint: 'Le prenotazioni vengono fatte a questo nome.',
+      nameRequired: 'Inserisci il tuo nome per continuare.',
+    },
     host: { enter: 'Entra come host', body: 'Gestisci annunci e prenotazioni.', visualTitle: 'Apri la porta. Al *calendario* pensiamo noi.' },
     welcome: 'Ciao, {name}.',
     signedOut: 'Sei uscito. A presto.',
+    continue: 'Continua', otherRole: 'Indietro',
   },
 
   explore: {
@@ -95,6 +100,15 @@ export default {
     cancelConfirm: 'Sì, annulla', keep: 'Mantieni', cancelled: 'Soggiorno annullato.',
     empty: { title: 'Ancora nessun viaggio', body: 'La tua prossima avventura è a una ricerca di distanza.', cta: 'Esplora soggiorni' },
     emptyPast: { title: 'Nessun viaggio passato', body: 'I soggiorni conclusi compariranno qui.' },
+  },
+
+  bookings: {
+    metaTitle: 'Tutte le prenotazioni — Dimora',
+    title: 'Tutte le prenotazioni',
+    by: 'Prenotato da {name}',
+    cancelBody: 'Il soggiorno di {guest} a {name} ({range}) verrà liberato. L’operazione non si può annullare.',
+    empty: { title: 'Ancora nessuna prenotazione', body: 'Qui compaiono le prenotazioni di tutti gli ospiti.', cta: 'Esplora alloggi' },
+    emptyPast: { title: 'Nessuna prenotazione passata', body: 'Qui compariranno i soggiorni conclusi.' },
   },
 
   host: {

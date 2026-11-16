@@ -19,6 +19,24 @@ test.describe('entry and access', () => {
     await expect(page).toHaveURL(/#\/login\?role=guest/);
   });
 
+  test('a guest is asked for their name, which is required and remembered', async ({ page }) => {
+    await page.goto('/#/login');
+    await page.getByRole('button', { name: /Enter as a guest/ }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('What’s your name?');
+    await page.getByLabel('Your name').fill('   ');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByRole('alert')).toHaveText('Enter your name to continue.');
+    await page.getByRole('button', { name: 'Back' }).click();
+    await expect(page.getByRole('button', { name: /Enter as a host/ })).toBeVisible();
+
+    await enterAs(page, 'guest', { name: 'Anna Bianchi' });
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Where to next, Anna?');
+    await signOut(page);
+    await page.goto('/#/login');
+    await page.getByRole('button', { name: /Enter as a guest/ }).click();
+    await expect(page.getByLabel('Your name')).toHaveValue('Anna Bianchi');
+  });
+
   test('each role stays inside its own space', async ({ page }) => {
     await enterAs(page, 'guest');
     await page.goto('/#/host/listings');

@@ -17,8 +17,8 @@ docker compose up --build --detach --wait web   # API on http://127.0.0.1:8000
 python3 website-studio/serve.py                  # Dimora on http://127.0.0.1:8080
 ```
 
-Open http://127.0.0.1:8080, choose **Enter as a guest** or **Enter as a host**, and
-you are in. Configuration is optional:
+Open http://127.0.0.1:8080, choose **Enter as a guest** (and type your name) or
+**Enter as a host**, and you are in. Configuration is optional:
 
 | Setting | Flag | Environment variable | Default |
 | --- | --- | --- | --- |
@@ -38,23 +38,26 @@ the Flask service and a strict Content Security Policy for the client.
   pill as the page scrolls. At the end, the page lifts like a curtain to uncover the
   footer, which repeats the same single call to action.
 - **Entry.** Two doors: *Enter as a guest* or *Enter as a host*. The left panel shows
-  the role's mark and line, and changes as you point at either door.
+  the role's mark and line, and changes as you point at either door. The guest door
+  asks for the guest's name, as the CLI asks "Your name", and remembers it for next time.
 - **Workspaces.** A side panel holds the role's sections, the light/dark switch and
   the profile menu with sign-out. Screens open on a compact heading with their main
   action; the language choice sits in a footer pinned to the bottom of the screen.
 
 ## Feature coverage
 
-Every CLI command has a web equivalent.
+Every CLI command has a web equivalent. By design the web client is stricter in one
+respect: it does not book dates in the past or change completed stays.
 
 | CLI command | Role | Dimora screen |
 | --- | --- | --- |
 | `apartment view` | both | Explore (guest), Listings (host) |
 | `apartment search` | guest | Explore → dates and guests |
 | `booking create` | guest | Explore → Book |
-| `booking view` | both | My trips (guest, own bookings), Reservations (host, all) |
-| `booking change` | guest | My trips → Change |
-| `booking cancel` | guest | My trips → Cancel |
+| `booking create` (booker name) | guest | Entry → Your name |
+| `booking view` | both | All bookings and My trips (guest), Reservations (host) |
+| `booking change` | guest | All bookings or My trips → Change |
+| `booking cancel` | guest | All bookings or My trips → Cancel |
 | `apartment add` | host | Listings → New listing |
 | `apartment update` | host | Listings → Price |
 | `apartment remove` | host | Listings → Remove |
@@ -125,9 +128,10 @@ fonts.
 - The proxy forwards only `Content-Type`/`Accept` upstream and
   `Content-Type`/`Retry-After`/`Allow` back, caps bodies at 64 KB, hides dotfiles and
   directory listings, and binds to `127.0.0.1` by default.
-- **Demo profiles, not accounts.** The booking API has no authentication, so
-  entering as a role opens that role's demo profile (guest: Tom Springer, host:
-  Sebastiano Druda). A guest's trips are the bookings made under the profile's name.
+- **Names, not accounts.** The booking API has no authentication, so a guest enters
+  with their name, which becomes the booker name of their bookings (*My trips* lists
+  those), and the host opens a demo profile (Sebastiano Druda). As in the CLI, any
+  guest can view, change and cancel every booking from *All bookings*.
   Before any public deployment the API needs real authentication and per-user
   authorisation.
 
@@ -145,8 +149,8 @@ The **unit suites** run in milliseconds with no browser. The **end-to-end suite*
 (`e2e/`, Playwright) starts its own Flask API on a fresh temporary database and its
 own studio server on ports 8765/8766, seeds a small catalogue, and drives Chromium on
 a desktop viewport and an emulated Pixel 7. It covers the landing page (scroll pill,
-curtain footer, language), entry and route guards, theme persistence, the guest
-journey (search, book, change, cancel, validation, conflicts) and the host journey
+curtain footer, language), entry (guest name) and route guards, theme persistence, the guest
+journey (search, book, change, cancel, all bookings, validation, conflicts) and the host journey
 (publish, duplicate names, reprice, guarded removal, reservation filters). Locators
 use roles and accessible names only, so a control that loses its label fails a test.
 

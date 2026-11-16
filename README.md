@@ -121,8 +121,9 @@ and conflicts return structured errors as
 ### Web client (Dimora)
 
 `website-studio/` contains Dimora, a multilingual (Italian, English, German) web
-client built on the REST API. Visitors enter as a guest or as a host: guests filter
-the catalogue live by place, dates and party size, then book, change and cancel stays;
+client built on the REST API. Visitors enter as a guest (with their name) or as a
+host: guests filter the catalogue live by place, dates and party size, then book,
+change and cancel stays, and see every booking as the CLI booker does;
 hosts publish, reprice and remove listings, filter reservations from a single menu and
 follow an overview with key figures, a 30-day stay timeline per listing and revenue by
 month, each role in a workspace with a side panel. With the API

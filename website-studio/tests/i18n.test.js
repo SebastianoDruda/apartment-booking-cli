@@ -63,6 +63,11 @@ test('dynamic keys used by views exist for every variant', () => {
     ...['revenue', 'upcoming', 'guests', 'occupancy'].map((kpi) => `host.overview.kpi.${kpi}`),
     ...['live', 'overlap', 'price', 'flex'].flatMap((key) => [`landing.features.${key}.title`, `landing.features.${key}.body`]),
     ...['how', 'features', 'stays'].map((id) => `nav.${id}`),
+    ...['trips', 'bookings'].flatMap((scope) => [
+      `${scope}.metaTitle`, `${scope}.title`, `${scope}.empty.title`, `${scope}.empty.body`,
+      `${scope}.emptyPast.title`, `${scope}.emptyPast.body`,
+    ]),
+    ...['explore', 'trips', 'bookings', 'overview', 'listings', 'reservations'].map((item) => `shell.nav.${item}`),
   ];
   assert.deepEqual(keys.filter((key) => !has(key)), []);
 });

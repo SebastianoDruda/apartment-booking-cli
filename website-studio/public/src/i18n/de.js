@@ -15,7 +15,7 @@ export default {
   footer: { line: 'Dein nächster Aufenthalt beginnt *hier*.', engine: 'Basierend auf der Apartment-Booking-Engine', top: 'Dimora, nach oben' },
   shell: {
     mainNav: 'Hauptnavigation',
-    nav: { explore: 'Entdecken', trips: 'Meine Reisen', overview: 'Übersicht', listings: 'Inserate', reservations: 'Buchungen' },
+    nav: { explore: 'Entdecken', trips: 'Meine Reisen', overview: 'Übersicht', listings: 'Inserate', reservations: 'Buchungen', bookings: 'Alle Buchungen' },
   },
 
   landing: {
@@ -42,10 +42,15 @@ export default {
     metaTitle: 'Eintreten — Dimora',
     back: 'Start',
     title: 'Wie möchtest du starten?',
-    guest: { enter: 'Als Gast eintreten', body: 'Unterkünfte finden und buchen.', visualTitle: 'Deine Daten. *Dein* Ort.' },
+    guest: { enter: 'Als Gast eintreten', body: 'Unterkünfte finden und buchen.', visualTitle: 'Deine Daten. *Dein* Ort.',
+      nameTitle: 'Wie heißt du?', nameLabel: 'Dein Name',
+      nameHint: 'Buchungen laufen auf diesen Namen.',
+      nameRequired: 'Gib deinen Namen ein, um fortzufahren.',
+    },
     host: { enter: 'Als Gastgeber eintreten', body: 'Inserate und Buchungen verwalten.', visualTitle: 'Öffne die Tür. Um den *Kalender* kümmern wir uns.' },
     welcome: 'Hallo, {name}.',
     signedOut: 'Abgemeldet. Bis bald.',
+    continue: 'Weiter', otherRole: 'Zurück',
   },
 
   explore: {
@@ -95,6 +100,15 @@ export default {
     cancelConfirm: 'Ja, stornieren', keep: 'Behalten', cancelled: 'Aufenthalt storniert.',
     empty: { title: 'Noch keine Reisen', body: 'Dein nächstes Abenteuer ist nur eine Suche entfernt.', cta: 'Unterkünfte entdecken' },
     emptyPast: { title: 'Keine vergangenen Reisen', body: 'Abgeschlossene Aufenthalte erscheinen hier.' },
+  },
+
+  bookings: {
+    metaTitle: 'Alle Buchungen — Dimora',
+    title: 'Alle Buchungen',
+    by: 'Gebucht von {name}',
+    cancelBody: 'Der Aufenthalt von {guest} in {name} ({range}) wird freigegeben. Das lässt sich nicht rückgängig machen.',
+    empty: { title: 'Noch keine Buchungen', body: 'Hier erscheinen die Buchungen aller Gäste.', cta: 'Unterkünfte entdecken' },
+    emptyPast: { title: 'Keine vergangenen Buchungen', body: 'Abgeschlossene Aufenthalte erscheinen hier.' },
   },
 
   host: {

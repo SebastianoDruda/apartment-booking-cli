@@ -8,6 +8,7 @@ export const STORAGE_KEYS = {
   theme: 'dimora.theme',
   accounts: 'dimora.accounts.v1',
   session: 'dimora.session.v1',
+  guestName: 'dimora.guest-name',
 };
 
 export const ROLES = ['guest', 'host'];
@@ -21,6 +22,7 @@ export const NAV = {
   guest: [
     { path: '/guest/explore', label: 'shell.nav.explore', icon: 'compass' },
     { path: '/guest/trips', label: 'shell.nav.trips', icon: 'suitcase' },
+    { path: '/guest/bookings', label: 'shell.nav.bookings', icon: 'calendar' },
   ],
   host: [
     { path: '/host/overview', label: 'shell.nav.overview', icon: 'grid' },
@@ -31,3 +33,4 @@ export const NAV = {
 
 export const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_GUESTS = 30;
+export const MAX_NAME_LENGTH = 80;

@@ -33,10 +33,14 @@ export const api = {
   }),
 };
 
-/** Enter the app through the entry page, as a real visitor would. */
-export async function enterAs(page, role) {
+/** Enter the app through the entry page, as a real visitor would; a guest types their name. */
+export async function enterAs(page, role, { name = 'Tom Springer' } = {}) {
   await page.goto('/#/login');
   await page.getByRole('button', { name: role === 'host' ? /Enter as a host/ : /Enter as a guest/ }).click();
+  if (role === 'guest') {
+    await page.getByLabel('Your name').fill(name);
+    await page.getByRole('button', { name: 'Continue' }).click();
+  }
   await expect(page).toHaveURL(role === 'host' ? /#\/host\/overview/ : /#\/guest\/explore/);
 }
 

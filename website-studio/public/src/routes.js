@@ -8,7 +8,7 @@
 import { landingView } from './views/landing.js';
 import { authView } from './views/auth.js';
 import { exploreView } from './views/guest/explore.js';
-import { tripsView } from './views/guest/trips.js';
+import { bookingsView, tripsView } from './views/guest/trips.js';
 import { overviewView } from './views/host/overview.js';
 import { listingsView } from './views/host/listings.js';
 import { reservationsView } from './views/host/reservations.js';
@@ -19,6 +19,7 @@ export const routes = [
   { path: '/login', view: authView, access: 'anonymous' },
   { path: '/guest/explore', view: exploreView, access: 'guest', layout: 'app' },
   { path: '/guest/trips', view: tripsView, access: 'guest', layout: 'app' },
+  { path: '/guest/bookings', view: bookingsView, access: 'guest', layout: 'app' },
   { path: '/host/overview', view: overviewView, access: 'host', layout: 'app' },
   { path: '/host/listings', view: listingsView, access: 'host', layout: 'app' },
   { path: '/host/reservations', view: reservationsView, access: 'host', layout: 'app' },

@@ -7,21 +7,24 @@ import { ApiError, createApiClient } from '../public/src/services/api.js';
 import { PERSONAS, createAuthService } from '../public/src/services/auth.js';
 import { createBookingService } from '../public/src/services/booking-service.js';
 
-test('entering a role opens its demo profile, which expires and can be closed', () => {
+test('a guest enters with their own name; the session expires and can be closed', () => {
   let clock = 0;
   const storage = createStorage(memoryBackend());
   const auth = createAuthService({ storage, now: () => clock });
   assert.equal(auth.getSession(), null);
-  const session = auth.enter('guest');
-  assert.equal(session.name, PERSONAS.guest.name);
+  assert.equal(auth.lastGuestName(), '');
+  const session = auth.enter('guest', '  Mario   Rossi ');
+  assert.equal(session.name, 'Mario Rossi', 'trimmed like the API stores booker names');
   assert.deepEqual(storage.read(STORAGE_KEYS.session), session);
   assert.equal(auth.getSession().role, 'guest');
+  assert.equal(auth.lastGuestName(), 'Mario Rossi', 'remembered to prefill the next entry');
   clock += 8 * 24 * 60 * 60 * 1000;
   assert.equal(auth.getSession(), null, 'expired');
-  auth.enter('host');
+  assert.equal(auth.enter('host').name, PERSONAS.host.name);
   auth.signOut();
   assert.equal(auth.getSession(), null);
   assert.throws(() => auth.enter('admin'));
+  assert.throws(() => auth.enter('guest', '   '), 'a guest needs a name');
 });
 
 test('tampered sessions are discarded', () => {

@@ -102,6 +102,44 @@ test.describe('guest', () => {
     await expect(clear).toBeHidden();
   });
 
+  test('books under the name the guest entered with', async ({ page }) => {
+    await enterAs(page, 'guest', { name: 'Mario Rossi' });
+    await page.getByLabel('Where').fill(apartment);
+    await card(page).getByRole('button', { name: 'Book' }).click();
+    const booking = page.getByRole('dialog', { name: `Book ${apartment}` });
+    await booking.getByLabel('Check-in').fill(isoDays(90));
+    await booking.getByLabel('Check-out').fill(isoDays(92));
+    await booking.getByRole('button', { name: 'Confirm booking' }).click();
+    await expect(page.getByRole('article').filter({ hasText: apartment })).toBeVisible();
+
+    await openSection(page, 'All bookings');
+    await expect(page.getByRole('article').filter({ hasText: apartment })).toContainText('Booked by Mario Rossi');
+  });
+
+  test('all bookings lists every guest and changes or cancels any of them', async ({ page, request }) => {
+    await api.book(request, { apartment, start: isoDays(100), end: isoDays(102), guest: 'Booked From The Terminal', people: 1 });
+    await enterAs(page, 'guest');
+    await openSection(page, 'My trips');
+    await expect(page.getByRole('article').filter({ hasText: apartment })).toHaveCount(0);
+
+    await openSection(page, 'All bookings');
+    const stay = page.getByRole('article').filter({ hasText: apartment });
+    await expect(stay).toContainText('Booked by Booked From The Terminal');
+    await expect(stay).toContainText('2 nights · 1 guest');
+
+    await stay.getByRole('button', { name: 'Change' }).click();
+    const change = page.getByRole('dialog', { name: 'Change your stay' });
+    await change.getByRole('button', { name: 'More' }).click();
+    await change.getByRole('button', { name: 'Update booking' }).click();
+    await expect(stay).toContainText('2 nights · 2 guests');
+
+    await stay.getByRole('button', { name: 'Cancel' }).click();
+    const confirm = page.getByRole('dialog', { name: 'Cancel this stay?' });
+    await expect(confirm).toContainText('The stay of Booked From The Terminal');
+    await confirm.getByRole('button', { name: 'Yes, cancel' }).click();
+    await expect(stay).toHaveCount(0);
+  });
+
   test('past stays are listed apart, without actions', async ({ page }) => {
     await enterAs(page, 'guest');
     await openSection(page, 'My trips');

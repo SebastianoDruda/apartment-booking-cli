@@ -15,7 +15,7 @@ export default {
   footer: { line: 'Your next stay starts *here*.', engine: 'Powered by the Apartment Booking engine', top: 'Dimora, back to top' },
   shell: {
     mainNav: 'Main navigation',
-    nav: { explore: 'Explore', trips: 'My trips', overview: 'Overview', listings: 'Listings', reservations: 'Reservations' },
+    nav: { explore: 'Explore', trips: 'My trips', overview: 'Overview', listings: 'Listings', reservations: 'Reservations', bookings: 'All bookings' },
   },
 
   landing: {
@@ -42,10 +42,15 @@ export default {
     metaTitle: 'Enter — Dimora',
     back: 'Home',
     title: 'How are you joining?',
-    guest: { enter: 'Enter as a guest', body: 'Find and book stays.', visualTitle: 'Your dates. *Your* place.' },
+    guest: { enter: 'Enter as a guest', body: 'Find and book stays.', visualTitle: 'Your dates. *Your* place.',
+      nameTitle: 'What’s your name?', nameLabel: 'Your name',
+      nameHint: 'Bookings are made under this name.',
+      nameRequired: 'Enter your name to continue.',
+    },
     host: { enter: 'Enter as a host', body: 'Manage listings and bookings.', visualTitle: 'Open the door. We handle the *calendar*.' },
     welcome: 'Hi, {name}.',
     signedOut: 'Signed out. See you soon.',
+    continue: 'Continue', otherRole: 'Back',
   },
 
   explore: {
@@ -95,6 +100,15 @@ export default {
     cancelConfirm: 'Yes, cancel', keep: 'Keep it', cancelled: 'Stay cancelled.',
     empty: { title: 'No trips yet', body: 'Your next adventure is one search away.', cta: 'Explore stays' },
     emptyPast: { title: 'No past trips', body: 'Completed stays will appear here.' },
+  },
+
+  bookings: {
+    metaTitle: 'All bookings — Dimora',
+    title: 'All bookings',
+    by: 'Booked by {name}',
+    cancelBody: 'The stay of {guest} at {name} ({range}) will be released. This can’t be undone.',
+    empty: { title: 'No bookings yet', body: 'Bookings from every guest appear here.', cta: 'Explore stays' },
+    emptyPast: { title: 'No past bookings', body: 'Completed stays will appear here.' },
   },
 
   host: {

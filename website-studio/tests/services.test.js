@@ -41,7 +41,11 @@ function fakeFetch(responses) {
     calls.push({ url, init });
     const next = responses.shift();
     if (next instanceof Error) throw next;
-    return { ok: next.status < 400, status: next.status, statusText: 'x', json: async () => next.body };
+    const headers = new Map(Object.entries(next.headers ?? {}).map(([name, value]) => [name.toLowerCase(), value]));
+    return {
+      ok: next.status < 400, status: next.status, statusText: 'x', json: async () => next.body,
+      headers: { get: (name) => headers.get(name.toLowerCase()) ?? null },
+    };
   };
   return { calls, fetchImpl };
 }
@@ -59,6 +63,32 @@ test('API client unwraps data and maps errors', async () => {
   assert.equal(calls[1].init.headers['Content-Type'], 'application/json');
   assert.equal(calls[1].init.body, '{"x":1}');
   await assert.rejects(api.get('/apartments'), { code: 'network' });
+});
+
+test('API client sends its own writes back until the read model confirms them', async () => {
+  const { calls, fetchImpl } = fakeFetch([
+    { status: 201, body: { data: { id: 7 } }, headers: { 'X-Consistency-Token': 'booking:7@1' } },
+    { status: 200, body: { data: [] }, headers: { 'X-Consistency': 'fresh' } },
+    { status: 200, body: { data: [] } },
+  ]);
+  const api = createApiClient({ baseUrl: '/api', fetchImpl });
+  await api.post('/bookings', { x: 1 });
+  assert.equal(calls[0].init.headers['X-Wait-For'], undefined, 'writes never wait');
+  await api.get('/bookings');
+  assert.equal(calls[1].init.headers['X-Wait-For'], 'booking:7@1');
+  await api.get('/bookings');
+  assert.equal(calls[2].init.headers['X-Wait-For'], undefined, 'confirmed tokens are dropped');
+});
+
+test('API client without consistency headers behaves as before', async () => {
+  const { calls, fetchImpl } = fakeFetch([
+    { status: 201, body: { data: { id: 1 } } },
+    { status: 200, body: { data: [] } },
+  ]);
+  const api = createApiClient({ baseUrl: '/api', fetchImpl });
+  await api.post('/apartments', {});
+  await api.get('/apartments');
+  assert.equal(calls[1].init.headers['X-Wait-For'], undefined);
 });
 
 test('booking service speaks the REST contract', async () => {

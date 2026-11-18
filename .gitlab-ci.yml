@@ -46,7 +46,7 @@ lint:
     - python -m pip install -r requirements/ci.txt
     # Rules and target version come from pyproject.toml.
     - python -m ruff check .
-    - python -m compileall -q apartment_booking ci tests main.py
+    - python -m compileall -q apartment_booking ci tests main.py microservices
 
 .unit-tests:
   stage: test
@@ -97,6 +97,30 @@ unit-tests:python3.14:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+    expire_in: 14 days
+
+microservices-unit-tests:
+  stage: test
+  # Event-driven edition (microservices/): event contract, projector, outbox,
+  # HTTP services and the CLI's gateway client, with in-memory fakes. The Docker
+  # stack itself runs on GitHub, because job containers here are unprivileged.
+  cache:
+    key:
+      files:
+        - microservices/requirements.txt
+    paths:
+      - .cache/pip
+  script:
+    - python -m pip install -r microservices/requirements.txt -r requirements/ci.txt
+    - cd microservices
+    - PYTHONPATH=.. python -m pytest tests/unit --junitxml=../junit-microservices.xml
+  artifacts:
+    when: always
+    name: "microservices-unit-tests-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - junit-microservices.xml
+    reports:
+      junit: junit-microservices.xml
     expire_in: 14 days
 
 load-test:

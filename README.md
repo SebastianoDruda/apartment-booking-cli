@@ -5,6 +5,7 @@
 [![Load test](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/load-test.yml)
 [![Website](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/website.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/website.yml)
 [![Playwright](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/playwright.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/playwright.yml)
+[![Microservices](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/microservices.yml/badge.svg)](https://github.com/SebastianoDruda/apartment-booking-cli/actions/workflows/microservices.yml)
 
 Apartment Booking is a compact, fully tested Python application developed to
 demonstrate how one domain model can support different delivery interfaces without
@@ -17,6 +18,12 @@ transaction safety therefore behave consistently whether a request originates fr
 the CLI or HTTP. SQLite provides lightweight local persistence, while Docker Compose
 offers a reproducible runtime with shared storage.
 
+The [`microservices/`](microservices/README.md) folder adds a second, event-driven
+edition of the same system. It splits apartments and bookings into separate services
+with their own databases, connects them through RabbitMQ, separates reads from
+writes (CQRS) and puts an nginx gateway in front. The CLI and the web client run on
+it unchanged.
+
 ## Features
 
 - Apartment catalogue management with capacity and nightly pricing.
@@ -25,6 +32,7 @@ offers a reproducible runtime with shared storage.
 - Persistent SQLite storage with transactional writes and Docker volumes.
 - Interactive terminal completion and browser-based API exploration.
 - Dimora, a multilingual web client for guests and hosts built on the same API.
+- An event-driven edition: microservices, RabbitMQ, PostgreSQL, MongoDB and an nginx gateway.
 - Automated unit, integration, Docker, coverage, Locust load and Playwright end-to-end tests.
 - Continuous integration on GitHub Actions and on a self-managed GitLab runner.
 
@@ -156,6 +164,39 @@ without leaving partial state.
 The domain relationships are summarized in the
 [concept map](docs/domain-concept-map.png).
 
+## Event-driven edition (microservices)
+
+`microservices/` runs the same application as a set of services that each own their
+data and communicate through events on RabbitMQ:
+
+```text
+Browser / CLI -> nginx gateway -> POST/PATCH/DELETE -> apartment service   -> PostgreSQL
+                               |                    -> reservation service -> PostgreSQL
+                               -> GET -------------> query service ------> MongoDB
+apartment and reservation services -> RabbitMQ -> projector -> MongoDB (read model)
+```
+
+- **CQRS.** The gateway sends writes to the service that owns the data and every
+  read to a query service that serves ready-made views.
+- **Own data per service.** The apartment service knows nothing about bookings. The
+  reservation service keeps a copy of the apartment data it needs, fed by events.
+- **Events on every change.** An outbox (`version` and `published_version` on each
+  row) publishes every change after the transaction commits, even if RabbitMQ was
+  down when the data was written. Durable queues keep events for consumers that
+  start later.
+- **Same behaviour.** The edition reuses `apartment_booking` for validation and
+  messages, keeps the REST contract, runs the original CLI over HTTP and serves the
+  Dimora client unchanged. Removing an apartment still cancels its bookings, now
+  through events.
+
+```bash
+cd microservices
+docker compose up --build --detach --wait   # http://127.0.0.1:8080 (web, /api, /docs)
+```
+
+Architecture, data ownership, event contract, reliability and operations are
+documented in [microservices/README.md](microservices/README.md).
+
 ## Project layout
 
 ```text
@@ -178,6 +219,7 @@ apartment-booking-cli/
 │   ├── ci.txt                  # Test, coverage and lint tooling
 │   └── load.txt                # Locust, for load testing
 ├── website-studio/             # Dimora web client (static app + dev server)
+├── microservices/              # Event-driven edition: services, gateway, Compose stack
 ├── docs/                       # Architecture assets
 ├── ci/gitlab/                  # GitLab pipeline summary (runner scripts stay local)
 ├── .github/workflows/          # Test, coverage, load-test, website and Playwright pipelines
@@ -269,7 +311,9 @@ publishes downloadable HTML and CSV reports. Two more workflows cover the web cl
 `Website`, triggered when `website-studio/` changes, checks its modules and runs its
 JavaScript and development-server tests; `Playwright` runs the end-to-end guest and
 host journeys in Chromium on desktop and mobile viewports against the real API, and
-publishes the HTML report as an artifact.
+publishes the HTML report as an artifact. The `Microservices` workflow tests the
+event-driven edition: unit tests on Python 3.11 and 3.14, the whole Docker stack
+with its failure scenarios, and the same Playwright suite through the nginx gateway.
 
 ### Performance testing
 
@@ -310,8 +354,9 @@ by digest.
 
 | Stage | Job | Purpose |
 | --- | --- | --- |
-| validate | `lint` | Ruff correctness rules and bytecode compilation |
+| validate | `lint` | Ruff correctness rules and bytecode compilation (both editions) |
 | test | `unit-tests:python3.10`, `unit-tests:python3.14` | Full suite with JUnit reports; branch coverage, Cobertura and HTML reports on 3.14 |
+| test | `microservices-unit-tests` | Unit tests of the event-driven edition, with a JUnit report |
 | performance | `load-test` | Locust booking journey against a Flask server inside the job |
 | report | `pipeline-summary` | Markdown summary of tests, coverage and load results |
 
@@ -371,12 +416,15 @@ This repository is an educational local application rather than a production
 booking platform. It intentionally omits authentication, payments, customer booking
 ownership, schema migrations and multi-node persistence. Prices use SQLite `REAL`,
 displayed totals follow the apartment's current price, and dates have no time-zone
-component. The API should therefore remain bound to localhost.
+component. The API should therefore remain bound to localhost. The event-driven
+edition instead stores the nightly price in each booking, and its reads are
+eventually consistent; its own limits are listed in its README.
 
 ## Releases
 
 | Release | Focus |
 | --- | --- |
+| [Checkpoint 07](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-07) | Event-driven edition: CQRS microservices, RabbitMQ, nginx gateway |
 | [Checkpoint 06](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-06) | Dimora web client for guests and hosts in Italian, English and German |
 | [Checkpoint 05](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-05) | GitLab CI with a self-managed Docker executor runner |
 | [Checkpoint 04](https://github.com/SebastianoDruda/apartment-booking-cli/releases/tag/checkpoint-04) | GitHub Actions pipeline with coverage and Locust load testing |

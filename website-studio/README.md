@@ -30,6 +30,14 @@ Open http://127.0.0.1:8080, choose **Enter as a guest** (and type your name) or
 `/api/*` to the booking API, so the browser sees a single origin: no CORS changes to
 the Flask service and a strict Content Security Policy for the client.
 
+The same client also runs, unchanged, on the event-driven edition in
+[`../microservices`](../microservices/README.md): there the nginx gateway serves
+`public/` and routes `/api/*` to the command and query services. The only
+addition is in `services/api.js`. When a write answers with an `X-Consistency-Token`
+header, the client sends the token back in `X-Wait-For` on its next reads, so the
+query service answers only once its views include that write. The original API sends no
+tokens, so its behaviour is unchanged.
+
 ## The experience
 
 - **Landing.** A centred promise over a slow aurora with a single *Try our system*
@@ -142,6 +150,7 @@ cd website-studio
 npm test                                      # unit: i18n parity, rendering, formatting, services + serve.py
 npm ci && npx playwright install chromium     # once, for the end-to-end suite
 PYTHON=../.venv/bin/python npm run test:e2e   # end-to-end with Playwright (any Python with Flask)
+E2E_GATEWAY_URL=http://127.0.0.1:8080 npm run test:e2e   # same suite on a fresh microservices stack
 npm run test:e2e:report                       # open the HTML report after a CI-style run
 ```
 
@@ -153,9 +162,12 @@ curtain footer, language), entry (guest name) and route guards, theme persistenc
 journey (search, book, change, cancel, all bookings, validation, conflicts) and the host journey
 (publish, duplicate names, reprice, guarded removal, reservation filters). Locators
 use roles and accessible names only, so a control that loses its label fails a test.
+With `E2E_GATEWAY_URL` set, the suite starts no servers and targets that gateway
+instead; it expects an empty stack, because it seeds its own catalogue.
 
 On GitHub Actions, the `Website` workflow runs the unit suites when
 `website-studio/` changes, and the `Playwright` workflow runs the end-to-end suite on
 every push and pull request to `main`, uploading the HTML report and failure traces as
-an artifact. Node 20 or newer is needed for the tests only; the app itself needs just
+an artifact. The `Microservices` workflow runs the same end-to-end suite through the
+event-driven stack's gateway. Node 20 or newer is needed for the tests only; the app itself needs just
 a modern browser.

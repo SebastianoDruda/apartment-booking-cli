@@ -1,0 +1,217 @@
+# Dimora, event-driven edition: CQRS microservices connected through RabbitMQ.
+#
+#   docker compose up --build --detach --wait     # from this folder
+#   open http://127.0.0.1:8080                    # web client, API under /api, explorer at /docs
+#   open http://127.0.0.1:15672                   # RabbitMQ management (dimora / dimora-local)
+#
+# Only the gateway and the RabbitMQ management UI are published, on localhost.
+# Databases are reachable only inside the Compose network.
+
+name: dimora-events
+
+x-service: &service
+  build:
+    context: ..
+    dockerfile: microservices/Dockerfile
+    target: runtime
+  image: dimora-events-service:local
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+  restart: unless-stopped
+
+x-http-healthcheck: &http-healthcheck
+  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
+  interval: 5s
+  timeout: 4s
+  start_period: 10s
+  retries: 6
+
+x-postgres: &postgres
+  image: postgres:17-alpine
+  environment: &postgres-env
+    POSTGRES_USER: dimora
+    POSTGRES_PASSWORD: ${DIMORA_DB_PASSWORD:-dimora-local}
+  restart: unless-stopped
+
+x-environment: &environment
+  DIMORA_RABBITMQ_URL: amqp://dimora:${DIMORA_RABBITMQ_PASSWORD:-dimora-local}@rabbitmq:5672/%2F
+  DIMORA_APARTMENT_DSN: postgresql://dimora:${DIMORA_DB_PASSWORD:-dimora-local}@apartment-db:5432/apartments
+  DIMORA_RESERVATION_DSN: postgresql://dimora:${DIMORA_DB_PASSWORD:-dimora-local}@reservation-db:5432/reservations
+  DIMORA_MONGO_URL: mongodb://read-db:27017
+  DIMORA_MONGO_DATABASE: dimora_read
+
+services:
+  # ---------------------------------------------------------------- messaging
+  rabbitmq:
+    image: rabbitmq:4.1-management-alpine
+    # The node name derives from the host name; keep it stable so stored messages survive restarts.
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: dimora
+      RABBITMQ_DEFAULT_PASS: ${DIMORA_RABBITMQ_PASSWORD:-dimora-local}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    ports:
+      - "127.0.0.1:${DIMORA_RABBITMQ_UI_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 5s
+      timeout: 10s
+      start_period: 20s
+      retries: 12
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------- write side
+  apartment-db:
+    <<: *postgres
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: apartments
+    volumes:
+      - apartment-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dimora", "-d", "apartments"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  reservation-db:
+    <<: *postgres
+    environment:
+      <<: *postgres-env
+      POSTGRES_DB: reservations
+    volumes:
+      - reservation-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "dimora", "-d", "reservations"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  apartment-service:
+    <<: *service
+    command: ["python", "-m", "dimora.apartment"]
+    environment: *environment
+    healthcheck: *http-healthcheck
+    depends_on:
+      apartment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  reservation-service:
+    <<: *service
+    command: ["python", "-m", "dimora.reservation"]
+    environment: *environment
+    healthcheck: *http-healthcheck
+    depends_on:
+      reservation-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------- read side
+  read-db:
+    image: mongo:8.0
+    volumes:
+      - read-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      start_period: 10s
+      retries: 12
+    restart: unless-stopped
+
+  projector:
+    <<: *service
+    command: ["python", "-m", "dimora.projector"]
+    environment: *environment
+    healthcheck:
+      # The projector touches this file while it consumes events.
+      test: ["CMD", "python", "-c", "import os, sys, time; sys.exit(time.time() - os.path.getmtime('/tmp/projector.alive') > 30)"]
+      interval: 5s
+      timeout: 3s
+      start_period: 15s
+      retries: 6
+    depends_on:
+      read-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  query-service:
+    <<: *service
+    command: ["python", "-m", "dimora.query"]
+    environment: *environment
+    healthcheck: *http-healthcheck
+    depends_on:
+      read-db:
+        condition: service_healthy
+
+  # ---------------------------------------------------------------- entry point
+  gateway:
+    build:
+      context: ..
+      dockerfile: microservices/gateway/Dockerfile
+    image: dimora-events-gateway:local
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    ports:
+      - "127.0.0.1:${DIMORA_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/health"]
+      interval: 5s
+      timeout: 4s
+      start_period: 5s
+      retries: 6
+    depends_on:
+      apartment-service:
+        condition: service_healthy
+      reservation-service:
+        condition: service_healthy
+      query-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------- tools (docker compose run)
+  cli:
+    <<: *service
+    profiles: ["tools"]
+    command: ["python", "-m", "dimora.cli"]
+    environment:
+      DIMORA_API_URL: http://gateway:8080
+    stdin_open: true
+    tty: true
+    restart: "no"
+
+  importer:
+    <<: *service
+    profiles: ["tools"]
+    command: ["python", "-m", "dimora.tools.import_sqlite", "/import/apartment_booking.db"]
+    environment: *environment
+    restart: "no"
+
+  republish:
+    <<: *service
+    profiles: ["tools"]
+    command: ["python", "-m", "dimora.tools.republish"]
+    environment: *environment
+    restart: "no"
+
+volumes:
+  rabbitmq-data:
+  apartment-data:
+  reservation-data:
+  read-data:

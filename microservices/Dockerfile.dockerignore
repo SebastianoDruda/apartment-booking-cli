@@ -1,0 +1,19 @@
+# Build context is the repository root; send only what the services image needs.
+**
+!apartment_booking/
+!apartment_booking/*.py
+!apartment_booking/web/
+!apartment_booking/web/*.py
+!apartment_booking/web/templates/
+!apartment_booking/web/templates/*.html
+!apartment_booking/web/static/
+!apartment_booking/web/static/*.css
+!apartment_booking/web/static/*.js
+!microservices/requirements.txt
+!microservices/dimora/
+!microservices/dimora/**/*.py
+!microservices/tests/unit/
+!microservices/tests/unit/*.py
+**/.DS_Store
+**/__pycache__
+**/*.py[cod]

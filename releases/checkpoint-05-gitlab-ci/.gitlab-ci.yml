@@ -1,0 +1,165 @@
+# GitLab CI for the Apartment Booking System.
+#
+# Jobs run on the project-scoped, self-managed runner described in ci/gitlab/:
+# a Docker executor on Apple Silicon that accepts only jobs tagged local, docker
+# and arm64, runs one unprivileged job at a time and never uses Docker-in-Docker.
+
+stages:
+  - validate
+  - test
+  - performance
+  - report
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+
+variables:
+  # Multi-architecture image indexes pinned by digest for reproducible jobs.
+  PYTHON_310_IMAGE: "python:3.10-slim-bookworm@sha256:5be5aaecb962a41567bc8041f1e9e3432cb085b037fe057f9a562630b2e4b370"
+  PYTHON_314_IMAGE: "python:3.14-slim-bookworm@sha256:3fe1a0b6c2d6b2ebb572906cdabeca75aeb558c0c17db5ffefbcf8094871c32b"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_ROOT_USER_ACTION: "ignore"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+default:
+  image: $PYTHON_314_IMAGE
+  tags:
+    - local
+    - docker
+    - arm64
+  interruptible: true
+  timeout: 10m
+
+lint:
+  stage: validate
+  cache:
+    key:
+      files:
+        - requirements-ci.txt
+    paths:
+      - .cache/pip
+  script:
+    - python -m pip install -r requirements-ci.txt
+    # Correctness rules only (syntax errors, undefined names, unused imports).
+    - python -m ruff check --isolated --select E4,E7,E9,F .
+    - python -m compileall -q apartment_booking ci tests main.py
+
+.unit-tests:
+  stage: test
+  cache:
+    key:
+      files:
+        - requirements.txt
+        - requirements-ci.txt
+    paths:
+      - .cache/pip
+  before_script:
+    - python --version
+    - python -m pip install -r requirements.txt -r requirements-ci.txt
+
+unit-tests:python3.10:
+  extends: .unit-tests
+  image: $PYTHON_310_IMAGE
+  script:
+    - python -m pytest tests -p no:cacheprovider --junitxml=junit-py3.10.xml
+  artifacts:
+    when: always
+    name: "unit-tests-py3.10-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - junit-py3.10.xml
+    reports:
+      junit: junit-py3.10.xml
+    expire_in: 14 days
+
+unit-tests:python3.14:
+  extends: .unit-tests
+  image: $PYTHON_314_IMAGE
+  script:
+    - python -m coverage run -m pytest tests -p no:cacheprovider --junitxml=junit-py3.14.xml
+    - python -m coverage xml
+    - python -m coverage html
+    # Enforces the 85% branch-coverage minimum configured in .coveragerc.
+    - python -m coverage report
+  coverage: '/^TOTAL.*\s(\d+(?:\.\d+)?)%$/'
+  artifacts:
+    when: always
+    name: "unit-tests-py3.14-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - junit-py3.14.xml
+      - coverage.xml
+      - htmlcov/
+    reports:
+      junit: junit-py3.14.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    expire_in: 14 days
+
+load-test:
+  stage: performance
+  variables:
+    # Disposable database inside the job container; never shared with other jobs.
+    APARTMENT_BOOKING_DB_PATH: /tmp/apartment-booking-load-test.db
+  cache:
+    key:
+      files:
+        - requirements.txt
+        - requirements-load.txt
+    paths:
+      - .cache/pip
+  script:
+    - python -m pip install -r requirements.txt -r requirements-load.txt
+    - mkdir -p .artifacts/locust
+    - >-
+      python -m flask --app apartment_booking.web:create_app --no-debug run
+      --host 127.0.0.1 --port 8000 --no-debugger --no-reload
+      > .artifacts/locust/flask.log 2>&1 &
+    - |
+      for attempt in $(seq 1 30); do
+        if python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=2).close()" 2>/dev/null; then
+          break
+        fi
+        if [ "$attempt" -eq 30 ]; then
+          echo "The API did not become healthy within 30 seconds." >&2
+          cat .artifacts/locust/flask.log >&2
+          exit 1
+        fi
+        sleep 1
+      done
+    # Same journey, load and service-level objectives as the GitHub workflow.
+    - >-
+      python -m locust
+      --locustfile tests/performance/locustfile.py
+      --host http://127.0.0.1:8000
+      --headless --users 10 --spawn-rate 2 --run-time 30s --stop-timeout 5
+      --only-summary
+      --csv .artifacts/locust/results --csv-full-history
+      --html .artifacts/locust/report.html
+      --logfile .artifacts/locust/locust.log
+  artifacts:
+    when: always
+    name: "load-test-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - .artifacts/locust/
+    expire_in: 14 days
+
+pipeline-summary:
+  stage: report
+  needs:
+    - job: unit-tests:python3.10
+      artifacts: true
+    - job: unit-tests:python3.14
+      artifacts: true
+    - job: load-test
+      artifacts: true
+  script:
+    - python ci/gitlab/summarize_reports.py
+  artifacts:
+    name: "pipeline-summary-$CI_COMMIT_SHORT_SHA"
+    paths:
+      - pipeline-summary.md
+    expire_in: 14 days

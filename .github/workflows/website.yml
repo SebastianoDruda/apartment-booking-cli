@@ -1,12 +1,12 @@
-name: Website
+name: Checkpoint 06 · Website
 
 on:
   push:
     branches: [main]
-    paths: ['website-studio/**', '.github/workflows/website.yml']
+    paths: ['releases/checkpoint-06-dimora-web/website-studio/**', '.github/workflows/website.yml']
   pull_request:
     branches: [main]
-    paths: ['website-studio/**', '.github/workflows/website.yml']
+    paths: ['releases/checkpoint-06-dimora-web/website-studio/**', '.github/workflows/website.yml']
   workflow_dispatch:
 
 permissions:
@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 10
     defaults:
       run:
-        working-directory: website-studio
+        working-directory: releases/checkpoint-06-dimora-web/website-studio
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

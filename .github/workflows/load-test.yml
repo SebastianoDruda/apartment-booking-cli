@@ -1,14 +1,24 @@
-name: API load test
+name: Checkpoint 06 · API load test
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/load-test.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/load-test.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: releases/checkpoint-06-dimora-web
 
 concurrency:
   group: load-test-${{ github.workflow }}-${{ github.ref }}
@@ -32,7 +42,7 @@ jobs:
         with:
           python-version: '3.14'
           cache: pip
-          cache-dependency-path: requirements/load.txt
+          cache-dependency-path: releases/checkpoint-06-dimora-web/requirements/load.txt
 
       - name: Install Locust
         run: python -m pip install --disable-pip-version-check -r requirements/load.txt
@@ -74,7 +84,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: locust-load-test-report
-          path: .artifacts/locust/
+          path: releases/checkpoint-06-dimora-web/.artifacts/locust/
           if-no-files-found: warn
           retention-days: 14
 

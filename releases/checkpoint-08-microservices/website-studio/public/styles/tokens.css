@@ -1,0 +1,129 @@
+/* Dimora design tokens — light theme by default, dark via system or toggle. */
+
+/* Self-hosted variable fonts (SIL Open Font License, see assets/fonts). No third-party requests. */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("../assets/fonts/bricolage-grotesque.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("../assets/fonts/manrope.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+:root {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: "Bricolage Grotesque", "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  --paper: #fbf7f1;
+  --paper-2: #f3ece2;
+  --surface: #ffffff;
+  --surface-2: #faf6f0;
+  --ink: #1a1612;
+  --ink-2: #4a433b;
+  --muted: #776e63;
+  --line: #ebe3d8;
+  --line-strong: #d9cdbd;
+
+  --brand: #b84a26;          /* Terracotta — AA on cream and on white text */
+  --brand-strong: #9a3c1c;
+  --brand-soft: #f8e4d9;
+  --on-brand: #fff8f2;
+  --sage: #47705a;
+  --sage-soft: #e1ece4;
+  --chart: #2b7a52;          /* Host charts: validated vs surface (chroma, lightness, 3:1); white labels 5.2:1 */
+  --chart-ink: #ffffff;
+  --gold: #c08a22;
+  --gold-soft: #f6ebd0;
+  --info: #2d5b8a;
+  --info-soft: #e2ecf6;
+  --danger: #b42318;
+  --danger-soft: #fbe5e2;
+
+  --night: #17120e;          /* Always-dark surfaces (CTA band, auth visual) */
+  --night-ink: #fbf7f1;
+
+  --shadow-sm: 0 1px 2px rgb(26 22 18 / 0.06), 0 1px 1px rgb(26 22 18 / 0.04);
+  --shadow-md: 0 10px 28px -12px rgb(26 22 18 / 0.18), 0 2px 6px rgb(26 22 18 / 0.05);
+  --shadow-lg: 0 32px 64px -24px rgb(26 22 18 / 0.30), 0 12px 24px -12px rgb(26 22 18 / 0.12);
+
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 22px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --container: 1200px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --header-h: 72px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #100e0c;
+    --paper-2: #18140f;
+    --surface: #1b1814;
+    --surface-2: #221e19;
+    --ink: #f4eee6;
+    --ink-2: #d2c9bd;
+    --muted: #a0968a;
+    --line: #2d2721;
+    --line-strong: #42392f;
+    --brand: #e57a52;
+    --brand-strong: #f29270;
+    --brand-soft: #3a2117;
+    --on-brand: #1a0d07;
+    --sage: #86b897;
+    --sage-soft: #1c2b21;
+  --chart: #55a97c;
+  --chart-ink: #100e0c;
+    --chart: #55a97c;
+    --chart-ink: #100e0c;
+    --gold: #e2b65a;
+    --gold-soft: #2f2615;
+    --info: #94bde6;
+    --info-soft: #172537;
+    --danger: #f2877a;
+    --danger-soft: #3a1915;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 12px 30px -12px rgb(0 0 0 / 0.6);
+    --shadow-lg: 0 34px 70px -24px rgb(0 0 0 / 0.75);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #100e0c;
+  --paper-2: #18140f;
+  --surface: #1b1814;
+  --surface-2: #221e19;
+  --ink: #f4eee6;
+  --ink-2: #d2c9bd;
+  --muted: #a0968a;
+  --line: #2d2721;
+  --line-strong: #42392f;
+  --brand: #e57a52;
+  --brand-strong: #f29270;
+  --brand-soft: #3a2117;
+  --on-brand: #1a0d07;
+  --sage: #86b897;
+  --sage-soft: #1c2b21;
+  --gold: #e2b65a;
+  --gold-soft: #2f2615;
+  --info: #94bde6;
+  --info-soft: #172537;
+  --danger: #f2877a;
+  --danger-soft: #3a1915;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 12px 30px -12px rgb(0 0 0 / 0.6);
+  --shadow-lg: 0 34px 70px -24px rgb(0 0 0 / 0.75);
+  color-scheme: dark;
+}

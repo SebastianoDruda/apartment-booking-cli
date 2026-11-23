@@ -1,0 +1,16 @@
+# Allow only application source and tests into the build context.
+# Local databases, backups, Git metadata and credentials are excluded by default.
+**
+!Dockerfile
+!.dockerignore
+!main.py
+!requirements.txt
+!src/
+!src/*.py
+!src/templates/
+!src/templates/*.html
+!src/static/
+!src/static/*.css
+!src/static/*.js
+!tests/
+!tests/*.py

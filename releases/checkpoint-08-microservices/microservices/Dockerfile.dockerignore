@@ -1,0 +1,23 @@
+# Build context is the release folder; send only what the service images need.
+**
+!apartment_booking/
+!apartment_booking/*.py
+!apartment_booking/web/
+!apartment_booking/web/*.py
+!apartment_booking/web/templates/
+!apartment_booking/web/templates/*.html
+!apartment_booking/web/static/
+!apartment_booking/web/static/*.css
+!apartment_booking/web/static/*.js
+!microservices/requirements.txt
+!microservices/dimora/
+!microservices/dimora/**/*.py
+!microservices/contracts/
+!microservices/contracts/**/*.json
+!microservices/tests/unit/
+!microservices/tests/unit/*.py
+!microservices/tests/contract/
+!microservices/tests/contract/*.py
+**/.DS_Store
+**/__pycache__
+**/*.py[cod]

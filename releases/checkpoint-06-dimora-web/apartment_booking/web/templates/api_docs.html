@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Apartment Booking · API Explorer</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='api_docs.css') }}"
+    />
+    <script
+      src="{{ url_for('static', filename='api_docs.js') }}"
+      defer
+    ></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/docs">
+        <span class="brand-mark">AB</span>
+        <span>Apartment Booking<small>API</small></span>
+      </a>
+      <nav id="operations" aria-label="API operations">
+        <p class="muted">Loading endpoints…</p>
+      </nav>
+      <div class="sidebar-footer">
+        <span class="status-dot"></span>Local API
+        <a href="/api/openapi.json" target="_blank" rel="noopener">OpenAPI ↗</a>
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <strong>API Explorer</strong>
+        <span>
+          <a href="/api/health" target="_blank" rel="noopener">Health</a>
+          <a href="/api/openapi.json" target="_blank" rel="noopener">OpenAPI</a>
+        </span>
+      </header>
+      <div class="content">
+        <section class="hero">
+          <div>
+            <h1>Test the API</h1>
+            <p>Choose an endpoint, edit the request, and send it.</p>
+          </div>
+          <div class="server">
+            <span class="status-dot"></span><code id="server-origin"></code>
+            <small>Writes persist locally</small>
+          </div>
+        </section>
+        <section class="workspace" aria-labelledby="operation-title">
+          <div class="request-panel">
+            <div class="panel-heading">
+              <span>Request</span><span id="operation-tag" class="muted"></span>
+            </div>
+            <h2 id="operation-title">Select an endpoint</h2>
+            <div class="request-line">
+              <span id="method" class="method get">GET</span>
+              <code id="endpoint">/api/health</code>
+            </div>
+            <form id="request-form">
+              <div id="parameters"></div>
+              <div id="body-section" hidden>
+                <label class="field-label" for="request-body">
+                  JSON body <span>application/json</span>
+                </label>
+                <textarea
+                  id="request-body"
+                  spellcheck="false"
+                ></textarea>
+              </div>
+              <div class="actions">
+                <button id="send-request" type="submit">Send GET</button>
+                <button id="reset-example" class="secondary" type="button">Reset</button>
+              </div>
+            </form>
+            <details class="curl-box">
+              <summary>curl</summary>
+              <pre id="curl-example"></pre>
+              <button id="copy-curl" class="secondary" type="button">Copy</button>
+            </details>
+          </div>
+          <div class="response-panel">
+            <div class="panel-heading">
+              <span>Response</span><span id="response-status" role="status">Ready</span>
+            </div>
+            <div class="response-meta">
+              <span id="response-time">Live response</span>
+              <button id="copy-response" class="text-button" type="button" disabled>
+                Copy JSON
+              </button>
+            </div>
+            <pre id="response-body" tabindex="0">// Send a request</pre>
+          </div>
+        </section>
+        <p id="page-error" class="page-error" role="alert" hidden></p>
+      </div>
+    </main>
+  </body>
+</html>

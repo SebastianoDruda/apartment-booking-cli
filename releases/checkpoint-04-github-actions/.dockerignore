@@ -1,0 +1,18 @@
+# Allow only application source and tests into the build context.
+# Local databases, backups, Git metadata and credentials are excluded by default.
+**
+!Dockerfile
+!.dockerignore
+!main.py
+!requirements.txt
+!apartment_booking/
+!apartment_booking/*.py
+!apartment_booking/templates/
+!apartment_booking/templates/*.html
+!apartment_booking/static/
+!apartment_booking/static/*.css
+!apartment_booking/static/*.js
+!tests/
+!tests/*.py
+!tests/smoke/
+!tests/smoke/*.py

@@ -177,9 +177,9 @@ Import the data of the original edition into a fresh stack (the importer refuses
 write into databases that already contain data):
 
 ```bash
-# In the repository root: copy the original database out of its volume (or use a backup)
+# In releases/checkpoint-06-dimora-web: copy the original database out of its volume (or use a backup)
 docker compose create booking
-docker compose cp booking:/data/apartment_booking.db microservices/apartment_booking.db
+docker compose cp booking:/data/apartment_booking.db ../checkpoint-07-cqrs-microservices/microservices/apartment_booking.db
 
 # In microservices/: import it
 docker compose run --rm -v "$PWD/apartment_booking.db:/import/apartment_booking.db:ro" importer
@@ -240,10 +240,11 @@ queued for a projector that starts later; the removal cascade; the CLI reading i
 own writes; the dead-letter queue; a full read-model rebuild; unprivileged containers;
 and persistence across a restart. It removes its project and volumes at the end.
 
-On GitHub Actions the `Microservices` workflow runs the unit tests on Python 3.11 and
-3.14, the system test, and the Playwright suite of the web client through the
-gateway. On GitLab the `microservices-unit-tests` job runs the unit tests on the
-self-managed runner.
+On GitHub Actions the `Checkpoint 07 · CQRS microservices` workflow
+(`.github/workflows/microservices.yml` at the repository root) runs the unit tests
+on Python 3.11 and 3.14, the system test, and the Playwright suite of the web client
+through the gateway. On GitLab the `checkpoint-07-unit-tests` job runs the unit tests
+on the self-managed runner.
 
 ## Layout
 
@@ -268,8 +269,8 @@ microservices/
     └── system/             # stack_smoke.py, Docker required
 ```
 
-Both Dockerfiles build from the repository root, so the shared `apartment_booking`
-package and the web client are part of the image. Their own `*.dockerignore` files
+Both Dockerfiles build from the release folder (`releases/checkpoint-07-cqrs-microservices`),
+so the shared `apartment_booking` package and the web client are part of the image. Their own `*.dockerignore` files
 limit the build context to what each image needs.
 
 ## Limits

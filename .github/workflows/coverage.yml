@@ -1,14 +1,24 @@
-name: Code coverage
+name: Checkpoint 06 · Code coverage
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/coverage.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/coverage.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: releases/checkpoint-06-dimora-web
 
 concurrency:
   group: coverage-${{ github.workflow }}-${{ github.ref }}
@@ -31,8 +41,8 @@ jobs:
           python-version: '3.14'
           cache: pip
           cache-dependency-path: |
-            requirements/web.txt
-            requirements/ci.txt
+            releases/checkpoint-06-dimora-web/requirements/web.txt
+            releases/checkpoint-06-dimora-web/requirements/ci.txt
 
       - name: Install test dependencies
         run: python -m pip install --disable-pip-version-check -r requirements/web.txt -r requirements/ci.txt
@@ -65,7 +75,7 @@ jobs:
         with:
           name: python-coverage-report
           path: |
-            coverage.xml
-            htmlcov/
+            releases/checkpoint-06-dimora-web/coverage.xml
+            releases/checkpoint-06-dimora-web/htmlcov/
           if-no-files-found: error
           retention-days: 14

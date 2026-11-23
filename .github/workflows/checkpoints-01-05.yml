@@ -1,0 +1,90 @@
+name: Checkpoints 01–05
+
+# The first five releases, kept in releases/checkpoint-01-terminal-app … 05 exactly as they were
+# tagged (minus local runner scripts). Each one still has to pass its own tests
+# and, from checkpoint 02 on, build and run in Docker.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'releases/checkpoint-01-terminal-app/**'
+      - 'releases/checkpoint-02-docker-compose/**'
+      - 'releases/checkpoint-03-rest-api/**'
+      - 'releases/checkpoint-04-github-actions/**'
+      - 'releases/checkpoint-05-gitlab-ci/**'
+      - '.github/workflows/checkpoints-01-05.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'releases/checkpoint-01-terminal-app/**'
+      - 'releases/checkpoint-02-docker-compose/**'
+      - 'releases/checkpoint-03-rest-api/**'
+      - 'releases/checkpoint-04-github-actions/**'
+      - 'releases/checkpoint-05-gitlab-ci/**'
+      - '.github/workflows/checkpoints-01-05.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checkpoints-01-05-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Checkpoint ${{ matrix.checkpoint }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - checkpoint: '01'
+            folder: checkpoint-01-terminal-app
+            requirements: ''
+            smoke: ''
+          - checkpoint: '02'
+            folder: checkpoint-02-docker-compose
+            requirements: ''
+            smoke: tests/docker_smoke.py
+          - checkpoint: '03'
+            folder: checkpoint-03-rest-api
+            requirements: requirements.txt
+            smoke: tests/docker_smoke.py tests/docker_web_smoke.py
+          - checkpoint: '04'
+            folder: checkpoint-04-github-actions
+            requirements: requirements.txt
+            smoke: tests/smoke/docker_cli.py tests/smoke/docker_web.py
+          - checkpoint: '05'
+            folder: checkpoint-05-gitlab-ci
+            requirements: requirements.txt
+            smoke: tests/smoke/docker_cli.py tests/smoke/docker_web.py
+    defaults:
+      run:
+        working-directory: releases/${{ matrix.folder }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+      - name: Install dependencies
+        if: ${{ matrix.requirements != '' }}
+        run: python -m pip install --disable-pip-version-check -r ${{ matrix.requirements }}
+      - name: Run the release's own tests
+        run: python -m unittest discover -s tests -v
+      - name: Build the Docker images
+        if: ${{ matrix.smoke != '' }}
+        run: |
+          docker compose config --quiet
+          docker compose build
+      - name: Run the Docker smoke tests
+        if: ${{ matrix.smoke != '' }}
+        run: |
+          for script in ${{ matrix.smoke }}; do
+            python3 "$script"
+          done

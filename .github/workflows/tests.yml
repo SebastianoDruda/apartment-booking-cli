@@ -1,14 +1,27 @@
-name: Tests
+name: Checkpoint 06 · Tests
+
+# The monolith of releases/checkpoint-06-dimora-web: CLI, Flask REST API and Dimora, on three
+# operating systems, plus its Docker images and smoke tests.
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/tests.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/tests.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+
+defaults:
+  run:
+    working-directory: releases/checkpoint-06-dimora-web
 
 jobs:
   unittest:

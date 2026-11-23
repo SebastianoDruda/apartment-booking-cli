@@ -1,0 +1,83 @@
+name: API load test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: load-test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  locust:
+    name: Booking lifecycle under load
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSE_PROJECT_NAME: apartment-booking-load-test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.14'
+          cache: pip
+          cache-dependency-path: requirements-load.txt
+
+      - name: Install Locust
+        run: python -m pip install --disable-pip-version-check -r requirements-load.txt
+
+      - name: Build and start an isolated API
+        run: docker compose up --build --detach --wait web
+
+      - name: Run the booking lifecycle load test
+        run: |
+          mkdir -p .artifacts/locust
+          python -m locust \
+            --locustfile tests/performance/locustfile.py \
+            --host http://127.0.0.1:8000 \
+            --headless \
+            --users 10 \
+            --spawn-rate 2 \
+            --run-time 30s \
+            --stop-timeout 5 \
+            --only-summary \
+            --csv .artifacts/locust/results \
+            --csv-full-history \
+            --html .artifacts/locust/report.html \
+            --logfile .artifacts/locust/locust.log
+
+      - name: Write test configuration to the summary
+        if: always()
+        run: |
+          {
+            echo '## API load test'
+            echo
+            echo '- Journey: browse → availability → create → list → change → cancel'
+            echo '- Load: 10 concurrent users, spawning 2 users/second for 30 seconds'
+            echo '- SLO: failures ≤ 1%, average response ≤ 500 ms, p95 ≤ 1,000 ms'
+            echo '- Full HTML and CSV results are available in the workflow artifact.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Locust reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: locust-load-test-report
+          path: .artifacts/locust/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop API and delete test data
+        if: always()
+        run: docker compose down --volumes --remove-orphans

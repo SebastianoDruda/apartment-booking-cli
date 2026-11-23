@@ -1,0 +1,16 @@
+{
+  "event_id": "apartment:3:v1",
+  "type": "apartment.added",
+  "source": "apartment-service",
+  "entity_id": 3,
+  "version": 1,
+  "occurred_at": "2027-05-01T10:15:00.000+00:00",
+  "data": {
+    "id": 3,
+    "name": "Casa Aurora",
+    "address": "Italia, Amalfi, Via Roma 1",
+    "max_people": 4,
+    "price_per_night": 180.0,
+    "removed": false
+  }
+}

@@ -1,0 +1,6 @@
+# Build context is the repository root; send only the gateway configuration and the web client.
+**
+!microservices/gateway/nginx.conf
+!website-studio/public/
+!website-studio/public/**
+**/.DS_Store

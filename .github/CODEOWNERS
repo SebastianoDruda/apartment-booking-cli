@@ -1,0 +1,52 @@
+# Code owners: who must approve a pull request that touches each area.
+#
+# GitHub reads this file top to bottom and the LAST matching line wins. With branch
+# protection on main ("Require a pull request" + "Require review from Code Owners"),
+# the merge button stays locked until an owner of every touched area approves.
+#
+# The repository belongs to a personal account, where GitHub teams do not exist, so
+# every area is owned by @SebastianoDruda. The team that would own it in an
+# organisation is named on each line; moving the repository to an organisation
+# means replacing the owner with that team, e.g. @dimora/apartment-team.
+# See docs/devops.md for the team model and the pipelines each team runs.
+
+# ------------------------------------------------------------------ default
+*                                                   @SebastianoDruda  # tech-leads
+
+# ------------------------------------------------------------------ released checkpoints (frozen)
+# Checkpoints 01-07 are kept as they were released; changes need the tech leads.
+/releases/                                          @SebastianoDruda  # tech-leads
+
+# ------------------------------------------------------------------ checkpoint 08: one area per team
+/releases/checkpoint-08-microservices/apartment_booking/                 @SebastianoDruda  # domain-team
+/releases/checkpoint-08-microservices/website-studio/                    @SebastianoDruda  # frontend-team
+/releases/checkpoint-08-microservices/microservices/dimora/cli/          @SebastianoDruda  # frontend-team
+/releases/checkpoint-08-microservices/microservices/tests/unit/test_cli_client.py  @SebastianoDruda  # frontend-team
+
+/releases/checkpoint-08-microservices/microservices/dimora/apartment/    @SebastianoDruda  # apartment-team
+/releases/checkpoint-08-microservices/microservices/tests/unit/test_apartment_service.py      @SebastianoDruda  # apartment-team
+/releases/checkpoint-08-microservices/microservices/tests/contract/test_apartment_producer.py @SebastianoDruda  # apartment-team
+
+/releases/checkpoint-08-microservices/microservices/dimora/reservation/  @SebastianoDruda  # reservation-team
+/releases/checkpoint-08-microservices/microservices/tests/unit/test_reservation_service.py      @SebastianoDruda  # reservation-team
+/releases/checkpoint-08-microservices/microservices/tests/contract/test_reservation_consumer.py @SebastianoDruda  # reservation-team
+
+# The event contract is the interface between two teams: both must approve.
+/releases/checkpoint-08-microservices/microservices/contracts/           @SebastianoDruda  # apartment-team reservation-team
+
+/releases/checkpoint-08-microservices/microservices/dimora/common/       @SebastianoDruda  # platform-team
+/releases/checkpoint-08-microservices/microservices/dimora/tools/        @SebastianoDruda  # platform-team
+/releases/checkpoint-08-microservices/microservices/gateway/             @SebastianoDruda  # platform-team
+/releases/checkpoint-08-microservices/microservices/compose.yaml         @SebastianoDruda  # platform-team
+/releases/checkpoint-08-microservices/microservices/Dockerfile           @SebastianoDruda  # platform-team
+/releases/checkpoint-08-microservices/microservices/tests/system/        @SebastianoDruda  # platform-team qa-team
+
+# ------------------------------------------------------------------ CI/CD and repository tooling
+/.github/                                           @SebastianoDruda  # devops-team
+/.gitlab-ci.yml                                     @SebastianoDruda  # devops-team
+/ci/                                                @SebastianoDruda  # devops-team
+/run.py                                             @SebastianoDruda  # devops-team
+
+# ------------------------------------------------------------------ documentation
+/README.md                                          @SebastianoDruda  # tech-leads
+/docs/                                              @SebastianoDruda  # tech-leads

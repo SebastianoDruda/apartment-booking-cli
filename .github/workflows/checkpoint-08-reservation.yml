@@ -1,0 +1,45 @@
+name: Checkpoint 08 · reservation service
+
+# Pipeline of the reservation team. It runs when the reservation service, the shared
+# platform code it builds on, or the event contract it consumes changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'releases/checkpoint-08-microservices/microservices/dimora/reservation/**'
+      - 'releases/checkpoint-08-microservices/microservices/dimora/common/**'
+      - 'releases/checkpoint-08-microservices/microservices/contracts/**'
+      - 'releases/checkpoint-08-microservices/microservices/tests/unit/test_reservation*'
+      - 'releases/checkpoint-08-microservices/microservices/tests/contract/test_reservation*'
+      - 'releases/checkpoint-08-microservices/microservices/requirements.txt'
+      - 'releases/checkpoint-08-microservices/microservices/Dockerfile'
+      - 'releases/checkpoint-08-microservices/apartment_booking/**'
+      - '.github/workflows/checkpoint-08-reservation.yml'
+      - '.github/workflows/checkpoint-08-service.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'releases/checkpoint-08-microservices/microservices/dimora/reservation/**'
+      - 'releases/checkpoint-08-microservices/microservices/dimora/common/**'
+      - 'releases/checkpoint-08-microservices/microservices/contracts/**'
+      - 'releases/checkpoint-08-microservices/microservices/tests/unit/test_reservation*'
+      - 'releases/checkpoint-08-microservices/microservices/tests/contract/test_reservation*'
+      - 'releases/checkpoint-08-microservices/microservices/requirements.txt'
+      - 'releases/checkpoint-08-microservices/microservices/Dockerfile'
+      - 'releases/checkpoint-08-microservices/apartment_booking/**'
+      - '.github/workflows/checkpoint-08-reservation.yml'
+      - '.github/workflows/checkpoint-08-service.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checkpoint-08-reservation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reservation:
+    uses: ./.github/workflows/checkpoint-08-service.yml
+    with:
+      service: reservation

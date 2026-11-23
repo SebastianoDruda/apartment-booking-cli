@@ -1,12 +1,19 @@
-name: Playwright
+name: Checkpoint 06 · Playwright
 
 # End-to-end tests of the Dimora web client against the real Flask API.
-# Runs on every change because a backend change can break the user journeys too.
+# Runs on every change to checkpoint 06, because a backend change can break the
+# user journeys too.
 on:
   push:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/playwright.yml'
   pull_request:
     branches: [main]
+    paths:
+      - 'releases/checkpoint-06-dimora-web/**'
+      - '.github/workflows/playwright.yml'
   workflow_dispatch:
 
 permissions:
@@ -23,7 +30,7 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
-        working-directory: website-studio
+        working-directory: releases/checkpoint-06-dimora-web/website-studio
     steps:
       - name: Check out source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,7 +47,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-          cache-dependency-path: website-studio/package-lock.json
+          cache-dependency-path: releases/checkpoint-06-dimora-web/website-studio/package-lock.json
       - name: Install Playwright
         run: npm ci
       - name: Install Chromium
@@ -55,7 +62,7 @@ jobs:
         with:
           name: playwright-report
           path: |
-            website-studio/playwright-report/
-            website-studio/test-results/
+            releases/checkpoint-06-dimora-web/website-studio/playwright-report/
+            releases/checkpoint-06-dimora-web/website-studio/test-results/
           if-no-files-found: warn
           retention-days: 14
